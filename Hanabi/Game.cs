@@ -1,50 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Hanabi
 {
     public class Game
     {
-        public const int MaxClueCounter = 8;
-        public const int MaxBlowCounter = 3;
+        public Board Board;
+
+        public Deck Deck
+        {
+            get { return Board.Deck; }
+        }
 
         public const int MinPlayerCount = 2;
         public const int MaxPlayerCount = 5;
 
-        public Deck Deck;
-
-        public FireworkPile FireworkPile;
-        public DiscardPile DiscardPile;
+        public int Score;
 
         public List<Player> Players;
-
-        private int _clueCounter;
-        public int ClueCounter
-        {
-            get
-            {
-                return _clueCounter;
-            }
-            set
-            {
-                if (0 <= value && value <= MaxClueCounter)
-                    _clueCounter = value;
-            }
-        }
-
-        private int _blowCounter;
-        public int BlowCounter
-        {
-            get
-            {
-                return _blowCounter;
-            }
-            set
-            {
-                if (0 <= value && value <= MaxBlowCounter)
-                    _blowCounter = value;
-            }
-        }
 
         public Game(int playersCount, bool isSpecial = false)
         {
@@ -59,36 +33,44 @@ namespace Hanabi
             for (int i = 0; i < playersCount; i++)
             {
                 Player player = new Player(this);
+                player.Name = i.ToString();
+                player.CardAdded += OnCardAdded;
                 player.ClueGiven += OnClueGiven;
                 player.Discarded += OnDiscarded;
+                player.Blown += OnBlow;
+                
                 Players.Add(player);
             }
 
-            ClueCounter = MaxClueCounter;
-            BlowCounter = MaxBlowCounter;
-
-            FireworkPile = new FireworkPile();
-            FireworkPile.Blow += OnBlow;
-            DiscardPile = new DiscardPile();
-
-            Deck = Deck.Create();
+            Board = Board.Create();
+            Score = 0;
         }
 
         void OnDiscarded(Object sender, EventArgs args)
         {
-            ClueCounter += 1;
-            AddCardToPlayer(sender as Player);
+            Board.ClueCounter += 1;
+
+            if (!Deck.IsEmpty())
+            {
+                AddCardToPlayer(sender as Player);
+            }
         }
 
         void OnBlow(Object sender, EventArgs args)
         {
-            BlowCounter -= 1;
+            Board.BlowCounter -= 1;
+            AddCardToPlayer(sender as Player);
+        }
+
+        void OnCardAdded(Object sender, EventArgs args)
+        {
+            Score++;
+            AddCardToPlayer(sender as Player);
         }
 
         void OnClueGiven(Object sender, EventArgs args)
         {
-            ClueCounter -= 1;
-            AddCardToPlayer(sender as Player);
+            Board.ClueCounter -= 1;
         }
 
         public void AddCardToPlayer(Player player)
@@ -104,7 +86,7 @@ namespace Hanabi
             var playersEnumerator = NextTurn();
             Player player = null;
 
-            while (BlowCounter != 0 || Deck.IsEmpty())
+            while (Board.BlowCounter != 0 && !Deck.IsEmpty())
             {
                 playersEnumerator.MoveNext();
                 player = playersEnumerator.Current;
@@ -125,7 +107,12 @@ namespace Hanabi
                 } while (player != playerLastTurn);
             }
 
-            return BlowCounter == 0 ? 0 : FireworkPile.GetScore();
+            return GetScore();
+        }
+
+        private int GetScore()
+        {
+            return Board.BlowCounter == 0 ? 0 : Score;
         }
 
         private void PrepareForGame()
@@ -143,6 +130,11 @@ namespace Hanabi
                     AddCardToPlayer(player);
                 }
             }
+        }
+
+        public IReadOnlyList<Player> GetPlayers(Player player)
+        {
+            return Players.Except(new[] {player}).ToList();
         }
 
         public IEnumerator<Player> NextTurn()

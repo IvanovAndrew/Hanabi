@@ -1,52 +1,49 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Hanabi
 {
-    public class FireworkPile
+    public class FireworkPile : Pile
     {
-        public Firework BlueFirework;
-        public Firework GreenFirework;
-        public Firework RedFirework;
-        public Firework YellowFirework;
-        public Firework WhiteFirework;
-
-        public event EventHandler Blow;
+        private readonly Firework _blueFirework;
+        private readonly Firework _greenFirework;
+        private readonly Firework _redFirework;
+        private readonly Firework _yellowFirework;
+        private readonly Firework _whiteFirework;
 
         public FireworkPile()
         {
-            BlueFirework = new BlueFirework();
-            GreenFirework = new GreenFirework();
-            RedFirework = new RedFirework();
-            YellowFirework = new YellowFirework();
-            WhiteFirework = new WhiteFirework();
+            _blueFirework = new BlueFirework();
+            _greenFirework = new GreenFirework();
+            _redFirework = new RedFirework();
+            _yellowFirework = new YellowFirework();
+            _whiteFirework = new WhiteFirework();
         }
 
-        public bool AddCard(Card card)
+        public override bool AddCard(Card card)
         {
             bool added;
 
             switch(card.Color)
             {
                 case Color.Blue:
-                    added = BlueFirework.AddCard(card);
+                    added = _blueFirework.AddCard(card);
                     break;
 
                 case Color.Green:
-                    added = GreenFirework.AddCard(card);
+                    added = _greenFirework.AddCard(card);
                     break;
 
                 case Color.Red:
-                    added = RedFirework.AddCard(card);
+                    added = _redFirework.AddCard(card);
                     break;
 
                 case Color.White:
-                    added = WhiteFirework.AddCard(card);
+                    added = _whiteFirework.AddCard(card);
                     break;
 
                 case Color.Yellow:
-                    added = YellowFirework.AddCard(card);
+                    added = _yellowFirework.AddCard(card);
                     break;
 
                 default: 
@@ -54,53 +51,33 @@ namespace Hanabi
                     break;
             }
 
-            if (!added) RaiseEvent();
+            if (added) _cards.Add(card);
 
             return added;
         }
 
-        public int GetScore()
+        public IReadOnlyList<Card> GetExpectedCards()
         {
-            return new List<Firework> { BlueFirework, GreenFirework, RedFirework, WhiteFirework, YellowFirework }
-                    .Select(firework => firework.GetLastCard())
-                    .Sum(card => card == null? 0 : (int) card.Nominal + 1);
+            return new List<Card>
+                {
+                    _blueFirework.GetNextCard(),
+                    _greenFirework.GetNextCard(),
+                    _redFirework.GetNextCard(),
+                    _whiteFirework.GetNextCard(),
+                    _yellowFirework.GetNextCard()
+                }.FindAll(card => card != null);
         }
 
-        private void RaiseEvent()
+        public IReadOnlyList<Card> GetLastCards()
         {
-            if (Blow != null)
-                Blow(this, new EventArgs());
+            return new List<Card>
+            {
+                _blueFirework.GetLastCard(),
+                _greenFirework.GetLastCard(),
+                _redFirework.GetLastCard(),
+                _whiteFirework.GetLastCard(),
+                _yellowFirework.GetLastCard()
+            }.FindAll(card => card != null);
         }
-
-        //public bool AddCard(Card card)
-        //{
-        //    return AddCardToFirework(card);
-        //}
-
-        //private bool AddCardToFirework(YellowCard card)
-        //{
-        //    return YellowFirework.AddCard(card);
-        //}
-
-        //private bool AddCardToFirework(BlueCard card)
-        //{
-        //    return BlueFirework.AddCard(card);
-        //}
-
-        //private bool AddCardToFirework(GreenCard card)
-        //{
-        //    return GreenFirework.AddCard(card);
-        //}
-
-        //private bool AddCardToFirework(RedCard card)
-        //{
-        //    return RedFirework.AddCard(card);
-        //}
-
-        //private bool AddCardToFirework(WhiteCard card)
-        //{
-        //    return WhiteFirework.AddCard(card);
-        //}
-
     }
 }

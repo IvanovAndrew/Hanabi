@@ -8,11 +8,11 @@ namespace HanabiTest
     public class FireworkTest
     {
         [Test]
-        public void EmptyGreenFirework_AddGreenOneCard_CardAdded()
+        public void AddCard_AddGreenOneCardToEmptyGreenFirework_Added()
         {
             var firework = new GreenFirework();
 
-            var greenOne = new GreenCard { Nominal = Number.One };
+            var greenOne = new GreenCard(Number.One);
 
             var isAdded = firework.AddCard(greenOne);
 
@@ -20,11 +20,11 @@ namespace HanabiTest
         }
 
         [Test]
-        public void EmptyYellowFirework_AddYellowTwoCard_CardNotAdded()
+        public void AddCard_AddYellowTwoCardToEmptyYellowFirework_NotAdded()
         {
             var firework = new YellowFirework();
 
-            var yellowTwo = new YellowCard { Nominal = Number.Two };
+            var yellowTwo = new YellowCard(Number.Two);
 
             var isAdded = firework.AddCard(yellowTwo);
 
@@ -32,14 +32,14 @@ namespace HanabiTest
         }
 
         [Test]
-        public void BlueFireworkWithLastThree_AddBlueFourCard_CardAdded()
+        public void AddCard_AddBlueFourCardToBlueFireworkWithLastThree_Added()
         {
             var firework = new BlueFirework();
 
-            var blueOneCard = new BlueCard { Nominal = Number.One };
-            var blueTwoCard = new BlueCard { Nominal = Number.Two };
-            var blueThreeCard = new BlueCard { Nominal = Number.Three };
-            var blueFourCard = new BlueCard { Nominal = Number.Four };
+            var blueOneCard = new BlueCard (Number.One);
+            var blueTwoCard = new BlueCard (Number.Two);
+            var blueThreeCard = new BlueCard(Number.Three);
+            var blueFourCard = new BlueCard (Number.Four);
 
             firework.AddCard(blueOneCard);
             firework.AddCard(blueTwoCard);
@@ -51,33 +51,72 @@ namespace HanabiTest
         }
 
         [Test]
-        public void WhiteFireworkWithLastTwo_AddWhiteTwoCard_CardNotAdded()
+        public void AddCard_AddWhiteTwoCardToWhiteFireworkWithLastTwo_NotAdded()
         {
             var firework = new WhiteFirework();
 
-            var whiteOneCard = new WhiteCard { Nominal = Number.One };
-            var whiteTwoCard = new WhiteCard { Nominal = Number.Two };
+            var whiteOneCard = new WhiteCard(Number.One);
+            var whiteTwoCard = new WhiteCard(Number.Two);
 
             firework.AddCard(whiteOneCard);
             firework.AddCard(whiteTwoCard);
 
-            var otherWhiteTwoCard = new WhiteCard { Nominal = Number.Two };
+            var otherWhiteTwoCard = new WhiteCard(Number.Two);
             var added = firework.AddCard(otherWhiteTwoCard);
 
             Assert.IsFalse(added);
         }
 
         [Test]
-        public void RedFireworkWithLastOne_AddBlueTwoCard_ArgumentExceptionThrown()
+        public void AddCard_AddBlueTwoCardToRedFireworkWithLastOne_ArgumentExceptionThrown()
         {
             var firework = new RedFirework();
 
-            var redOneCard = new RedCard { Nominal = Number.One };
+            var redOneCard = new RedCard(Number.One);
             firework.AddCard(redOneCard);
 
-            var blueTwoCard = new BlueCard { Nominal = Number.Two };
+            var blueTwoCard = new BlueCard(Number.Two);
 
             Assert.Catch<ArgumentException>(() => firework.AddCard(blueTwoCard));
+        }
+
+        [Test]
+        public void GetNextCard_EmptyBlueFirework_BlueOne()
+        {
+            var firework = new BlueFirework();
+
+            var nextCard = firework.GetNextCard();
+
+            Assert.AreEqual(Number.One, nextCard.Nominal);
+        }
+
+        [Test]
+        public void GetNextCard_FullBlueFirework_Null()
+        {
+            var firework = new BlueFirework();
+            firework.AddCard(new BlueCard (Number.One));
+            firework.AddCard(new BlueCard (Number.Two));
+            firework.AddCard(new BlueCard (Number.Three));
+            firework.AddCard(new BlueCard (Number.Four));
+            firework.AddCard(new BlueCard (Number.Five));
+
+            var nextCard = firework.GetNextCard();
+
+            Assert.IsNull(nextCard);
+        }
+
+        [Test]
+        public void GetNextCard_BlueFireworkWithLastFour_BlueFive()
+        {
+            var firework = new BlueFirework();
+            firework.AddCard(new BlueCard(Number.One));
+            firework.AddCard(new BlueCard(Number.Two));
+            firework.AddCard(new BlueCard(Number.Three));
+            firework.AddCard(new BlueCard(Number.Four));
+
+            var nextCard = firework.GetNextCard();
+
+            Assert.AreEqual(new BlueCard(Number.Five), nextCard);
         }
     }
 }

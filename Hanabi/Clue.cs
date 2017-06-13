@@ -25,6 +25,23 @@
         {
             return new IsNotValue(_value);
         }
+
+        private bool EqualsInternal(IsValue clue)
+        {
+            return _value == clue._value;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is IsValue)
+                return EqualsInternal((IsValue) obj);
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return _value.GetHashCode() * GetType().GetHashCode();
+        }
     }
 
     public class IsNotValue : Clue
@@ -44,6 +61,24 @@
         public override Clue Revert()
         {
             return new IsValue(_value);
+        }
+
+        private bool EqualsInternal(IsNotValue clue)
+        {
+            return _value == clue._value;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is IsNotValue)
+                return EqualsInternal((IsNotValue) obj);
+            return false;
+        }
+
+
+        public override int GetHashCode()
+        {
+            return _value.GetHashCode() * GetType().GetHashCode();
         }
     }
 
@@ -65,6 +100,23 @@
         {
  	        return new IsNotColor(_color);
         }
+
+        private bool EqualsInternal(IsColor clue)
+        {
+            return _color == clue._color;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is IsColor)
+                return EqualsInternal(obj as IsColor);
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return _color.GetHashCode() * typeof(IsColor).GetHashCode();
+        }
     }
 
     public class IsNotColor : Clue
@@ -84,6 +136,23 @@
         public override Clue Revert()
         {
             return new IsColor(_color);
+        }
+
+        public override int GetHashCode()
+        {
+            return _color.GetHashCode() * typeof(IsNotColor).GetHashCode();
+        }
+
+        private bool EqualsInternal(IsNotColor clue)
+        {
+            return _color == clue._color;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is IsNotColor)
+                return EqualsInternal(obj as IsNotColor);
+            return false;
         }
     }
 }

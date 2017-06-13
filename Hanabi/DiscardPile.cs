@@ -1,15 +1,11 @@
-﻿using System.Collections.Generic;
-
-namespace Hanabi
+﻿namespace Hanabi
 {
-    public class DiscardPile
+    public class DiscardPile : Pile
     {
-        private List<Card> _cards = new List<Card>();
-        public IReadOnlyList<Card> Cards { get{ return _cards.AsReadOnly();} }
-
-        public void AddCard(Card card)
+        public override bool AddCard(Card card)
         {
             _cards.Add(card);
+            return true;
         }
     }
 }

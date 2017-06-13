@@ -42,6 +42,23 @@ namespace Hanabi
         {
             return _cards.Count == 0 ? null : _cards.Peek();
         }
+
+        public Card GetNextCard()
+        {
+            var lastCard = GetLastCard();
+            if (lastCard == null)
+                return CreateCard(Number.One);
+
+            if (lastCard.Nominal == Number.Five)
+                return null;
+
+            int nextNumber = (int)lastCard.Nominal + 1;
+
+            return CreateCard((Number) nextNumber);
+        }
+
+        protected abstract Card CreateCard(Number number);
+
     }
 
     public class BlueFirework : Firework
@@ -49,6 +66,11 @@ namespace Hanabi
         public BlueFirework()
         {
             Color = Color.Blue;
+        }
+
+        protected override Card CreateCard(Number number)
+        {
+            return new BlueCard(number);
         }
     }
 
@@ -58,6 +80,11 @@ namespace Hanabi
         {
             Color = Color.Green;
         }
+
+        protected override Card CreateCard(Number number)
+        {
+            return new GreenCard(number);
+        }
     }
 
     public class RedFirework : Firework
@@ -65,6 +92,11 @@ namespace Hanabi
         public RedFirework()
         {
             Color = Color.Red;
+        }
+
+        protected override Card CreateCard(Number number)
+        {
+            return new RedCard(number);
         }
     }
 
@@ -74,6 +106,11 @@ namespace Hanabi
         {
             Color = Color.White;
         }
+
+        protected override Card CreateCard(Number number)
+        {
+            return new WhiteCard(number);
+        }
     }
 
     public class YellowFirework : Firework
@@ -81,6 +118,11 @@ namespace Hanabi
         public YellowFirework()
         {
             Color = Color.Yellow;
+        }
+
+        protected override Card CreateCard(Number number)
+        {
+            return new YellowCard(number);
         }
     }
 }

@@ -39,11 +39,11 @@ namespace Hanabi
 
             foreach (var nominal in nominals)
             {
-                cards.Add(new BlueCard {Nominal = nominal});
-                cards.Add(new GreenCard {Nominal = nominal});
-                cards.Add(new RedCard {Nominal = nominal});
-                cards.Add(new WhiteCard {Nominal = nominal});
-                cards.Add(new YellowCard {Nominal = nominal});
+                cards.Add(new BlueCard (nominal));
+                cards.Add(new GreenCard (nominal));
+                cards.Add(new RedCard (nominal));
+                cards.Add(new WhiteCard (nominal));
+                cards.Add(new YellowCard (nominal));
             }
 
             return cards;
@@ -79,11 +79,11 @@ namespace Hanabi
         internal ExtendedDeck()
         {
             var usualCards = GetCards();
-            usualCards.Add(new MulticolorCard {Nominal = Number.One});
-            usualCards.Add(new MulticolorCard {Nominal = Number.Two});
-            usualCards.Add(new MulticolorCard { Nominal = Number.Three });
-            usualCards.Add(new MulticolorCard { Nominal = Number.Four });
-            usualCards.Add(new MulticolorCard { Nominal = Number.Five });
+            usualCards.Add(new MulticolorCard(Number.One));
+            usualCards.Add(new MulticolorCard(Number.Two));
+            usualCards.Add(new MulticolorCard(Number.Three));
+            usualCards.Add(new MulticolorCard(Number.Four));
+            usualCards.Add(new MulticolorCard(Number.Five));
 
             Cards = new Stack<Card>(usualCards);
         }

@@ -40,14 +40,19 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Board.cs" />
     <Compile Include="Card.cs" />
+    <Compile Include="CardsToMatrixConverter.cs" />
     <Compile Include="Clue.cs" />
+    <Compile Include="ClueCandidate.cs" />
     <Compile Include="Deck.cs" />
     <Compile Include="DiscardPile.cs" />
     <Compile Include="Firework.cs" />
     <Compile Include="FireworkPile.cs" />
     <Compile Include="Game.cs" />
     <Compile Include="Guess.cs" />
+    <Compile Include="Knowledge.cs" />
+    <Compile Include="Pile.cs" />
     <Compile Include="Player.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

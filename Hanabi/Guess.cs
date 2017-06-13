@@ -1,20 +1,29 @@
-﻿namespace Hanabi
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace Hanabi
 {
     public class Guess
     {
+        const int NumberCount = 5;
+        const int ColorCount = 5;
+        
         public int[,] Matrix;
+        private readonly int[,] _Defaultmatrix;
 
         private Guess()
         {
-            Matrix = 
-                new int[5, 5]
-                {
-                    {3,3,3,3,3},
-                    {2,2,2,2,2},
-                    {2,2,2,2,2},
-                    {2,2,2,2,2},
-                    {1,1,1,1,1},
-                };
+            _Defaultmatrix = new int[NumberCount, ColorCount]
+            {
+                {3,3,3,3,3},
+                {2,2,2,2,2},
+                {2,2,2,2,2},
+                {2,2,2,2,2},
+                {1,1,1,1,1},
+            };
+
+            Matrix = _Defaultmatrix;
         }
 
         public static Guess Create(bool isSpecialGame = false)
@@ -26,11 +35,11 @@
         {
             int row = (int)value;
 
-            for(int n = 0; n < 5; n++)
+            for(int n = 0; n < NumberCount; n++)
             {
                 if (n == row) continue;
 
-                for(int c = 0; c < 5; c++)
+                for(int c = 0; c < ColorCount; c++)
                 {
                     Matrix[n, c] = 0;
                 }
@@ -41,7 +50,7 @@
         {
             int row = (int)value;
 
-            for (int c = 0; c < 5; c++)
+            for (int c = 0; c < NumberCount; c++)
             {
                 Matrix[row, c] = 0;
             }
@@ -51,11 +60,11 @@
         {
             int column = (int)color;
 
-            for (int c = 0; c < 5; c++)
+            for (int c = 0; c < ColorCount; c++)
             {
                 if (c == column) continue;
 
-                for (int row = 0; row < 5; row++)
+                for (int row = 0; row < NumberCount; row++)
                 {
                     Matrix[row, c] = 0;
                 }
@@ -66,10 +75,52 @@
         {
             int column = (int)color;
 
-            for(int i = 0; i < 5; i++)
+            for(int i = 0; i < NumberCount; i++)
             {
                 Matrix[i, column] = 0;
             }
+        }
+
+        public double GetProbability(IEnumerable<Card> cardsToSearch, IEnumerable<Card> thrown, IEnumerable<Card> otherPlayersCards)
+        {
+            int[,] thrownMatrix = CardsToMatrixConverter.Encode(thrown);
+            int[,] otherPlayersCardsMatrix = CardsToMatrixConverter.Encode(otherPlayersCards);
+
+            int[,] guessMatrix = GetCorrectedGuess(thrownMatrix, otherPlayersCardsMatrix);
+
+            int positiveWays =
+                cardsToSearch.Sum(card => guessMatrix[(int)card.Nominal, (int)card.Color]);
+
+            int allWays = 0;
+            for (int i = 0; i < NumberCount; i++)
+            {
+                for (int j = 0; j < ColorCount; j++)
+                {
+                    allWays += guessMatrix[i, j];
+                }
+            }
+
+            return positiveWays / (double) allWays;
+        }
+
+        private int[,] GetCorrectedGuess(int[,] thrown, int[,] otherPlayers)
+        {
+            int[,] situation = new int[NumberCount, ColorCount];
+
+            for (int i = 0; i < NumberCount; i++)
+            {
+                for (int j = 0; j < ColorCount; j++)
+                {
+                    situation[i, j] = Math.Max(Matrix[i, j] - (thrown[i, j] + otherPlayers[i, j]), 0);
+                }
+            }
+
+            return situation;
+        }
+
+        public bool KnowAboutNominalAndColor()
+        {
+            return CardsToMatrixConverter.Decode(Matrix).Count == 1;
         }
     }
 }
