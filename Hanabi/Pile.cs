@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 
 namespace Hanabi
@@ -27,6 +28,9 @@ namespace Hanabi
         // на руках или в колоде осталась всего одна такая карта.
         public static IReadOnlyList<Card> GetUniqueCards(FireworkPile fireworkPile, DiscardPile discardPile)
         {
+            Contract.Requires(fireworkPile != null);
+            Contract.Requires(discardPile != null);
+
             int[,] resultMatrix = (int[,])DefaultMatrix.Clone();
 
             int[,] played = fireworkPile.ToMatrix();
@@ -67,6 +71,9 @@ namespace Hanabi
 
         public static IReadOnlyList<Card> GetThrownCards(FireworkPile fireworkPile, DiscardPile discardPile)
         {
+            Contract.Requires(fireworkPile != null);
+            Contract.Requires(discardPile != null);
+
             return fireworkPile.Cards.Concat(discardPile.Cards)
                                     .ToList()
                                     .AsReadOnly();
@@ -75,6 +82,11 @@ namespace Hanabi
 
         public static IReadOnlyList<Card> GetCardsWhateverToPlay(FireworkPile fireworkPile, DiscardPile discardPile)
         {
+            Contract.Requires(fireworkPile != null);
+            Contract.Requires(discardPile != null);
+
+            Contract.Ensures(Contract.Result<IReadOnlyList<Card>>() != null);
+
             int[,] possibleToPlay = (int[,])DefaultMatrix.Clone();
 
             int[,] played = fireworkPile.ToMatrix();
@@ -131,6 +143,8 @@ namespace Hanabi
 
         public int[,] ToMatrix()
         {
+            Contract.Ensures(Contract.Result<int[,]>() != null);
+
             return CardsToMatrixConverter.Encode(Cards);
         }
 

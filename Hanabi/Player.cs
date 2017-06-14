@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 
 namespace Hanabi
@@ -56,12 +57,16 @@ namespace Hanabi
 
         public Player(Game game)
         {
+            Contract.Requires(game != null);
+
             _memory = new Knowledge();
             Game = game;
         }
 
         public void ReceiveFirstCards(IEnumerable<Card> cards)
         {
+            Contract.Requires(cards.Any());
+
             foreach (var card in cards)
             {
                 _memory.Add(card);
@@ -70,6 +75,9 @@ namespace Hanabi
 
         public void ListenClue(IEnumerable<Card> cards, Clue clue)
         {
+            Contract.Requires(cards.Any());
+            Contract.Requires(clue != null);
+
             _memory.Update(cards, clue);
 
             var otherCards = Hand.Except(cards);
@@ -221,6 +229,8 @@ namespace Hanabi
 
         public void AddCard(Card card)
         {
+            Contract.Requires(card != null);
+
             _memory.Add(card);
         }
 
@@ -291,6 +301,8 @@ namespace Hanabi
 
         public bool KnowAllAboutNominalAndColor(Card card)
         {
+            Contract.Requires(card != null);
+
             return _memory[card].KnowAboutNominalAndColor();
         }
 

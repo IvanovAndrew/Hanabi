@@ -1,4 +1,6 @@
-﻿namespace Hanabi
+﻿using System.Diagnostics.Contracts;
+
+namespace Hanabi
 {
     public class Board
     {
@@ -46,6 +48,8 @@
 
         public static Board Create(bool isSpecial = false)
         {
+            Contract.Ensures(Contract.Result<Board>() != null);
+            
             Board board = new Board
             {
                 FireworkPile = new FireworkPile(),

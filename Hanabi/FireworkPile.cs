@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 
 namespace Hanabi
 {
@@ -22,6 +23,8 @@ namespace Hanabi
 
         public override bool AddCard(Card card)
         {
+            Contract.Requires(card != null);
+            
             bool added;
 
             switch(card.Color)
@@ -58,6 +61,8 @@ namespace Hanabi
 
         public IReadOnlyList<Card> GetExpectedCards()
         {
+            Contract.Ensures(Contract.Result<IReadOnlyList<Card>>() != null);
+
             return new List<Card>
                 {
                     _blueFirework.GetNextCard(),
@@ -70,6 +75,8 @@ namespace Hanabi
 
         public IReadOnlyList<Card> GetLastCards()
         {
+            Contract.Ensures(Contract.Result<IReadOnlyList<Card>>() != null);
+
             return new List<Card>
             {
                 _blueFirework.GetLastCard(),

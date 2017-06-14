@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 
 namespace Hanabi
@@ -16,17 +17,26 @@ namespace Hanabi
         
         public void Remove(Card card)
         {
+            Contract.Requires(_thoughts.Exists(thought => Equals(thought.Card, card)));
+
             var thoughts = _thoughts.Find(thought => Equals(thought.Card, card));
             _thoughts.Remove(thoughts);
         }
 
         public Guess this[Card card]
         {
-            get { return _thoughts.Find(thought => Equals(thought.Card, card)).Guess; }
+            get
+            {
+                Contract.Requires(_thoughts.Exists(thought => Equals(thought.Card, card)));
+
+                return _thoughts.Find(thought => Equals(thought.Card, card)).Guess;
+            }
         }
 
         public IReadOnlyList<Clue> GetPreviousCluesAboutCard(Card card)
         {
+            Contract.Requires(_thoughts.Exists(thought => Equals(thought.Card, card)));
+
             return _thoughts.Find(thought => Equals(thought.Card, card)).Clues.AsReadOnly();
         }
 
@@ -42,6 +52,8 @@ namespace Hanabi
 
         public void Add(Card card)
         {
+            Contract.Requires(card != null);
+            
             var newThought = new ThoughtsAboutCard
                         {
                             Card = card, 
@@ -53,6 +65,8 @@ namespace Hanabi
 
         public Card GetCardByGuess(Guess guess)
         {
+            Contract.Requires(_thoughts.Exists(thoughts => thoughts.Guess == guess));
+
             return _thoughts.Find(thought => thought.Guess == guess).Card;
         }
 
@@ -63,6 +77,9 @@ namespace Hanabi
 
         public void Update(IEnumerable<Card> cards, Clue clue)
         {
+            Contract.Requires(cards.Any());
+            Contract.Requires(clue != null);
+
             foreach (Card card in cards)
             {
                 var thought = GetThoughtsAboutCard(card);

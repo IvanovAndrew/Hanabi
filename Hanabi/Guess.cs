@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 
 namespace Hanabi
@@ -28,6 +29,8 @@ namespace Hanabi
 
         public static Guess Create(bool isSpecialGame = false)
         {
+            Contract.Ensures(Contract.Result<Guess>() != null);
+
             return new Guess();
         }
 
@@ -83,6 +86,12 @@ namespace Hanabi
 
         public double GetProbability(IEnumerable<Card> cardsToSearch, IEnumerable<Card> thrown, IEnumerable<Card> otherPlayersCards)
         {
+            Contract.Requires(cardsToSearch.Any());
+            Contract.Requires(otherPlayersCards.Any());
+            
+            Contract.Ensures(0.0 <= Contract.Result<double>());
+            Contract.Ensures(Contract.Result<double>() <= 1.0);
+            
             int[,] thrownMatrix = CardsToMatrixConverter.Encode(thrown);
             int[,] otherPlayersCardsMatrix = CardsToMatrixConverter.Encode(otherPlayersCards);
 

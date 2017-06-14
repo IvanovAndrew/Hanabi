@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 
 namespace Hanabi
 {
@@ -7,7 +8,8 @@ namespace Hanabi
     {
         public static int[,] Encode(IEnumerable<Card> cards, bool isSpecial = false)
         {
-            if (cards == null) throw new ArgumentNullException();
+            Contract.Requires(cards != null);
+            Contract.Ensures(Contract.Result<int[,]>() != null);
 
             int colorCount = isSpecial ? 6 : 5;
 
@@ -23,6 +25,9 @@ namespace Hanabi
 
         public static List<Card> Decode(int[,] matrix, bool isSpecial = false)
         {
+            Contract.Requires(matrix != null);
+            Contract.Ensures(Contract.Result<int[,]>() != null);
+            
             if (matrix == null) throw new ArgumentNullException();
 
             int colorCount = isSpecial ? 6 : 5;

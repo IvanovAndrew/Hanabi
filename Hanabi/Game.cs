@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 
 namespace Hanabi
@@ -48,6 +49,8 @@ namespace Hanabi
 
         void OnDiscarded(Object sender, EventArgs args)
         {
+            Contract.Ensures(Contract.OldValue(Board.ClueCounter) <= Board.ClueCounter);
+
             Board.ClueCounter += 1;
 
             if (!Deck.IsEmpty())
@@ -58,23 +61,32 @@ namespace Hanabi
 
         void OnBlow(Object sender, EventArgs args)
         {
+            Contract.Ensures(Contract.OldValue(Board.BlowCounter) < Board.BlowCounter);
+
             Board.BlowCounter -= 1;
             AddCardToPlayer(sender as Player);
         }
 
         void OnCardAdded(Object sender, EventArgs args)
         {
+            Contract.Ensures(Score > Contract.OldValue(Score));
+
             Score++;
             AddCardToPlayer(sender as Player);
         }
 
         void OnClueGiven(Object sender, EventArgs args)
         {
+            Contract.Ensures(Contract.OldValue(Board.ClueCounter) > Board.ClueCounter);
+
             Board.ClueCounter -= 1;
         }
 
         public void AddCardToPlayer(Player player)
         {
+            Contract.Requires(player != null);
+            Contract.Requires(!Deck.IsEmpty());
+
             Card newCard = Deck.PopCard();
             player.AddCard(newCard);
         }
