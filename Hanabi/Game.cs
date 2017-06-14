@@ -33,13 +33,12 @@ namespace Hanabi
 
             for (int i = 0; i < playersCount; i++)
             {
-                Player player = new Player(this);
-                player.Name = i.ToString();
+                Player player = new Player(this) {Name = i.ToString()};
                 player.CardAdded += OnCardAdded;
                 player.ClueGiven += OnClueGiven;
                 player.Discarded += OnDiscarded;
                 player.Blown += OnBlow;
-                
+
                 Players.Add(player);
             }
 
@@ -64,7 +63,11 @@ namespace Hanabi
             Contract.Ensures(Contract.OldValue(Board.BlowCounter) < Board.BlowCounter);
 
             Board.BlowCounter -= 1;
-            AddCardToPlayer(sender as Player);
+
+            if (!Deck.IsEmpty())
+            {
+                AddCardToPlayer(sender as Player);
+            }
         }
 
         void OnCardAdded(Object sender, EventArgs args)
@@ -72,7 +75,10 @@ namespace Hanabi
             Contract.Ensures(Score > Contract.OldValue(Score));
 
             Score++;
-            AddCardToPlayer(sender as Player);
+            if (!Deck.IsEmpty())
+            {
+                AddCardToPlayer(sender as Player);
+            }
         }
 
         void OnClueGiven(Object sender, EventArgs args)
