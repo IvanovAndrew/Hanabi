@@ -6,7 +6,7 @@ namespace Hanabi
     {
         static void Main(string[] args)
         {
-            var game = new Game(2);
+            var game = new Game(new GameMode(2));
             int score = game.Play();
             Console.WriteLine("Score: " + score);
         }

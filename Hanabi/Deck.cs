@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 
 namespace Hanabi
 {
@@ -21,7 +22,7 @@ namespace Hanabi
 
         protected List<Card> GetCards()
         {
-            List<Card> cards = new List<Card>();
+            var cards = new List<Card>();
         
             var nominals = new List<Number>
             {
@@ -65,7 +66,11 @@ namespace Hanabi
 
         public Card PopCard()
         {
-            return IsEmpty()? null : Cards.Pop();
+            Contract.Ensures(Contract.Result<Card>() != null);
+            
+            if (IsEmpty()) throw new InvalidOperationException("Deck is empty");
+
+            return Cards.Pop();
         }
 
         public bool IsEmpty()

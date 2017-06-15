@@ -8,11 +8,10 @@ namespace Hanabi
     {
         public static int[,] Encode(IEnumerable<Card> cards, bool isSpecial = false)
         {
-            Contract.Requires(cards != null);
+            Contract.Requires<ArgumentNullException>(cards != null);
             Contract.Ensures(Contract.Result<int[,]>() != null);
 
             int colorCount = isSpecial ? 6 : 5;
-
             int[,] result = new int[5, colorCount];
 
             foreach (Card card in cards)
@@ -23,16 +22,14 @@ namespace Hanabi
             return result;
         }
 
-        public static List<Card> Decode(int[,] matrix, bool isSpecial = false)
+        public static IReadOnlyList<Card> Decode(int[,] matrix, bool isSpecial = false)
         {
-            Contract.Requires(matrix != null);
-            Contract.Ensures(Contract.Result<int[,]>() != null);
+            Contract.Requires<ArgumentNullException>(matrix != null);
+            Contract.Ensures(Contract.Result<IReadOnlyList<Card>>() != null);
             
-            if (matrix == null) throw new ArgumentNullException();
-
             int colorCount = isSpecial ? 6 : 5;
 
-            List<Card> result = new List<Card>();
+            var result = new List<Card>();
 
             for (int i = 0; i < 5; i++)
             {

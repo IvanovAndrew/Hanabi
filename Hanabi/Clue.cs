@@ -2,156 +2,156 @@
 {
     public abstract class Clue
     {
-        public abstract void UpdateGuess(Guess guess);
-
         public abstract Clue Revert();
+
+        public abstract void Accept(IClueVisitor visitor);
     }
 
     public class IsValue : Clue
     {
-        private readonly Number _value;
+        public Number Value { get; private set; }
 
         public IsValue(Number value)
         {
-            _value = value;
-        }
-
-        public override void UpdateGuess(Guess guess)
-        {
-            guess.NumberIs(_value);
+            Value = value;
         }
 
         public override Clue Revert()
         {
-            return new IsNotValue(_value);
+            return new IsNotValue(Value);
         }
 
-        private bool EqualsInternal(IsValue clue)
+        private bool EqualsCore(IsValue clue)
         {
-            return _value == clue._value;
+            return Value == clue.Value;
         }
 
         public override bool Equals(object obj)
         {
             if (obj is IsValue)
-                return EqualsInternal((IsValue) obj);
+                return EqualsCore((IsValue) obj);
             return false;
         }
 
         public override int GetHashCode()
         {
-            return _value.GetHashCode() * GetType().GetHashCode();
+            return Value.GetHashCode() * GetType().GetHashCode();
+        }
+
+        public override void Accept(IClueVisitor visitor)
+        {
+            visitor.Update(this);
         }
     }
 
     public class IsNotValue : Clue
     {
-        private readonly Number _value;
+        public Number Value { get; private set; }
 
         public IsNotValue(Number value)
         {
-            _value = value;
-        }
-
-        public override void UpdateGuess(Guess guess)
-        {
-            guess.NumberIsNot(_value);
+            Value = value;
         }
 
         public override Clue Revert()
         {
-            return new IsValue(_value);
+            return new IsValue(Value);
         }
 
-        private bool EqualsInternal(IsNotValue clue)
+        public override void Accept(IClueVisitor visitor)
         {
-            return _value == clue._value;
+            visitor.Update(this);
+        }
+
+        private bool EqualsCore(IsNotValue clue)
+        {
+            return Value == clue.Value;
         }
 
         public override bool Equals(object obj)
         {
             if (obj is IsNotValue)
-                return EqualsInternal((IsNotValue) obj);
+                return EqualsCore((IsNotValue) obj);
             return false;
         }
 
 
         public override int GetHashCode()
         {
-            return _value.GetHashCode() * GetType().GetHashCode();
+            return Value.GetHashCode() * GetType().GetHashCode();
         }
     }
 
     public class IsColor : Clue
     {
-        private readonly Color _color;
+        public Color Color { get; private set; }
 
         public IsColor(Color color)
         {
-            _color = color;
-        }
-
-        public override void UpdateGuess(Guess guess)
-        {
-            guess.ColorIs(_color);
+            Color = color;
         }
 
         public override Clue Revert()
         {
- 	        return new IsNotColor(_color);
+ 	        return new IsNotColor(Color);
         }
 
-        private bool EqualsInternal(IsColor clue)
+        public override void Accept(IClueVisitor visitor)
         {
-            return _color == clue._color;
+            visitor.Update(this);
+        }
+
+        private bool EqualsCore(IsColor clue)
+        {
+            return Color == clue.Color;
         }
 
         public override bool Equals(object obj)
         {
             if (obj is IsColor)
-                return EqualsInternal(obj as IsColor);
+                return EqualsCore(obj as IsColor);
             return false;
         }
 
         public override int GetHashCode()
         {
-            return _color.GetHashCode() * typeof(IsColor).GetHashCode();
+            return Color.GetHashCode() * typeof(IsColor).GetHashCode();
         }
     }
 
     public class IsNotColor : Clue
     {
-        private readonly Color _color;
+        public Color Color { get; private set; }
 
         public IsNotColor(Color color)
         {
-            _color = color;
-        }
-
-        public override void UpdateGuess(Guess guess)
-        {
-            guess.ColorIsNot(_color);
+            Color = color;
         }
 
         public override Clue Revert()
         {
-            return new IsColor(_color);
+            return new IsColor(Color);
+        }
+
+        public override void Accept(IClueVisitor visitor)
+        {
+            visitor.Update(this);
         }
 
         public override int GetHashCode()
         {
-            return _color.GetHashCode() * typeof(IsNotColor).GetHashCode();
+            return Color.GetHashCode() * typeof(IsNotColor).GetHashCode();
         }
 
-        private bool EqualsInternal(IsNotColor clue)
+        private bool EqualsCore(IsNotColor clue)
         {
-            return _color == clue._color;
+            return Color == clue.Color;
         }
 
         public override bool Equals(object obj)
         {
             if (obj is IsNotColor)
-                return EqualsInternal(obj as IsNotColor);
+                return EqualsCore((IsNotColor) obj);
             return false;
         }
     }

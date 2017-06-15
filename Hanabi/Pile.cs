@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
 
@@ -28,8 +29,10 @@ namespace Hanabi
         // на руках или в колоде осталась всего одна такая карта.
         public static IReadOnlyList<Card> GetUniqueCards(FireworkPile fireworkPile, DiscardPile discardPile)
         {
-            Contract.Requires(fireworkPile != null);
-            Contract.Requires(discardPile != null);
+            Contract.Requires<ArgumentNullException>(fireworkPile != null);
+            Contract.Requires<ArgumentNullException>(discardPile != null);
+
+            Contract.Ensures(Contract.Result<IReadOnlyList<Card>>() != null);
 
             int[,] resultMatrix = (int[,])DefaultMatrix.Clone();
 
@@ -71,19 +74,20 @@ namespace Hanabi
 
         public static IReadOnlyList<Card> GetThrownCards(FireworkPile fireworkPile, DiscardPile discardPile)
         {
-            Contract.Requires(fireworkPile != null);
-            Contract.Requires(discardPile != null);
+            Contract.Requires<ArgumentNullException>(fireworkPile != null);
+            Contract.Requires<ArgumentNullException>(discardPile != null);
+            
+            Contract.Ensures(Contract.Result<IReadOnlyList<Card>>() != null);
 
             return fireworkPile.Cards.Concat(discardPile.Cards)
                                     .ToList()
                                     .AsReadOnly();
-
         }
 
         public static IReadOnlyList<Card> GetCardsWhateverToPlay(FireworkPile fireworkPile, DiscardPile discardPile)
         {
-            Contract.Requires(fireworkPile != null);
-            Contract.Requires(discardPile != null);
+            Contract.Requires<ArgumentNullException>(fireworkPile != null);
+            Contract.Requires<ArgumentNullException>(discardPile != null);
 
             Contract.Ensures(Contract.Result<IReadOnlyList<Card>>() != null);
 
@@ -144,7 +148,7 @@ namespace Hanabi
         public int[,] ToMatrix()
         {
             Contract.Ensures(Contract.Result<int[,]>() != null);
-
+            
             return CardsToMatrixConverter.Encode(Cards);
         }
 

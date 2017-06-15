@@ -46,15 +46,15 @@ namespace Hanabi
             BlowCounter = MaxBlowCounter;
         }
 
-        public static Board Create(bool isSpecial = false)
+        public static Board Create(bool isSpecial)
         {
             Contract.Ensures(Contract.Result<Board>() != null);
-            
+
             Board board = new Board
             {
                 FireworkPile = new FireworkPile(),
                 DiscardPile = new DiscardPile(),
-                Deck = Deck.Create()
+                Deck = Deck.Create(isSpecial)
             };
 
             return board;

@@ -44,7 +44,7 @@ namespace Hanabi
             return Color.ToString() + " " + Nominal.ToString();
         }
 
-        public bool EqualsInternal(Card card)
+        private bool EqualsCore(Card card)
         {
             return this.Color == card.Color && this.Nominal == card.Nominal;
         }
@@ -52,7 +52,7 @@ namespace Hanabi
         public override bool Equals(object obj)
         {
             if (!(obj is Card)) return false;
-            return EqualsInternal((Card) obj);
+            return EqualsCore((Card) obj);
         }
 
         public override int GetHashCode()

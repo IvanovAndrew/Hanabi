@@ -78,7 +78,7 @@ namespace HanabiTest
                 {0, 0, 0, 0, 0},
             };
 
-            List<Card> actual = CardsToMatrixConverter.Decode(input);
+            IReadOnlyList<Card> actual = CardsToMatrixConverter.Decode(input);
 
             Assert.IsEmpty(actual);
         }
@@ -95,7 +95,7 @@ namespace HanabiTest
                 {0, 0, 0, 0, 0},
             };
 
-            List<Card> actual = CardsToMatrixConverter.Decode(input);
+            IReadOnlyList<Card> actual = CardsToMatrixConverter.Decode(input);
 
             Assert.AreEqual(1, actual.Count);
 

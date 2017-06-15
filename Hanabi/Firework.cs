@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 
 namespace Hanabi
 {
@@ -7,12 +8,11 @@ namespace Hanabi
     {
         private readonly Stack<Card> _cards = new Stack<Card>();
 
-        protected Color Color;
+        public Color Color;
 
         public bool AddCard(Card card)
         {
-            if (card.Color != Color)
-                throw new ArgumentException();
+            Contract.Requires<ArgumentException>(card.Color == Color);
 
             if (_cards.Count == 0)
             {
@@ -45,7 +45,7 @@ namespace Hanabi
 
         public Card GetNextCard()
         {
-            var lastCard = GetLastCard();
+            Card lastCard = GetLastCard();
             if (lastCard == null)
                 return CreateCard(Number.One);
 

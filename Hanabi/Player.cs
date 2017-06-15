@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
@@ -14,11 +15,6 @@ namespace Hanabi
         public event EventHandler CardAdded;
         public event EventHandler Blown;
 
-        public IReadOnlyList<Card> Hand
-        {
-            get { return _memory.GetHand(); }
-        }
-
         public IReadOnlyList<Guess> Guesses
         {
             get { return _memory.GetGuesses(); }
@@ -32,12 +28,21 @@ namespace Hanabi
 
         private DiscardPile DiscardPile
         {
-            get { return Game.Board.DiscardPile; }
+            get
+            {
+                Contract.Ensures(Contract.Result<DiscardPile>() != null);
+                return Game.Board.DiscardPile;
+            }
         }
 
         private FireworkPile FireworkPile
         {
-            get { return Game.Board.FireworkPile; }
+            get
+            {
+                Contract.Ensures(Contract.Result<FireworkPile>() != null);
+
+                return Game.Board.FireworkPile;
+            }
         }
 
         private int BlowCounter
@@ -52,12 +57,16 @@ namespace Hanabi
 
         private IReadOnlyList<Player> Players
         {
-            get { return Game.GetPlayers(this); }
+            get
+            {
+                Contract.Ensures(Contract.Result<IReadOnlyList<Player>>() != null);
+                return Game.GetPlayers(this);
+            }
         }
 
         public Player(Game game)
         {
-            Contract.Requires(game != null);
+            Contract.Requires<ArgumentNullException>(game != null);
 
             _memory = new Knowledge();
             Game = game;
@@ -65,6 +74,7 @@ namespace Hanabi
 
         public void ReceiveFirstCards(IEnumerable<Card> cards)
         {
+            Contract.Requires<ArgumentNullException>(cards != null);
             Contract.Requires(cards.Any());
 
             foreach (var card in cards)
@@ -73,16 +83,21 @@ namespace Hanabi
             }
         }
 
+        public IReadOnlyList<Card> ShowCards(Player to)
+        {
+            Contract.Requires<ArgumentException>(to != this);
+
+            return _memory.GetHand();
+        }
+
         public void ListenClue(IEnumerable<Card> cards, Clue clue)
         {
+            Contract.Requires<ArgumentNullException>(cards != null);
             Contract.Requires(cards.Any());
-            Contract.Requires(clue != null);
+
+            Contract.Requires<ArgumentNullException>(clue != null);
 
             _memory.Update(cards, clue);
-
-            var otherCards = Hand.Except(cards);
-            Clue revertedClue = clue.Revert();
-            _memory.Update(otherCards, revertedClue);
         }
 
         /// Can I play?
@@ -136,6 +151,7 @@ namespace Hanabi
             }
             else
             {
+                DiscardPile.AddCard(card);
                 RaiseBlownEvent();
             }
         }
@@ -182,12 +198,12 @@ namespace Hanabi
             if (previousClues.Contains(clue))
             {
                 clue = new IsColor(cardToClue.Color);
-                cardsToClue = playerToClue.Hand
+                cardsToClue = playerToClue.ShowCards(this)
                                         .Where(card => card.Color == cardToClue.Color);
             }
             else
             {
-                cardsToClue = playerToClue.Hand
+                cardsToClue = playerToClue.ShowCards(this)
                                         .Where(card => card.Nominal == cardToClue.Nominal);
             }
 
@@ -229,7 +245,7 @@ namespace Hanabi
 
         public void AddCard(Card card)
         {
-            Contract.Requires(card != null);
+            Contract.Requires<ArgumentNullException>(card != null);
 
             _memory.Add(card);
         }
@@ -239,15 +255,16 @@ namespace Hanabi
             // получить список нужных карт
             var neededCards = FireworkPile.GetExpectedCards();
 
-            var thrownCards = Pile.GetThrownCards(FireworkPile, DiscardPile);
-
-            var otherPlayersCards = GetOtherPlayersCards();
+            // получить список карт, которые уже сброшены или находятся на руках у других игроков
+            var excludedCards =
+                Pile.GetThrownCards(FireworkPile, DiscardPile)
+                    .Concat(GetOtherPlayersCards());
 
             List<Card> cardsToPlay = new List<Card>();
             // поискать у себя карты из списка нужных
             foreach (Guess guess in Guesses)
             {
-                var probability = guess.GetProbability(neededCards, thrownCards, otherPlayersCards);
+                var probability = guess.GetProbability(neededCards, excludedCards);
                 if (probability > ProbabilityThreshold)
                 {
                     cardsToPlay.Add(_memory.GetCardByGuess(guess));
@@ -267,9 +284,10 @@ namespace Hanabi
         private List<Card> FindCardsAtPlayer(Player player, IEnumerable<Card> cardsToSearch)
         {
             // надо исключить карты, о которых игрок знает всё.
-            return player.Hand.Intersect(cardsToSearch)
-                .OrderBy(card => card.Nominal)
-                .ToList();
+            return player.ShowCards(this)
+                        .Intersect(cardsToSearch)
+                        .OrderBy(card => card.Nominal)
+                        .ToList();
         }
 
         // нужно выбросить ту карту, которая не нужна.
@@ -279,29 +297,31 @@ namespace Hanabi
 
             var thrownCards = Pile.GetThrownCards(FireworkPile, DiscardPile);
             var otherPlayerCards = GetOtherPlayersCards();
+
+            var excludedCards = thrownCards.Concat(otherPlayerCards);
             // для каждой карты оценим вероятность того, что она - карта - критичная
             // выбросим карту с наименьшей вероятностью
 
             return _memory.GetCardByGuess(
                             Guesses
-                                .OrderBy(guess => guess.GetProbability(uniqueCards, thrownCards, otherPlayerCards))
-                                .First()
-                                    );
+                                .OrderBy(guess => guess.GetProbability(uniqueCards, excludedCards))
+                                .First());
         }
 
         private IReadOnlyList<Card> GetOtherPlayersCards()
         {
             List<Card> result = new List<Card>();
 
-            return Players.Aggregate(result, (current, player) => current.Concat(player.Hand).ToList())
-                        .Where(card => card != null)
-                        .ToList()
-                        .AsReadOnly();
+            return Players
+                    .Aggregate(result, (current, player) => current.Concat(player.ShowCards(this)).ToList())
+                    .Where(card => card != null)
+                    .ToList()
+                    .AsReadOnly();
         }
 
         public bool KnowAllAboutNominalAndColor(Card card)
         {
-            Contract.Requires(card != null);
+            Contract.Requires<ArgumentNullException>(card != null);
 
             return _memory[card].KnowAboutNominalAndColor();
         }
