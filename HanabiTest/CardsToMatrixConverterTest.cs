@@ -8,98 +8,111 @@ namespace HanabiTest
     public class CardsToMatrixConverterTest
     {
         [Test]
-        public void Encode_ZeroCards_ZeroMatrix()
+        public void Encode_ZeroCards_ReturnsZeroMatrix()
         {
-            int[,] expected = new int[5, 5]
+            var deckMatrixProvider = new FakeGameProvider
             {
-                {0, 0, 0, 0, 0},
-                {0, 0, 0, 0, 0},
-                {0, 0, 0, 0, 0},
-                {0, 0, 0, 0, 0},
-                {0, 0, 0, 0, 0},
+                Colors = new List<Color> { Color.Blue, Color.Green, Color.Red },
+                Numbers = new List<Number> { Number.One, Number.Two, Number.Three, }
             };
+
+            Matrix emptyMatrix = deckMatrixProvider.CreateEmptyMatrix();
+
+            CardsToMatrixConverter converter = new CardsToMatrixConverter(deckMatrixProvider);
+
+            Matrix result = converter.Encode(new List<Card>());
+
+            TestHelper.AreMatrixEqual(emptyMatrix, result, deckMatrixProvider);
+        }
+
+        [Test]
+        public void Encode_WhiteOneCard_ReturnsMatrixWithOne()
+        {
+            // arrange
+            var deckMatrixProvider = new FakeGameProvider
+            {
+                Colors = new List<Color> {Color.Yellow, Color.White},
+                Numbers = new List<Number> {Number.One, Number.Two, Number.Three}
+            };
+
+            List<Card> list = new List<Card>{new Card(Number.One, Color.White)};
+
+            CardsToMatrixConverter converter = new CardsToMatrixConverter(deckMatrixProvider);
             
-            int[,] result = CardsToMatrixConverter.Encode(new List<Card>());
+            // act
+            Matrix result = converter.Encode(list);
 
-            TestHelper.AreMatrixEqual(expected, result);
+
+            Matrix expected = deckMatrixProvider.CreateEmptyMatrix();
+            expected[new Card(Color.White, Number.One)] = 1;
+
+            TestHelper.AreMatrixEqual(expected, result, deckMatrixProvider);
         }
 
         [Test]
-        public void Encode_WhiteOneCard_MatrixWithOne()
+        public void Encode_TwoRedFourCard_ReturnsMatrixWithZerosAndTwo()
         {
-            int[,] expected = new int[5, 5]
+            // arrange
+            var deckMatrixProvider = new FakeGameProvider()
             {
-                {0, 0, 0, 0, 1},
-                {0, 0, 0, 0, 0},
-                {0, 0, 0, 0, 0},
-                {0, 0, 0, 0, 0},
-                {0, 0, 0, 0, 0},
-            };
-
-            List<Card> list = new List<Card>{Card.CreateCard(Number.One, Color.White)};
-
-            int[,] result = CardsToMatrixConverter.Encode(list);
-
-            TestHelper.AreMatrixEqual(expected, result);
-        }
-
-        [Test]
-        public void Encode_TwoRedFourCard_MatrixWithZerosAndTwo()
-        {
-            int[,] expected = new int[5, 5]
-            {
-                {0, 0, 0, 0, 0},
-                {0, 0, 0, 0, 0},
-                {0, 0, 0, 0, 0},
-                {0, 0, 2, 0, 0},
-                {0, 0, 0, 0, 0},
+                Colors = new List<Color>() {Color.Yellow, Color.Red},
+                Numbers = new List<Number>() { Number.One, Number.Two, Number.Three, Number.Four},
             };
 
             List<Card> list = new List<Card>
             {
-                Card.CreateCard(Number.Four, Color.Red),
-                Card.CreateCard(Number.Four, Color.Red),
+                new Card(Number.Four, Color.Red),
+                new Card(Number.Four, Color.Red),
             };
 
-            int[,] result = CardsToMatrixConverter.Encode(list);
+            CardsToMatrixConverter converter = new CardsToMatrixConverter(deckMatrixProvider);
+            
+            // act
+            Matrix result = converter.Encode(list);
 
-            TestHelper.AreMatrixEqual(expected, result);
+            // assert
+            Matrix expected = deckMatrixProvider.CreateEmptyMatrix();
+            expected[new Card(Number.Four, Color.Red)] = 2;
+
+            TestHelper.AreMatrixEqual(expected, result, deckMatrixProvider);
         }
 
         [Test]
-        public void Decode_ZeroMatrix_EmptyList()
+        public void Decode_ZeroMatrix_ReturnsEmptyList()
         {
-            int[,] input = new int[5, 5]
+            var deckMatrixProvider = new FakeGameProvider
             {
-                {0, 0, 0, 0, 0},
-                {0, 0, 0, 0, 0},
-                {0, 0, 0, 0, 0},
-                {0, 0, 0, 0, 0},
-                {0, 0, 0, 0, 0},
+                Colors = new List<Color> {Color.Blue, Color.Red, Color.Green},
+                Numbers = new List<Number> {Number.One, Number.Two, Number.Three}
             };
 
-            IReadOnlyList<Card> actual = CardsToMatrixConverter.Decode(input);
+            Matrix zeroMatrix = deckMatrixProvider.CreateEmptyMatrix();
+
+            CardsToMatrixConverter converter = new CardsToMatrixConverter(deckMatrixProvider);
+            
+            IReadOnlyList<Card> actual = converter.Decode(zeroMatrix);
 
             Assert.IsEmpty(actual);
         }
 
         [Test]
-        public void Decode_MatrixWithOne1AndMany0_ListWithOneElement()
+        public void Decode_MatrixWithOne1AndMany0_ReturnsListWithOneElement()
         {
-            int[,] input = new int[5, 5]
+            var deckMatrixProvider = new FakeGameProvider
             {
-                {0, 0, 0, 0, 0},
-                {0, 0, 0, 0, 0},
-                {0, 1, 0, 0, 0},
-                {0, 0, 0, 0, 0},
-                {0, 0, 0, 0, 0},
+                Colors = new List<Color> {Color.Blue, Color.Green, Color.Red},
+                Numbers = new List<Number> {Number.One, Number.Two, Number.Three},
             };
 
-            IReadOnlyList<Card> actual = CardsToMatrixConverter.Decode(input);
+            Matrix input = deckMatrixProvider.CreateEmptyMatrix();
+            input[new Card(Color.Green, Number.Three)] = 1;
+
+            CardsToMatrixConverter converter = new CardsToMatrixConverter(deckMatrixProvider);
+            IReadOnlyList<Card> actual = converter.Decode(input);
 
             Assert.AreEqual(1, actual.Count);
 
-            Card greenThree = Card.CreateCard(Number.Three, Color.Green);
+            Card greenThree = new Card(Number.Three, Color.Green);
             Assert.AreEqual(greenThree, actual[0]);
         }
     }

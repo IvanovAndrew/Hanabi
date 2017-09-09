@@ -7,7 +7,7 @@ namespace Hanabi
 {
     public class ThoughtsAboutCard
     {
-        public Card Card { get; set; }
+        public CardInHand CardInHand { get; set; }
         public Guess Guess { get; set; }
         public List<Clue> Clues { get; set; }
     }
@@ -15,40 +15,37 @@ namespace Hanabi
     public class Knowledge
     {
         private readonly List<ThoughtsAboutCard> _thoughts = new List<ThoughtsAboutCard>();
-        
-        public void Remove(Card card)
+        private readonly IGameProvider _provider;
+        private readonly Player _player;
+
+        public Knowledge(IGameProvider provider, Player player)
+        {
+            _provider = provider;
+            _player = player;
+        }
+
+        public void Remove(CardInHand card)
         {
             Contract.Requires<ArgumentNullException>(card != null);
 
-            var thoughts = _thoughts.Find(thought => Equals(thought.Card, card));
+            var thoughts = _thoughts.Find(thought => Equals(thought.CardInHand, card));
             _thoughts.Remove(thoughts);
         }
 
-        public Guess this[Card card]
-        {
-            get
-            {
-                Contract.Requires<ArgumentNullException>(card != null);
-                Contract.Ensures(Contract.Result<Guess>() != null);
-
-                return _thoughts.Find(thought => Equals(thought.Card, card)).Guess;
-            }
-        }
-
-        public IReadOnlyList<Clue> GetPreviousCluesAboutCard(Card card)
+        public IReadOnlyList<Clue> GetPreviousCluesAboutCard(CardInHand card)
         {
             Contract.Requires<ArgumentNullException>(card != null);
             Contract.Ensures(Contract.Result<IReadOnlyList<Clue>>() != null);
 
-            return _thoughts.Find(thought => Equals(thought.Card, card)).Clues.AsReadOnly();
+            return _thoughts.Find(thought => Equals(thought.CardInHand, card)).Clues.AsReadOnly();
         }
 
-        public IReadOnlyList<Card> GetHand()
+        public IReadOnlyList<CardInHand> GetHand()
         {
-            Contract.Ensures(Contract.Result<IReadOnlyList<Card>>() != null);
-            Contract.Ensures(Contract.Result<IReadOnlyList<Card>>().Any());
+            Contract.Ensures(Contract.Result<IReadOnlyList<CardInHand>>() != null);
+            Contract.Ensures(Contract.Result<IReadOnlyList<CardInHand>>().Any());
             
-            return _thoughts.Select(thought => thought.Card).ToList().AsReadOnly();
+            return _thoughts.Select(thought => thought.CardInHand).ToList().AsReadOnly();
         }
 
         public IReadOnlyList<Guess> GetGuesses()
@@ -59,56 +56,70 @@ namespace Hanabi
             return _thoughts.Select(thoughts => thoughts.Guess).ToList().AsReadOnly();
         }
 
-        public void Add(Card card)
+        public CardInHand Add(Card card)
         {
             Contract.Requires<ArgumentNullException>(card != null);
             
             var newThought = new ThoughtsAboutCard
                         {
-                            Card = card, 
-                            Guess = Guess.Create(), 
+                            CardInHand = new CardInHand(card, _player), 
+                            Guess = new Guess(_provider), 
                             Clues = new List<Clue>()
                         };
             _thoughts.Add(newThought);
+
+            return newThought.CardInHand;
         }
 
-        public Card GetCardByGuess(Guess guess)
+        public CardInHand GetCardByGuess(Guess guess)
         {
             Contract.Requires<ArgumentNullException>(guess != null);
-            Contract.Ensures(Contract.Result<Card>() != null);
+            Contract.Ensures(Contract.Result<CardInHand>() != null);
 
-            return _thoughts.Find(thought => thought.Guess == guess).Card;
+            return _thoughts.Find(thought => thought.Guess == guess).CardInHand;
         }
 
-        private ThoughtsAboutCard GetThoughtsAboutCard(Card card)
+        private ThoughtsAboutCard GetThoughtsAboutCard(CardInHand card)
         {
-            return _thoughts.Find(thought => Equals(thought.Card, card));
+            return _thoughts.Find(thought => Equals(thought.CardInHand, card));
         }
 
-        public void Update(IEnumerable<Card> cards, Clue clue)
+        public void Update(IEnumerable<CardInHand> cards, Clue clue)
         {
             Contract.Requires<ArgumentNullException>(cards != null);
             Contract.Requires(cards.Any());
 
             Contract.Requires<ArgumentNullException>(clue != null);
 
-            foreach (Card card in cards)
+            foreach (CardInHand card in cards)
             {
-                var thought = GetThoughtsAboutCard(card);
-                thought.Clues.Add(clue);
-
-                clue.Accept(thought.Guess);
+                ApplyClue(card, clue);
             }
 
             Clue revertedClue = clue.Revert();
-            var otherCards = _thoughts.Select(thought => thought.Card)
+            var otherCards = _thoughts.Select(thought => thought.CardInHand)
                 .Except(cards);
 
-            foreach (var otherCard in otherCards)
+            foreach (CardInHand otherCard in otherCards)
             {
-                var thought = GetThoughtsAboutCard(otherCard);
-                revertedClue.Accept(thought.Guess);
+                ApplyClue(otherCard, revertedClue);
             }
+        }
+
+        private void ApplyClue(CardInHand card, Clue clue)
+        {
+            var thought = GetThoughtsAboutCard(card);
+            thought.Clues.Add(clue);
+
+            clue.Accept(thought.Guess);
+        }
+
+        public Guess GetGuessAboutCard(CardInHand card)
+        {
+            Contract.Requires<ArgumentNullException>(card != null);
+            Contract.Ensures(Contract.Result<Guess>() != null);
+
+            return _thoughts.Find(thought => Equals(thought.CardInHand, card)).Guess;
         }
     }
 }

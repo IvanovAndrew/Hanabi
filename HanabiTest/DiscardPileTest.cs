@@ -1,4 +1,5 @@
-﻿using Hanabi;
+﻿using System.Collections.Generic;
+using Hanabi;
 using NUnit.Framework;
 
 namespace HanabiTest
@@ -7,40 +8,19 @@ namespace HanabiTest
     public class DiscardPileTest
     {
         [Test]
-        public void ToMatrix_EmptyPile_ZeroMatrix()
+        public void AddCard_Always_ReturnsTrue()
         {
-            DiscardPile pile = new DiscardPile();
-            int[,] actual = pile.ToMatrix();
-
-            int[,] expected = new int[5, 5]
+            IGameProvider provider = new FakeGameProvider()
             {
-                {0, 0, 0, 0, 0},
-                {0, 0, 0, 0, 0},
-                {0, 0, 0, 0, 0},
-                {0, 0, 0, 0, 0},
-                {0, 0, 0, 0, 0},
+                Colors = new List<Color>() {Color.Blue, Color.Green, Color.Red, Color.White},
+                Numbers = new List<Number> {Number.One, Number.Two, Number.Three, Number.Four},
             };
+            var discardPile = new DiscardPile(provider);
 
-            TestHelper.AreMatrixEqual(expected, actual);
-        }
+            var blueThreeCard = new Card(Color.Blue, Number.Three);
 
-        [Test]
-        public void ToMatrix_PileWithBlueOneCard_OnlyOne()
-        {
-            DiscardPile discardPile = new DiscardPile();
-            discardPile.AddCard(new BlueCard(Number.One));
-
-            int[,] actual = discardPile.ToMatrix();
-
-            int[,] expected = new int[5, 5]
-            {
-                {1, 0, 0, 0, 0},
-                {0, 0, 0, 0, 0},
-                {0, 0, 0, 0, 0},
-                {0, 0, 0, 0, 0},
-                {0, 0, 0, 0, 0},
-            };
-            TestHelper.AreMatrixEqual(expected, actual);
+            bool added = discardPile.AddCard(blueThreeCard);
+            Assert.IsTrue(added);
         }
     }
 }

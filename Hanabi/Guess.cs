@@ -7,131 +7,120 @@ namespace Hanabi
 {
     public class Guess : IClueVisitor
     {
-        const int NumberCount = 5;
-        const int ColorCount = 5;
-        
-        public int[,] Matrix;
-        private readonly int[,] _defaultmatrix;
+        private readonly IGameProvider _provider;
+        private readonly Matrix _matrix;
+        private readonly CardsToMatrixConverter _converter;
 
-        private Guess()
+        public Guess(IGameProvider provider)
         {
-            _defaultmatrix = new int[NumberCount, ColorCount]
-            {
-                {3,3,3,3,3},
-                {2,2,2,2,2},
-                {2,2,2,2,2},
-                {2,2,2,2,2},
-                {1,1,1,1,1},
-            };
-
-            Matrix = _defaultmatrix;
+            _provider = provider;
+            _converter = new CardsToMatrixConverter(provider);
+            _matrix = provider.CreateFullDeckMatrix();
         }
 
-        public static Guess Create(bool isSpecialGame = false)
+        public bool Visit(IsColor clue)
         {
-            Contract.Ensures(Contract.Result<Guess>() != null);
-
-            return new Guess();
-        }
-
-        public void Update(IsColor clue)
-        {
-            int column = (int)clue.Color;
-
-            for (int c = 0; c < ColorCount; c++)
+            foreach (var color in _provider.Colors)
             {
-                if (c == column) continue;
+                if (color == clue.Color) continue;
 
-                for (int row = 0; row < NumberCount; row++)
+                foreach (Number number in _provider.Numbers)
                 {
-                    Matrix[row, c] = 0;
+                    _matrix[number, color] = 0;
                 }
             }
+
+            return true;
         }
 
-        public void Update(IsNotColor clue)
+        public bool Visit(IsNotColor clue)
         {
-            int column = (int) clue.Color;
-
-            for (int i = 0; i < NumberCount; i++)
+            foreach (var number in _provider.Numbers)
             {
-                Matrix[i, column] = 0;
+                _matrix[number, clue.Color] = 0;
             }
+            
+            return true;
         }
 
-        public void Update(IsValue clue)
+        public bool Visit(IsNominal clue)
         {
-            int row = (int)clue.Value;
-
-            for (int n = 0; n < NumberCount; n++)
+            foreach (var number in _provider.Numbers)
             {
-                if (n == row) continue;
+                if (clue.Nominal == number) continue;
 
-                for (int c = 0; c < ColorCount; c++)
+                foreach (var color in _provider.Colors)
                 {
-                    Matrix[n, c] = 0;
+                    _matrix[number, color] = 0;
                 }
             }
+
+            return true;
         }
 
-        public void Update(IsNotValue clue)
+        public bool Visit(IsNotNominal clue)
         {
-            int row = (int)clue.Value;
-
-            for (int c = 0; c < NumberCount; c++)
+            foreach (var color in _provider.Colors)
             {
-                Matrix[row, c] = 0;
+                _matrix[clue.Nominal, color] = 0;
             }
+
+            return true;
         }
 
+        /// <summary>
+        /// P (card in {cardsToSearch})
+        /// </summary>
+        /// <param name="cardsToSearch"></param>
+        /// <param name="excludedCards"></param>
+        /// <returns></returns>
         public double GetProbability(IEnumerable<Card> cardsToSearch, IEnumerable<Card> excludedCards)
         {
             Contract.Requires<ArgumentNullException>(cardsToSearch != null);
-            Contract.Requires(cardsToSearch.Any());
+            Contract.Requires<ArgumentException>(cardsToSearch.Any());
 
             Contract.Requires<ArgumentNullException>(excludedCards != null);
-            Contract.Requires(excludedCards.Any());
 
             Contract.Ensures(0.0 <= Contract.Result<double>());
             Contract.Ensures(Contract.Result<double>() <= 1.0);
 
-            int[,] excludedCardsMatrix = CardsToMatrixConverter.Encode(excludedCards);
+            Matrix excludedCardsMatrix = _converter.Encode(excludedCards);
 
-            int[,] guessMatrix = GetCorrectedGuess(excludedCardsMatrix);
+            Matrix guessMatrix = GetCorrectedGuess(excludedCardsMatrix);
 
             int positiveWays =
-                cardsToSearch.Sum(card => guessMatrix[(int)card.Nominal, (int)card.Color]);
+                cardsToSearch.Sum(card => guessMatrix[card.Nominal, card.Color]);
 
             int allWays = 0;
-            for (int i = 0; i < NumberCount; i++)
+            foreach (Number number in _provider.Numbers)
             {
-                for (int j = 0; j < ColorCount; j++)
+                foreach (var color in _provider.Colors)
                 {
-                    allWays += guessMatrix[i, j];
+                    allWays += guessMatrix[number, color];
                 }
             }
 
             return positiveWays / (double) allWays;
         }
 
-        private int[,] GetCorrectedGuess(int[,] excludedCards)
+        private Matrix GetCorrectedGuess(Matrix excludedCards)
         {
-            int[,] situation = new int[NumberCount, ColorCount];
+            Matrix situation = _provider.CreateEmptyMatrix();
 
-            for (int i = 0; i < NumberCount; i++)
+            foreach (var number in _provider.Numbers)
             {
-                for (int j = 0; j < ColorCount; j++)
+                foreach (var color in _provider.Colors)
                 {
-                    situation[i, j] = Math.Max(Matrix[i, j] - excludedCards[i, j], 0);
+                    situation[number, color] = Math.Max(_matrix[number, color] - excludedCards[number, color], 0);
                 }
             }
-
+            
             return situation;
         }
 
         public bool KnowAboutNominalAndColor()
         {
-            return CardsToMatrixConverter.Decode(Matrix)
+            return _converter.Decode(_matrix)
                         .Distinct()
                         .ToList().Count == 1;
         }

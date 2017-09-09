@@ -76,6 +76,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="log4net, Version=2.0.8.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
+      <HintPath>..\packages\log4net.2.0.8\lib\net45-full\log4net.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -86,25 +90,34 @@
   <ItemGroup>
     <Compile Include="Board.cs" />
     <Compile Include="Card.cs" />
+    <Compile Include="CardInHand.cs" />
     <Compile Include="CardsToMatrixConverter.cs" />
     <Compile Include="Clue.cs" />
+    <Compile Include="ClueAboutNominalVisitor.cs" />
     <Compile Include="ClueCandidate.cs" />
     <Compile Include="Deck.cs" />
     <Compile Include="DiscardPile.cs" />
-    <Compile Include="Firework.cs" />
+    <Compile Include="ExtendedGameProvider.cs" />
     <Compile Include="FireworkPile.cs" />
     <Compile Include="Game.cs" />
-    <Compile Include="GameMode.cs" />
+    <Compile Include="HanabiException.cs" />
+    <Compile Include="IGameProvider.cs" />
     <Compile Include="Guess.cs" />
     <Compile Include="IClueVisitor.cs" />
     <Compile Include="Knowledge.cs" />
+    <Compile Include="LogClueVisitor.cs" />
+    <Compile Include="Logger.cs" />
+    <Compile Include="Matrix.cs" />
+    <Compile Include="GameProvider.cs" />
     <Compile Include="Pile.cs" />
+    <Compile Include="PilesAnalyzer.cs" />
     <Compile Include="Player.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -1,52 +1,32 @@
 ﻿using System;
+using System.Diagnostics.Contracts;
 
 namespace Hanabi
 {
-    public abstract class Card
+    public class Card
     {
-        public readonly Number Nominal;
-        public abstract Color Color {get;}
+        public Number Nominal { get; private set; }
+        public Color Color {get; private set; }
 
-        protected Card(Number number)
+        public Card(Number number, Color color) : this(color, number)
         {
-            Nominal = number;
+            
         }
 
-        public static Card CreateCard(Number nominal, Color color)
+        public Card(Color color, Number number)
         {
-            switch (color)
-            {
-                case Color.Blue:
-                    return new BlueCard(nominal);
-
-                case Color.Green:
-                    return new GreenCard(nominal);
-
-                case Color.Red:
-                    return new RedCard(nominal);
-
-                case Color.White:
-                    return new WhiteCard(nominal);
-
-                case Color.Yellow:
-                    return new YellowCard(nominal);
-
-                case Color.Multicolor:
-                    return new MulticolorCard(nominal);
-
-                default:
-                    throw new ArgumentException("Unknown color");
-            }
+            Nominal = number;
+            Color = color;
         }
 
         public override String ToString()
         {
-            return Color.ToString() + " " + Nominal.ToString();
+            return String.Format("{0} {1}", Color, Nominal);
         }
 
         private bool EqualsCore(Card card)
         {
-            return this.Color == card.Color && this.Nominal == card.Nominal;
+            return Color == card.Color && Nominal == card.Nominal;
         }
 
         public override bool Equals(object obj)
@@ -57,7 +37,30 @@ namespace Hanabi
 
         public override int GetHashCode()
         {
-            return Nominal.GetHashCode() * 27 + Color.GetHashCode() * 13;
+            unchecked
+            {
+                return ((int) Nominal * 397) ^ (int) Color;
+            }
+        }
+
+
+        public static Card GetCardInFireworkAfter(Card card)
+        {
+            Contract.Requires<ArgumentNullException>(card != null);
+
+            Number? nextNumber = card.Nominal.GetNextNumber();
+
+            return nextNumber != null ? new Card(nextNumber.Value, card.Color) : null;
+        }
+
+        
+        public static Card GetCardInFireworkBefore(Card card)
+        {
+            Contract.Requires<ArgumentNullException>(card != null);
+
+            Number? previousNumber = card.Nominal.GetPreviousNumber();
+
+            return previousNumber != null ? new Card(previousNumber.Value, card.Color) : null;
         }
     }
 
@@ -70,87 +73,30 @@ namespace Hanabi
         Five = 4
     }
 
+    public static class NumberExtension
+    {
+        public static Number? GetNextNumber(this Number number)
+        {
+            if (number == Number.Five) return null;
+
+            return (Number) ((int) number + 1);
+        }
+
+        public static Number? GetPreviousNumber(this Number number)
+        {
+            if (number == Number.One) return null;
+
+            return (Number) ((int) number - 1);
+        }
+    }
+
     public enum Color
     {
-        Blue = 0,
-        Green = 1,
-        Red = 2,
-        Yellow = 3,
-        White = 4,
-        Multicolor = 5,
-    }
-
-    public class YellowCard : Card
-    {
-        public override Color Color
-        {
-	        get { return Color.Yellow; }
-        }
-
-        public YellowCard(Number number) : base(number)
-        {
-            
-        }
-    }
-
-    public class RedCard : Card
-    {
-        public override Color Color
-        {
-	        get { return Color.Red; }
-        }
-
-        public RedCard(Number number) : base(number)
-        {
-            
-        }
-    }
-
-    public class BlueCard : Card
-    {
-        public override Color Color
-        {
-            get { return Color.Blue; }
-        }
-
-        public BlueCard(Number number) : base(number)
-        {
-        }
-    }
-
-    public class GreenCard : Card 
-    {
-        public override Color Color
-        {
-	        get { return Color.Green; }
-        }
-
-        public GreenCard(Number number) : base(number)
-        {
-        }
-    }
-
-    public class WhiteCard : Card
-    {
-        public override Color Color
-        {
-	        get { return Color.White; }
-        }
-
-        public WhiteCard(Number number) : base(number)
-        {
-        }
-    }
-
-    public class MulticolorCard : Card
-    {
-        public override Color Color
-        {
-            get { return Color.Multicolor; }
-        }
-
-        public MulticolorCard(Number number) : base(number)
-        {
-        }
+        Blue,
+        Green,
+        Red,
+        Yellow,
+        White,
+        Multicolor,
     }
 }

@@ -4,81 +4,97 @@
     {
         public abstract Clue Revert();
 
-        public abstract void Accept(IClueVisitor visitor);
+        public abstract bool Accept(IClueVisitor visitor);
+
+        public abstract bool IsConcreteClue();
     }
 
-    public class IsValue : Clue
+    public class IsNominal : Clue
     {
-        public Number Value { get; private set; }
+        public Number Nominal { get; private set; }
 
-        public IsValue(Number value)
+        public IsNominal(Number nominal)
         {
-            Value = value;
+            Nominal = nominal;
         }
 
         public override Clue Revert()
         {
-            return new IsNotValue(Value);
+            return new IsNotNominal(Nominal);
         }
 
-        private bool EqualsCore(IsValue clue)
+        private bool EqualsCore(IsNominal clue)
         {
-            return Value == clue.Value;
+            return Nominal == clue.Nominal;
         }
 
         public override bool Equals(object obj)
         {
-            if (obj is IsValue)
-                return EqualsCore((IsValue) obj);
+            if (obj is IsNominal)
+                return EqualsCore((IsNominal) obj);
             return false;
         }
 
         public override int GetHashCode()
         {
-            return Value.GetHashCode() * GetType().GetHashCode();
+            return Nominal.GetHashCode();
         }
 
-        public override void Accept(IClueVisitor visitor)
+        public override bool Accept(IClueVisitor visitor)
         {
-            visitor.Update(this);
+            return visitor.Visit(this);
+        }
+
+        public override bool IsConcreteClue()
+        {
+            return true;
+        }
+
+        public override string ToString()
+        {
+            return Nominal.ToString();
         }
     }
 
-    public class IsNotValue : Clue
+    public class IsNotNominal : Clue
     {
-        public Number Value { get; private set; }
+        public Number Nominal { get; private set; }
 
-        public IsNotValue(Number value)
+        public IsNotNominal(Number nominal)
         {
-            Value = value;
+            Nominal = nominal;
         }
 
         public override Clue Revert()
         {
-            return new IsValue(Value);
+            return new IsNominal(Nominal);
         }
 
-        public override void Accept(IClueVisitor visitor)
+        public override bool Accept(IClueVisitor visitor)
         {
-            visitor.Update(this);
+            return visitor.Visit(this);
         }
 
-        private bool EqualsCore(IsNotValue clue)
+        private bool EqualsCore(IsNotNominal clue)
         {
-            return Value == clue.Value;
+            return Nominal == clue.Nominal;
         }
 
         public override bool Equals(object obj)
         {
-            if (obj is IsNotValue)
-                return EqualsCore((IsNotValue) obj);
+            if (obj is IsNotNominal)
+                return EqualsCore((IsNotNominal) obj);
             return false;
         }
 
+        public override bool IsConcreteClue()
+        {
+            return false;
+        }
 
         public override int GetHashCode()
         {
-            return Value.GetHashCode() * GetType().GetHashCode();
+            return Nominal.GetHashCode();
         }
     }
 
@@ -96,9 +112,9 @@
  	        return new IsNotColor(Color);
         }
 
-        public override void Accept(IClueVisitor visitor)
+        public override bool Accept(IClueVisitor visitor)
         {
-            visitor.Update(this);
+            return visitor.Visit(this);
         }
 
         private bool EqualsCore(IsColor clue)
@@ -115,7 +131,17 @@
 
         public override int GetHashCode()
         {
-            return Color.GetHashCode() * typeof(IsColor).GetHashCode();
+            return Color.GetHashCode();
+        }
+
+        public override bool IsConcreteClue()
+        {
+            return true;
+        }
+
+        public override string ToString()
+        {
+            return Color.ToString();
         }
     }
 
@@ -133,19 +159,24 @@
             return new IsColor(Color);
         }
 
-        public override void Accept(IClueVisitor visitor)
+        public override bool Accept(IClueVisitor visitor)
         {
-            visitor.Update(this);
+            return visitor.Visit(this);
         }
 
         public override int GetHashCode()
         {
-            return Color.GetHashCode() * typeof(IsNotColor).GetHashCode();
+            return Color.GetHashCode();
         }
 
         private bool EqualsCore(IsNotColor clue)
         {
             return Color == clue.Color;
+        }
+
+        public override bool IsConcreteClue()
+        {
+            return false;
         }
 
         public override bool Equals(object obj)

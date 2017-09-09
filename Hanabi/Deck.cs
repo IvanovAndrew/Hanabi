@@ -6,54 +6,21 @@ namespace Hanabi
 {
     public class Deck
     {
-        protected Stack<Card> Cards;
+        private Stack<Card> _cards;
 
         private static readonly Random Random = new Random();
 
-        public static Deck Create(bool extended = false)
+        public Deck(IEnumerable<Card> cards)
         {
-            return extended ? new ExtendedDeck() : new Deck();
-        }
-        
-        protected Deck()
-        {
-            Cards = new Stack<Card>(GetCards());
-        }
+            Contract.Requires<ArgumentNullException>(cards != null);
 
-        protected List<Card> GetCards()
-        {
-            var cards = new List<Card>();
-        
-            var nominals = new List<Number>
-            {
-                Number.One,
-                Number.One,
-                Number.One,
-                Number.Two,
-                Number.Two,
-                Number.Three,
-                Number.Three,
-                Number.Four,
-                Number.Four,
-                Number.Five,
-            };
-
-            foreach (var nominal in nominals)
-            {
-                cards.Add(new BlueCard (nominal));
-                cards.Add(new GreenCard (nominal));
-                cards.Add(new RedCard (nominal));
-                cards.Add(new WhiteCard (nominal));
-                cards.Add(new YellowCard (nominal));
-            }
-
-            return cards;
+            _cards = new Stack<Card>(cards);
         }
 
         public void Shuffle()
         {
-            var cards = Cards.ToArray();
-            for (int n = Cards.Count - 1; n > 0; --n)
+            var cards = _cards.ToArray();
+            for (int n = _cards.Count - 1; n > 0; --n)
             {
                 int k = Random.Next(n + 1);
                 Card temp = cards[n];
@@ -61,7 +28,7 @@ namespace Hanabi
                 cards[k] = temp;
             }
 
-            Cards = new Stack<Card>(cards);
+            _cards = new Stack<Card>(cards);
         }
 
         public Card PopCard()
@@ -70,27 +37,12 @@ namespace Hanabi
             
             if (IsEmpty()) throw new InvalidOperationException("Deck is empty");
 
-            return Cards.Pop();
+            return _cards.Pop();
         }
 
         public bool IsEmpty()
         {
-            return Cards.Count == 0;
-        }
-    }
-
-    public class ExtendedDeck : Deck
-    {
-        internal ExtendedDeck()
-        {
-            var usualCards = GetCards();
-            usualCards.Add(new MulticolorCard(Number.One));
-            usualCards.Add(new MulticolorCard(Number.Two));
-            usualCards.Add(new MulticolorCard(Number.Three));
-            usualCards.Add(new MulticolorCard(Number.Four));
-            usualCards.Add(new MulticolorCard(Number.Five));
-
-            Cards = new Stack<Card>(usualCards);
+            return _cards.Count == 0;
         }
     }
 }

@@ -2,10 +2,10 @@
 {
     public interface IClueVisitor
     {
-        void Update(IsValue clue);
-        void Update(IsNotValue clue);
+        bool Visit(IsNominal clue);
+        bool Visit(IsNotNominal clue);
 
-        void Update(IsColor clue);
-        void Update(IsNotColor clue);
+        bool Visit(IsColor clue);
+        bool Visit(IsNotColor clue);
     }
 }

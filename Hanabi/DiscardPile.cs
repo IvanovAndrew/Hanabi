@@ -4,8 +4,12 @@
     {
         public override bool AddCard(Card card)
         {
-            _cards.Add(card);
+            Matrix[card]++;
             return true;
+        }
+
+        public DiscardPile(IGameProvider provider) : base(provider)
+        {
         }
     }
 }

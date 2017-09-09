@@ -1,5 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using Hanabi;
 
@@ -8,67 +8,123 @@ namespace HanabiTest
     [TestFixture]
     public class FireworkPileTest
     {
+        #region AddCard test methods
+
         [Test]
-        public void AddCard_AddGreenOneToEmptyFireworkPile_Added()
+        public void AddCard_AddGreenOneToEmptyFireworkPile_ReturnsTrue()
         {
-            var pile = new FireworkPile();
-            var greenOneCard = new GreenCard(Number.One);
-            
+            IGameProvider provider = new FakeGameProvider()
+            {
+                Colors = new List<Color>{Color.Green, Color.Red},
+                Numbers = new List<Number> { Number.One, Number.Two}
+            };
+            var pile = new FireworkPile(provider);
+            var greenOneCard = new Card(Color.Green, Number.One);
+
             var added = pile.AddCard(greenOneCard);
             Assert.IsTrue(added);
         }
 
         [Test]
-        public void AddCard_AddWhiteTwoToEmptyFireworkPile_NotAdded()
+        public void AddCard_AddWhiteTwoToEmptyFireworkPile_ReturnsFalse()
         {
-            var pile = new FireworkPile();
-            var whiteTwoCard = new WhiteCard(Number.Two);
+            IGameProvider provider = new FakeGameProvider()
+            {
+                Colors = new List<Color> { Color.Green, Color.Red, Color.White },
+                Numbers = new List<Number> { Number.One, Number.Two }
+            };
+            
+            var pile = new FireworkPile(provider);
+            var whiteTwoCard = new Card(Color.White, Number.Two);
 
             var added = pile.AddCard(whiteTwoCard);
             Assert.IsFalse(added);
         }
 
         [Test]
-        public void ToMatrix_EmptyFireworkPile_ZeroMatrix()
+        public void AddCard_AddWhiteTwoCardToWhiteFireworkWithLastTwo_ReturnsFalse()
         {
-            FireworkPile pile = new FireworkPile();
-            int[,] actual = pile.ToMatrix();
-
-            int[,] expected = new int[5, 5]
+            IGameProvider provider = new FakeGameProvider()
             {
-                {0, 0, 0, 0, 0},
-                {0, 0, 0, 0, 0},
-                {0, 0, 0, 0, 0},
-                {0, 0, 0, 0, 0},
-                {0, 0, 0, 0, 0},
+                Colors = new List<Color> { Color.Green, Color.White },
+                Numbers = new List<Number> { Number.One, Number.Two, Number.Three }
             };
 
-            TestHelper.AreMatrixEqual(expected, actual);
+            var firework = new FireworkPile(provider);
+
+            var whiteOneCard = new Card(Color.White, Number.One);
+            var whiteTwoCard = new Card(Color.White, Number.Two);
+
+            firework.AddCard(whiteOneCard);
+            firework.AddCard(whiteTwoCard);
+
+            var otherWhiteTwoCard = new Card(Color.White, Number.Two);
+            var added = firework.AddCard(otherWhiteTwoCard);
+
+            Assert.IsFalse(added);
         }
 
         [Test]
-        public void ToMatrix_FireworkPileWithBlueOneCardOnly_MatrixWithOne()
+        public void AddCard_AddBlueFourCardToBlueFireworkWithLastThree_ReturnsTrue()
         {
-            FireworkPile pile = new FireworkPile();
-            pile.AddCard(new BlueCard(Number.One));
-            int[,] actual = pile.ToMatrix();
-
-            int[,] expected = new int[5, 5]
+            IGameProvider provider = new FakeGameProvider()
             {
-                {1, 0, 0, 0, 0},
-                {0, 0, 0, 0, 0},
-                {0, 0, 0, 0, 0},
-                {0, 0, 0, 0, 0},
-                {0, 0, 0, 0, 0},
+                Colors = new List<Color> { Color.Blue, Color.Red,} ,
+                Numbers = new List<Number> { Number.One, Number.Two, Number.Three, Number.Four }
+            };
+            var firework = new FireworkPile(provider);
+
+            var blueOneCard = new Card(Color.Blue, Number.One);
+            var blueTwoCard = new Card(Color.Blue, Number.Two);
+            var blueThreeCard = new Card(Color.Blue, Number.Three);
+
+            firework.AddCard(blueOneCard);
+            firework.AddCard(blueTwoCard);
+            firework.AddCard(blueThreeCard);
+
+            var blueFourCard = new Card(Color.Blue, Number.Four);
+            var isAdded = firework.AddCard(blueFourCard);
+
+            Assert.IsTrue(isAdded);
+        }
+
+        #endregion
+
+        #region GetExpectedCards test methods
+
+        [Test]
+        public void GetExpectedCards_FullBlueFirework_ReturnsNullForBlueColor()
+        {
+            IGameProvider provider = new FakeGameProvider()
+            {
+                Colors = new List<Color> {Color.Blue, Color.White},
+                Numbers = new List<Number> {Number.One, Number.Two, Number.Three, Number.Four, Number.Five},
             };
 
-            TestHelper.AreMatrixEqual(expected, actual);
+            var pile = new FireworkPile(provider);
+
+            pile.AddCard(new Card(Color.Blue, Number.One));
+            pile.AddCard(new Card(Color.Blue, Number.Two));
+            pile.AddCard(new Card(Color.Blue, Number.Three));
+            pile.AddCard(new Card(Color.Blue, Number.Four));
+            pile.AddCard(new Card(Color.Blue, Number.Five));
+
+            var nextCards = pile.GetExpectedCards();
+
+            Assert.That(nextCards.All(card => card.Color != Color.Blue));
         }
 
         [Test]
-        public void GetExpectedCards_EmptyFireworkPile_ListWithFiveElements()
+        public void GetExpectedCards_EmptyFireworkPile_ReturnsListWithFiveElements()
         {
-            var fireworkPile = new FireworkPile();
+            IGameProvider provider = new FakeGameProvider()
+            {
+                Colors = new List<Color> {Color.Blue, Color.Green, Color.Red, Color.White, Color.Yellow},
+                Numbers = new List<Number> {Number.One}
+            };
+
+
+            var fireworkPile = new FireworkPile(provider);
 
             IReadOnlyList<Card> actual = fireworkPile.GetExpectedCards();
 
@@ -76,57 +132,117 @@ namespace HanabiTest
         }
 
         [Test]
-        public void GetExpectedCards_FireworkPileWithFullRedFirework_ListWithFourElements()
+        public void GetExpectedCards_BlueFireworkWithLastFour_ReturnsListWithBlueFive()
         {
-            var fireworkPile = new FireworkPile();
-            fireworkPile.AddCard(new RedCard(Number.One));
-            fireworkPile.AddCard(new RedCard(Number.Two));
-            fireworkPile.AddCard(new RedCard(Number.Three));
-            fireworkPile.AddCard(new RedCard(Number.Four));
-            fireworkPile.AddCard(new RedCard(Number.Five));
+            IGameProvider provider = new FakeGameProvider()
+            {
+                Colors = new List<Color> {Color.Blue},
+                Numbers = new List<Number> {Number.One, Number.Two, Number.Three, Number.Four, Number.Five}
+            };
+            var fireworkPile = new FireworkPile(provider);
 
-            IReadOnlyList<Card> actual = fireworkPile.GetExpectedCards();
+            fireworkPile.AddCard(new Card(Color.Blue, Number.One));
+            fireworkPile.AddCard(new Card(Color.Blue, Number.Two));
+            fireworkPile.AddCard(new Card(Color.Blue, Number.Three));
+            fireworkPile.AddCard(new Card(Color.Blue, Number.Four));
 
-            Assert.AreEqual(4, actual.Count);
+            var expectedCards = fireworkPile.GetExpectedCards();
+
+            var blueFiveCard = new Card(Color.Blue, Number.Five);
+
+            Assert.That(expectedCards.Any(card => card.Equals(blueFiveCard)));
         }
 
         [Test]
-        public void GetExpectedCards_FullFireworkPile_EmptyList()
+        public void GetExpectedCards_FireworkPileWithFullRedFirework_ReturnsListWithoutRedCards()
         {
-            var fireworkPile = new FireworkPile();
-            fireworkPile.AddCard(new BlueCard(Number.One));
-            fireworkPile.AddCard(new BlueCard(Number.Two));
-            fireworkPile.AddCard(new BlueCard(Number.Three));
-            fireworkPile.AddCard(new BlueCard(Number.Four));
-            fireworkPile.AddCard(new BlueCard(Number.Five));
+            IGameProvider provider = new FakeGameProvider()
+            {
+                Colors = new List<Color>{Color.Red, Color.Blue},
+                Numbers = new List<Number>{Number.One, Number.Two, Number.Three, Number.Four, Number.Five},
+            };
 
-            fireworkPile.AddCard(new GreenCard(Number.One));
-            fireworkPile.AddCard(new GreenCard(Number.Two));
-            fireworkPile.AddCard(new GreenCard(Number.Three));
-            fireworkPile.AddCard(new GreenCard(Number.Four));
-            fireworkPile.AddCard(new GreenCard(Number.Five));
+            var fireworkPile = new FireworkPile(provider);
 
-            fireworkPile.AddCard(new RedCard(Number.One));
-            fireworkPile.AddCard(new RedCard(Number.Two));
-            fireworkPile.AddCard(new RedCard(Number.Three));
-            fireworkPile.AddCard(new RedCard(Number.Four));
-            fireworkPile.AddCard(new RedCard(Number.Five));
+            fireworkPile.AddCard(new Card(Color.Red, Number.One));
+            fireworkPile.AddCard(new Card(Color.Red, Number.Two));
+            fireworkPile.AddCard(new Card(Color.Red, Number.Three));
+            fireworkPile.AddCard(new Card(Color.Red, Number.Four));
+            fireworkPile.AddCard(new Card(Color.Red, Number.Five));
 
-            fireworkPile.AddCard(new YellowCard(Number.One));
-            fireworkPile.AddCard(new YellowCard(Number.Two));
-            fireworkPile.AddCard(new YellowCard(Number.Three));
-            fireworkPile.AddCard(new YellowCard(Number.Four));
-            fireworkPile.AddCard(new YellowCard(Number.Five));
+            IReadOnlyList<Card> actual = fireworkPile.GetExpectedCards();
 
-            fireworkPile.AddCard(new WhiteCard(Number.One));
-            fireworkPile.AddCard(new WhiteCard(Number.Two));
-            fireworkPile.AddCard(new WhiteCard(Number.Three));
-            fireworkPile.AddCard(new WhiteCard(Number.Four));
-            fireworkPile.AddCard(new WhiteCard(Number.Five));
+            Assert.IsTrue(actual.All(card => card.Color != Color.Red));
+        }
+
+        [Test]
+        public void GetExpectedCards_FullFireworkPile_ReturnsEmptyList()
+        {
+            IGameProvider provider = new FakeGameProvider()
+            {
+                Colors = new List<Color> {Color.Blue, Color.Green},
+                Numbers = new List<Number> { Number.One, Number.Two},
+            };
+
+            var fireworkPile = new FireworkPile(provider);
+
+            var blueOneCard = new Card(Color.Blue, Number.One);
+            fireworkPile.AddCard(blueOneCard);
+
+            var blueTwoCard = new Card(Color.Blue, Number.Two);
+            fireworkPile.AddCard(blueTwoCard);
+
+            var greenOneCard = new Card(Color.Green, Number.One);
+            fireworkPile.AddCard(greenOneCard);
+
+            var greenTwoCard = new Card(Color.Green, Number.Two);
+            fireworkPile.AddCard(greenTwoCard);
 
             IReadOnlyList<Card> actual = fireworkPile.GetExpectedCards();
 
             Assert.IsEmpty(actual);
         }
+
+        #endregion
+
+        #region GetLastCards test methods
+
+        [Test]
+        public void GetLastCards_Default_ReturnsEmptyList()
+        {
+            IGameProvider provider = new FakeGameProvider()
+            {
+                Colors = new List<Color> {Color.Blue, Color.Green, Color.Red, Color.White, Color.Yellow},
+                Numbers = new List<Number> {Number.One, Number.Two},
+            };
+
+            var pile = new FireworkPile(provider);
+
+            var nextCards = pile.GetLastCards();
+
+            Assert.IsEmpty(nextCards);
+        }
+
+        [Test]
+        public void GetLastCards_FireworkWithGreenOneCard_ReturnsOneForGreenColor()
+        {
+            IGameProvider provider = new FakeGameProvider()
+            {
+                Colors = new List<Color> {Color.Green, Color.Blue},
+                Numbers = new List<Number> {Number.One, Number.Two},
+            };
+            var pile = new FireworkPile(provider);
+
+            var greenOneCard = new Card(Color.Green, Number.One);
+            pile.AddCard(greenOneCard);
+            
+            var lastCards = pile.GetLastCards();
+
+            var otherGreenOneCard = new Card(Color.Green, Number.One);
+            
+            Assert.Greater(lastCards.Count, 0);
+            Assert.That(lastCards.Any(card => card.Equals(otherGreenOneCard)));
+        }
+        #endregion
     }
 }

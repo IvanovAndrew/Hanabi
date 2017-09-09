@@ -1,19 +1,50 @@
-﻿using NUnit.Framework;
+﻿using System.Collections.Generic;
+using Hanabi;
+using NUnit.Framework;
 
 namespace HanabiTest
 {
+    public class FakeGameProvider : IGameProvider
+    {
+        public Matrix FullDeckMatrix { get; set; }
+        
+        public Matrix CreateEmptyMatrix()
+        {
+            return new Matrix(this);
+        }
+
+        public Matrix CreateFullDeckMatrix()
+        {
+            return FullDeckMatrix;
+        }
+
+        public IReadOnlyList<Color> Colors { get; set; }
+        public IReadOnlyList<Number> Numbers { get; set; }
+        
+        public int ColorToInt(Color color)
+        {
+            for (int i = 0; i < Colors.Count; i++)
+            {
+                if (color == Colors[i]) return i;
+            }
+            return -1;
+        }
+
+        public int GetMaximumScore()
+        {
+            return Numbers.Count * Colors.Count;
+        }
+    }
+
     public static class TestHelper
     {
-        public static void AreMatrixEqual(int[,] expected, int[,] actual)
+        public static void AreMatrixEqual(Matrix expected, Matrix actual, IGameProvider provider)
         {
-            Assert.AreEqual(expected.GetLength(0), actual.GetLength(0));
-            Assert.AreEqual(expected.GetLength(1), actual.GetLength(1));
-
-            for (int i = 0; i < expected.GetLength(0); i++)
+            foreach (var number in provider.Numbers)
             {
-                for (int j = 0; j < expected.GetLength(1); j++)
+                foreach (var color in provider.Colors)
                 {
-                    Assert.AreEqual(expected[i, j], actual[i, j]);
+                    Assert.AreEqual(expected[number, color], actual[number, color]);
                 }
             }
 

@@ -4,45 +4,49 @@ using System.Diagnostics.Contracts;
 
 namespace Hanabi
 {
-    public static class CardsToMatrixConverter
+    public class CardsToMatrixConverter
     {
-        public static int[,] Encode(IEnumerable<Card> cards, bool isSpecial = false)
+        private readonly IGameProvider _provider;
+
+        public CardsToMatrixConverter(IGameProvider provider)
+        {
+            _provider = provider;
+        }
+
+        public Matrix Encode(IEnumerable<Card> cards)
         {
             Contract.Requires<ArgumentNullException>(cards != null);
-            Contract.Ensures(Contract.Result<int[,]>() != null);
+            Contract.Ensures(Contract.Result<Matrix>() != null);
 
-            int colorCount = isSpecial ? 6 : 5;
-            int[,] result = new int[5, colorCount];
+            Matrix result = _provider.CreateEmptyMatrix();
 
             foreach (Card card in cards)
             {
-                result[(int) card.Nominal, (int) card.Color]++;
+                result[card]++;
             }
 
             return result;
         }
 
-        public static IReadOnlyList<Card> Decode(int[,] matrix, bool isSpecial = false)
+        public IReadOnlyList<Card> Decode(Matrix matrix)
         {
             Contract.Requires<ArgumentNullException>(matrix != null);
             Contract.Ensures(Contract.Result<IReadOnlyList<Card>>() != null);
-            
-            int colorCount = isSpecial ? 6 : 5;
 
             var result = new List<Card>();
 
-            for (int i = 0; i < 5; i++)
+            foreach (var number in _provider.Numbers)
             {
-                for (int j = 0; j < colorCount; j++)
+                foreach (var color in _provider.Colors)
                 {
-                    for (int k = 0; k < matrix[i, j]; k++)
+                    for (int i = 0; i < matrix[number, color]; i++)
                     {
-                        result.Add(Card.CreateCard((Number)i, (Color)j));
+                        result.Add(new Card(color, number));
                     }
                 }
             }
 
-            return result;
+            return result.AsReadOnly();
         }
     }
 }

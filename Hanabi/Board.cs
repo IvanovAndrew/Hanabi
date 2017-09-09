@@ -4,10 +4,15 @@ namespace Hanabi
 {
     public class Board
     {
-        public const int MaxClueCounter = 8;
-        public const int MaxBlowCounter = 3;
+        private const int MaxClueCounter = 8;
+        private const int MaxBlowCounter = 3;
 
-        public Deck Deck;
+        private readonly Deck _deck;
+
+        public Deck Deck
+        {
+            get { return _deck; }
+        }
 
         public FireworkPile FireworkPile;
         public DiscardPile DiscardPile;
@@ -40,21 +45,23 @@ namespace Hanabi
             }
         }
 
-        private Board()
+        private Board(Deck deck)
         {
             ClueCounter = MaxClueCounter;
             BlowCounter = MaxBlowCounter;
+            _deck = deck;
         }
 
-        public static Board Create(bool isSpecial)
+        public static Board Create(IGameProvider provider)
         {
             Contract.Ensures(Contract.Result<Board>() != null);
 
-            Board board = new Board
+            var cards = new CardsToMatrixConverter(provider).Decode(provider.CreateFullDeckMatrix());
+
+            Board board = new Board(new Deck(cards))
             {
-                FireworkPile = new FireworkPile(),
-                DiscardPile = new DiscardPile(),
-                Deck = Deck.Create(isSpecial)
+                FireworkPile = new FireworkPile(provider),
+                DiscardPile = new DiscardPile(provider),
             };
 
             return board;

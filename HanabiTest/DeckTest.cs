@@ -1,5 +1,6 @@
-﻿using Hanabi;
-using NUnit;
+﻿using System;
+using System.Collections.Generic;
+using Hanabi;
 using NUnit.Framework;
 
 namespace HanabiTest
@@ -8,36 +9,19 @@ namespace HanabiTest
     public class DeckTest
     {
         [Test]
-        public void Deck_New_NotEmpty()
+        public void IsEmpty_EmptyList_ReturnsTrue()
         {
-            var deck = Deck.Create();
-            Assert.IsFalse(deck.IsEmpty());
-        }
-
-        [Test]
-        public void Deck_Drop50Cards_EmptyDeck()
-        {
-            var deck = Deck.Create();
-            
-            for(int i = 0; i < 50; i++)
-            {
-                deck.PopCard();
-            }
-            
+            var deck = new Deck(new List<Card>());
             Assert.IsTrue(deck.IsEmpty());
         }
 
         [Test]
-        public void ExtendedDeck_Drop55Cards_EmptyDeck()
+        public void PopCard_EmptyDeck_ThrowsInvalidOperationException()
         {
-            var deck = Deck.Create(true);
+            var deck = new Deck(new Card[0]);
+            InvalidOperationException exception = Assert.Catch<InvalidOperationException>(() => deck.PopCard());
 
-            for (int i = 0; i < 55; i++)
-            {
-                deck.PopCard();
-            }
-
-            Assert.IsTrue(deck.IsEmpty());
+            StringAssert.Contains("is empty", exception.Message);
         }
     }
 }
