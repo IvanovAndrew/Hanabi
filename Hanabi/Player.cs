@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
+using Hanabi;
 
 
 namespace Hanabi
@@ -204,7 +205,7 @@ namespace Hanabi
 
             if (added)
             {
-                Logger.Log.InfoFormat("Firework pile:{0}", FireworkPile);
+                Logger.Log.InfoFormat("Firework pile: {0}", FireworkPile);
                 
                 RaiseCardAddedEvent(cardInHand.Card);
             }
@@ -356,6 +357,15 @@ namespace Hanabi
                 }
             }
 
+            // эвристика:
+            // если игрок знает, что у него есть единица, то пусть играет ей.
+            if (cardsToPlay.Count == 0 && BlowCounter > 1)
+            {
+                CardInHand card = GetCardWithNominalOneToPlay();
+                if (card != null)
+                    cardsToPlay.Add(card);
+            }
+
             if (cardsToPlay.Count == 0)
                 return null;
 
@@ -366,23 +376,23 @@ namespace Hanabi
             return cardsToPlay.Last().Card.Nominal == Number.Five ? cardsToPlay.Last() : cardsToPlay.First();
         }
 
-        //private CardInHand GetCardWithNominalOneToPlay()
-        //{
-        //    IClueVisitor clueFinder = new ClueAboutNominalFinder(Number.One);
-        //    // Если мы знаем, что одна из карт -- единица, то ходим ей.
-        //    foreach (var card in _memory.GetHand())
-        //    {
-        //        foreach (var clue in _memory.GetPreviousCluesAboutCard(card))
-        //        {
-        //            if (clue.Accept(clueFinder))
-        //            {
-        //                Logger.Log.InfoFormat("Player {0} finds cards with nominal One", Name);
-        //                return card;
-        //            }
-        //        }
-        //    }
-        //    return null;
-        //}
+        private CardInHand GetCardWithNominalOneToPlay()
+        {
+            IClueVisitor clueFinder = new ClueAboutNominalFinder(Number.One);
+            // Если мы знаем, что одна из карт -- единица, то ходим ей.
+            foreach (var card in _memory.GetHand())
+            {
+                foreach (var clue in _memory.GetPreviousCluesAboutCard(card))
+                {
+                    if (clue.Accept(clueFinder))
+                    {
+                        Logger.Log.InfoFormat("Player {0} finds cards with nominal One", Name);
+                        return card;
+                    }
+                }
+            }
+            return null;
+        }
 
         private List<CardInHand> FindCardsAtPlayer(Player player, IEnumerable<Card> cardsToSearch)
         {
@@ -406,9 +416,9 @@ namespace Hanabi
             var otherPlayerCards = GetOtherPlayersCards();
 
             var excludedCards = thrownCards.Concat(otherPlayerCards.Select(cardInHand => cardInHand.Card));
+            
             // для каждой карты оценим вероятность того, что она - карта - критичная
             // выбросим карту с наименьшей вероятностью
-
             return _memory.GetCardByGuess(
                             Guesses
                                 .OrderBy(guess => guess.GetProbability(uniqueCards, excludedCards))

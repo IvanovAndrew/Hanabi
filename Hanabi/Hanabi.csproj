@@ -93,7 +93,8 @@
     <Compile Include="CardInHand.cs" />
     <Compile Include="CardsToMatrixConverter.cs" />
     <Compile Include="Clue.cs" />
-    <Compile Include="ClueAboutNominalVisitor.cs" />
+    <Compile Include="ClueVisitors\ClueAboutNominalFinder.cs" />
+    <Compile Include="ClueVisitors\ClueAboutNominalVisitor.cs" />
     <Compile Include="ClueCandidate.cs" />
     <Compile Include="Deck.cs" />
     <Compile Include="DiscardPile.cs" />
@@ -103,9 +104,9 @@
     <Compile Include="HanabiException.cs" />
     <Compile Include="IGameProvider.cs" />
     <Compile Include="Guess.cs" />
-    <Compile Include="IClueVisitor.cs" />
+    <Compile Include="ClueVisitors\IClueVisitor.cs" />
     <Compile Include="Knowledge.cs" />
-    <Compile Include="LogClueVisitor.cs" />
+    <Compile Include="ClueVisitors\LogClueVisitor.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="Matrix.cs" />
     <Compile Include="GameProvider.cs" />
@@ -119,6 +120,7 @@
     <None Include="App.config" />
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

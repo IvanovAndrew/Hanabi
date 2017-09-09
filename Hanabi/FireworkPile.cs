@@ -89,7 +89,7 @@ namespace Hanabi
             Func<string, Card, string> func = 
                 (current, card) => String.Format("{0} {1} |", current, card.ToString());
 
-            return GetLastCards().Aggregate("| ", func);
+            return GetLastCards().Aggregate("|", func);
         }
     }
 }
