@@ -32,7 +32,7 @@ namespace Hanabi
             // вычитаем сброшенные карты
             Matrix thrown = _converter.Encode(discardPile.Cards);
 
-            foreach (var number in _provider.Numbers)
+            foreach (var number in _provider.Nominals)
             {
                 foreach (var color in _provider.Colors)
                 {
@@ -45,7 +45,7 @@ namespace Hanabi
             foreach (var color in _provider.Colors)
             {
                 bool wasZero = false;
-                foreach (var number in _provider.Numbers)
+                foreach (var number in _provider.Nominals)
                 {
                     if (!wasZero)
                     {
@@ -62,7 +62,7 @@ namespace Hanabi
             // учтём сыгранные карты
             Matrix played = _converter.Encode(fireworkPile.Cards);
 
-            foreach (var number in _provider.Numbers)
+            foreach (var number in _provider.Nominals)
             {
                 foreach (var color in _provider.Colors)
                 {
@@ -73,7 +73,7 @@ namespace Hanabi
 
             // интересуют только те ячейки, в которых значение 1
             // остальные зануляем
-            foreach (var number in _provider.Numbers)
+            foreach (var number in _provider.Nominals)
             {
                 foreach (var color in _provider.Colors)
                 {
@@ -111,7 +111,7 @@ namespace Hanabi
 
             Matrix played = _converter.Encode(fireworkPile.Cards);
 
-            foreach (var number in _provider.Numbers)
+            foreach (var number in _provider.Nominals)
             {
                 foreach (var color in _provider.Colors)
                 {
@@ -129,7 +129,7 @@ namespace Hanabi
 
             Matrix remain = _provider.CreateFullDeckMatrix();
 
-            foreach (var number in _provider.Numbers)
+            foreach (var number in _provider.Nominals)
             {
                 foreach (var color in _provider.Colors)
                 {
@@ -145,7 +145,7 @@ namespace Hanabi
                 // цвет зафиксирован.
                 // теперь разберёмся с номиналами.
                 bool wasOne = false;
-                foreach (var number in _provider.Numbers)
+                foreach (var number in _provider.Nominals)
                 {
                     if (possibleToPlay[number, color] == 0 && !wasOne) continue;
 

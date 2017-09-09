@@ -82,7 +82,7 @@ namespace Hanabi
 
             Score++;
 
-            if (args.Card.Nominal == Number.Five)
+            if (args.Card.Nominal == Nominal.Five)
             {
                 Board.ClueCounter++;
                 Logger.Log.InfoFormat("Clue counter: {0}", Board.ClueCounter);

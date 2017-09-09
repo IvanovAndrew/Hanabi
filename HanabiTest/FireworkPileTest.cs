@@ -16,10 +16,10 @@ namespace HanabiTest
             IGameProvider provider = new FakeGameProvider()
             {
                 Colors = new List<Color>{Color.Green, Color.Red},
-                Numbers = new List<Number> { Number.One, Number.Two}
+                Nominals = new List<Nominal> { Nominal.One, Nominal.Two}
             };
             var pile = new FireworkPile(provider);
-            var greenOneCard = new Card(Color.Green, Number.One);
+            var greenOneCard = new Card(Color.Green, Nominal.One);
 
             var added = pile.AddCard(greenOneCard);
             Assert.IsTrue(added);
@@ -31,11 +31,11 @@ namespace HanabiTest
             IGameProvider provider = new FakeGameProvider()
             {
                 Colors = new List<Color> { Color.Green, Color.Red, Color.White },
-                Numbers = new List<Number> { Number.One, Number.Two }
+                Nominals = new List<Nominal> { Nominal.One, Nominal.Two }
             };
             
             var pile = new FireworkPile(provider);
-            var whiteTwoCard = new Card(Color.White, Number.Two);
+            var whiteTwoCard = new Card(Color.White, Nominal.Two);
 
             var added = pile.AddCard(whiteTwoCard);
             Assert.IsFalse(added);
@@ -47,18 +47,18 @@ namespace HanabiTest
             IGameProvider provider = new FakeGameProvider()
             {
                 Colors = new List<Color> { Color.Green, Color.White },
-                Numbers = new List<Number> { Number.One, Number.Two, Number.Three }
+                Nominals = new List<Nominal> { Nominal.One, Nominal.Two, Nominal.Three }
             };
 
             var firework = new FireworkPile(provider);
 
-            var whiteOneCard = new Card(Color.White, Number.One);
-            var whiteTwoCard = new Card(Color.White, Number.Two);
+            var whiteOneCard = new Card(Color.White, Nominal.One);
+            var whiteTwoCard = new Card(Color.White, Nominal.Two);
 
             firework.AddCard(whiteOneCard);
             firework.AddCard(whiteTwoCard);
 
-            var otherWhiteTwoCard = new Card(Color.White, Number.Two);
+            var otherWhiteTwoCard = new Card(Color.White, Nominal.Two);
             var added = firework.AddCard(otherWhiteTwoCard);
 
             Assert.IsFalse(added);
@@ -70,19 +70,19 @@ namespace HanabiTest
             IGameProvider provider = new FakeGameProvider()
             {
                 Colors = new List<Color> { Color.Blue, Color.Red,} ,
-                Numbers = new List<Number> { Number.One, Number.Two, Number.Three, Number.Four }
+                Nominals = new List<Nominal> { Nominal.One, Nominal.Two, Nominal.Three, Nominal.Four }
             };
             var firework = new FireworkPile(provider);
 
-            var blueOneCard = new Card(Color.Blue, Number.One);
-            var blueTwoCard = new Card(Color.Blue, Number.Two);
-            var blueThreeCard = new Card(Color.Blue, Number.Three);
+            var blueOneCard = new Card(Color.Blue, Nominal.One);
+            var blueTwoCard = new Card(Color.Blue, Nominal.Two);
+            var blueThreeCard = new Card(Color.Blue, Nominal.Three);
 
             firework.AddCard(blueOneCard);
             firework.AddCard(blueTwoCard);
             firework.AddCard(blueThreeCard);
 
-            var blueFourCard = new Card(Color.Blue, Number.Four);
+            var blueFourCard = new Card(Color.Blue, Nominal.Four);
             var isAdded = firework.AddCard(blueFourCard);
 
             Assert.IsTrue(isAdded);
@@ -98,16 +98,16 @@ namespace HanabiTest
             IGameProvider provider = new FakeGameProvider()
             {
                 Colors = new List<Color> {Color.Blue, Color.White},
-                Numbers = new List<Number> {Number.One, Number.Two, Number.Three, Number.Four, Number.Five},
+                Nominals = new List<Nominal> {Nominal.One, Nominal.Two, Nominal.Three, Nominal.Four, Nominal.Five},
             };
 
             var pile = new FireworkPile(provider);
 
-            pile.AddCard(new Card(Color.Blue, Number.One));
-            pile.AddCard(new Card(Color.Blue, Number.Two));
-            pile.AddCard(new Card(Color.Blue, Number.Three));
-            pile.AddCard(new Card(Color.Blue, Number.Four));
-            pile.AddCard(new Card(Color.Blue, Number.Five));
+            pile.AddCard(new Card(Color.Blue, Nominal.One));
+            pile.AddCard(new Card(Color.Blue, Nominal.Two));
+            pile.AddCard(new Card(Color.Blue, Nominal.Three));
+            pile.AddCard(new Card(Color.Blue, Nominal.Four));
+            pile.AddCard(new Card(Color.Blue, Nominal.Five));
 
             var nextCards = pile.GetExpectedCards();
 
@@ -120,7 +120,7 @@ namespace HanabiTest
             IGameProvider provider = new FakeGameProvider()
             {
                 Colors = new List<Color> {Color.Blue, Color.Green, Color.Red, Color.White, Color.Yellow},
-                Numbers = new List<Number> {Number.One}
+                Nominals = new List<Nominal> {Nominal.One}
             };
 
 
@@ -137,18 +137,18 @@ namespace HanabiTest
             IGameProvider provider = new FakeGameProvider()
             {
                 Colors = new List<Color> {Color.Blue},
-                Numbers = new List<Number> {Number.One, Number.Two, Number.Three, Number.Four, Number.Five}
+                Nominals = new List<Nominal> {Nominal.One, Nominal.Two, Nominal.Three, Nominal.Four, Nominal.Five}
             };
             var fireworkPile = new FireworkPile(provider);
 
-            fireworkPile.AddCard(new Card(Color.Blue, Number.One));
-            fireworkPile.AddCard(new Card(Color.Blue, Number.Two));
-            fireworkPile.AddCard(new Card(Color.Blue, Number.Three));
-            fireworkPile.AddCard(new Card(Color.Blue, Number.Four));
+            fireworkPile.AddCard(new Card(Color.Blue, Nominal.One));
+            fireworkPile.AddCard(new Card(Color.Blue, Nominal.Two));
+            fireworkPile.AddCard(new Card(Color.Blue, Nominal.Three));
+            fireworkPile.AddCard(new Card(Color.Blue, Nominal.Four));
 
             var expectedCards = fireworkPile.GetExpectedCards();
 
-            var blueFiveCard = new Card(Color.Blue, Number.Five);
+            var blueFiveCard = new Card(Color.Blue, Nominal.Five);
 
             Assert.That(expectedCards.Any(card => card.Equals(blueFiveCard)));
         }
@@ -159,16 +159,16 @@ namespace HanabiTest
             IGameProvider provider = new FakeGameProvider()
             {
                 Colors = new List<Color>{Color.Red, Color.Blue},
-                Numbers = new List<Number>{Number.One, Number.Two, Number.Three, Number.Four, Number.Five},
+                Nominals = new List<Nominal>{Nominal.One, Nominal.Two, Nominal.Three, Nominal.Four, Nominal.Five},
             };
 
             var fireworkPile = new FireworkPile(provider);
 
-            fireworkPile.AddCard(new Card(Color.Red, Number.One));
-            fireworkPile.AddCard(new Card(Color.Red, Number.Two));
-            fireworkPile.AddCard(new Card(Color.Red, Number.Three));
-            fireworkPile.AddCard(new Card(Color.Red, Number.Four));
-            fireworkPile.AddCard(new Card(Color.Red, Number.Five));
+            fireworkPile.AddCard(new Card(Color.Red, Nominal.One));
+            fireworkPile.AddCard(new Card(Color.Red, Nominal.Two));
+            fireworkPile.AddCard(new Card(Color.Red, Nominal.Three));
+            fireworkPile.AddCard(new Card(Color.Red, Nominal.Four));
+            fireworkPile.AddCard(new Card(Color.Red, Nominal.Five));
 
             IReadOnlyList<Card> actual = fireworkPile.GetExpectedCards();
 
@@ -181,21 +181,21 @@ namespace HanabiTest
             IGameProvider provider = new FakeGameProvider()
             {
                 Colors = new List<Color> {Color.Blue, Color.Green},
-                Numbers = new List<Number> { Number.One, Number.Two},
+                Nominals = new List<Nominal> { Nominal.One, Nominal.Two},
             };
 
             var fireworkPile = new FireworkPile(provider);
 
-            var blueOneCard = new Card(Color.Blue, Number.One);
+            var blueOneCard = new Card(Color.Blue, Nominal.One);
             fireworkPile.AddCard(blueOneCard);
 
-            var blueTwoCard = new Card(Color.Blue, Number.Two);
+            var blueTwoCard = new Card(Color.Blue, Nominal.Two);
             fireworkPile.AddCard(blueTwoCard);
 
-            var greenOneCard = new Card(Color.Green, Number.One);
+            var greenOneCard = new Card(Color.Green, Nominal.One);
             fireworkPile.AddCard(greenOneCard);
 
-            var greenTwoCard = new Card(Color.Green, Number.Two);
+            var greenTwoCard = new Card(Color.Green, Nominal.Two);
             fireworkPile.AddCard(greenTwoCard);
 
             IReadOnlyList<Card> actual = fireworkPile.GetExpectedCards();
@@ -213,7 +213,7 @@ namespace HanabiTest
             IGameProvider provider = new FakeGameProvider()
             {
                 Colors = new List<Color> {Color.Blue, Color.Green, Color.Red, Color.White, Color.Yellow},
-                Numbers = new List<Number> {Number.One, Number.Two},
+                Nominals = new List<Nominal> {Nominal.One, Nominal.Two},
             };
 
             var pile = new FireworkPile(provider);
@@ -229,16 +229,16 @@ namespace HanabiTest
             IGameProvider provider = new FakeGameProvider()
             {
                 Colors = new List<Color> {Color.Green, Color.Blue},
-                Numbers = new List<Number> {Number.One, Number.Two},
+                Nominals = new List<Nominal> {Nominal.One, Nominal.Two},
             };
             var pile = new FireworkPile(provider);
 
-            var greenOneCard = new Card(Color.Green, Number.One);
+            var greenOneCard = new Card(Color.Green, Nominal.One);
             pile.AddCard(greenOneCard);
             
             var lastCards = pile.GetLastCards();
 
-            var otherGreenOneCard = new Card(Color.Green, Number.One);
+            var otherGreenOneCard = new Card(Color.Green, Nominal.One);
             
             Assert.Greater(lastCards.Count, 0);
             Assert.That(lastCards.Any(card => card.Equals(otherGreenOneCard)));

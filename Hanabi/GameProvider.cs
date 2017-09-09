@@ -19,11 +19,11 @@ namespace Hanabi
             {
                 if (color == Color.Multicolor) continue;
 
-                result[Number.One, color] = 3;
-                result[Number.Two, color] = 2;
-                result[Number.Three, color] = 2;
-                result[Number.Four, color] = 2;
-                result[Number.Five, color] = 1;
+                result[Nominal.One, color] = 3;
+                result[Nominal.Two, color] = 2;
+                result[Nominal.Three, color] = 2;
+                result[Nominal.Four, color] = 2;
+                result[Nominal.Five, color] = 1;
             }
 
             return result;
@@ -31,15 +31,15 @@ namespace Hanabi
 
         public Matrix CreateMatrix(int[,] table)
         {
-            Contract.Requires(table.GetLength(0) == Numbers.Count);
+            Contract.Requires(table.GetLength(0) == Nominals.Count);
             Contract.Requires(table.GetLength(1) == Colors.Count);
 
             Matrix result = CreateEmptyMatrix();
-            for (int i = 0; i < Numbers.Count; i++)
+            for (int i = 0; i < Nominals.Count; i++)
             {
                 for (int j = 0; j < Colors.Count; j++)
                 {
-                    result[(Number) i, Colors[j]] = table[i, j];
+                    result[(Nominal) i, Colors[j]] = table[i, j];
                 }
             }
 
@@ -51,14 +51,14 @@ namespace Hanabi
             get { return new[] { Color.Blue, Color.Green, Color.Red, Color.White, Color.Yellow }; }
         }
 
-        public IReadOnlyList<Number> Numbers
+        public IReadOnlyList<Nominal> Nominals
         {
-            get { return new[] { Number.One, Number.Two, Number.Three, Number.Four, Number.Five, }; }
+            get { return new[] { Nominal.One, Nominal.Two, Nominal.Three, Nominal.Four, Nominal.Five, }; }
         }
 
         public int GetMaximumScore()
         {
-            return Colors.Count * Numbers.Count;
+            return Colors.Count * Nominals.Count;
         }
 
         public int ColorToInt(Color color)

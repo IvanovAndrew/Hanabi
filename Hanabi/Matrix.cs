@@ -11,13 +11,13 @@ namespace Hanabi
         public Matrix(IGameProvider provider)
         {
             _gameProvider = provider;
-            _matrix = new int[provider.Numbers.Count, provider.Colors.Count];
+            _matrix = new int[provider.Nominals.Count, provider.Colors.Count];
         }
 
-        public int this[Number number, Color color]
+        public int this[Nominal nominal, Color color]
         {
-            get { return _matrix[(int) number, _gameProvider.ColorToInt(color)]; }
-            set { _matrix[(int)number, _gameProvider.ColorToInt(color)] = value; } 
+            get { return _matrix[(int) nominal, _gameProvider.ColorToInt(color)]; }
+            set { _matrix[(int)nominal, _gameProvider.ColorToInt(color)] = value; } 
         }
 
         public int this[Card card]

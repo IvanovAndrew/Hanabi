@@ -2,30 +2,30 @@
 {
     public class ClueAboutNominalVisitor : IClueVisitor
     {
-        private Number? _nominal;
+        private Nominal? _nominal;
 
-        public Number? Nominal
+        public Nominal? Nominal
         {
             get { return _nominal; }
         }
 
-        public bool Visit(IsNominal clue)
+        public bool Visit(ClueAboutNominal clue)
         {
             _nominal = clue.Nominal;
             return true;
         }
 
-        public bool Visit(IsNotNominal clue)
+        public bool Visit(ClueAboutNotNominal clue)
         {
             return false;
         }
 
-        public bool Visit(IsColor clue)
+        public bool Visit(ClueAboutColor clue)
         {
             return false;
         }
 
-        public bool Visit(IsNotColor clue)
+        public bool Visit(ClueAboutNotColor clue)
         {
             return false;
         }

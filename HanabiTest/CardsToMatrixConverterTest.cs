@@ -13,7 +13,7 @@ namespace HanabiTest
             var deckMatrixProvider = new FakeGameProvider
             {
                 Colors = new List<Color> { Color.Blue, Color.Green, Color.Red },
-                Numbers = new List<Number> { Number.One, Number.Two, Number.Three, }
+                Nominals = new List<Nominal> { Nominal.One, Nominal.Two, Nominal.Three, }
             };
 
             Matrix emptyMatrix = deckMatrixProvider.CreateEmptyMatrix();
@@ -32,10 +32,10 @@ namespace HanabiTest
             var deckMatrixProvider = new FakeGameProvider
             {
                 Colors = new List<Color> {Color.Yellow, Color.White},
-                Numbers = new List<Number> {Number.One, Number.Two, Number.Three}
+                Nominals = new List<Nominal> {Nominal.One, Nominal.Two, Nominal.Three}
             };
 
-            List<Card> list = new List<Card>{new Card(Number.One, Color.White)};
+            List<Card> list = new List<Card>{new Card(Nominal.One, Color.White)};
 
             CardsToMatrixConverter converter = new CardsToMatrixConverter(deckMatrixProvider);
             
@@ -44,7 +44,7 @@ namespace HanabiTest
 
 
             Matrix expected = deckMatrixProvider.CreateEmptyMatrix();
-            expected[new Card(Color.White, Number.One)] = 1;
+            expected[new Card(Color.White, Nominal.One)] = 1;
 
             TestHelper.AreMatrixEqual(expected, result, deckMatrixProvider);
         }
@@ -56,13 +56,13 @@ namespace HanabiTest
             var deckMatrixProvider = new FakeGameProvider()
             {
                 Colors = new List<Color>() {Color.Yellow, Color.Red},
-                Numbers = new List<Number>() { Number.One, Number.Two, Number.Three, Number.Four},
+                Nominals = new List<Nominal>() { Nominal.One, Nominal.Two, Nominal.Three, Nominal.Four},
             };
 
             List<Card> list = new List<Card>
             {
-                new Card(Number.Four, Color.Red),
-                new Card(Number.Four, Color.Red),
+                new Card(Nominal.Four, Color.Red),
+                new Card(Nominal.Four, Color.Red),
             };
 
             CardsToMatrixConverter converter = new CardsToMatrixConverter(deckMatrixProvider);
@@ -72,7 +72,7 @@ namespace HanabiTest
 
             // assert
             Matrix expected = deckMatrixProvider.CreateEmptyMatrix();
-            expected[new Card(Number.Four, Color.Red)] = 2;
+            expected[new Card(Nominal.Four, Color.Red)] = 2;
 
             TestHelper.AreMatrixEqual(expected, result, deckMatrixProvider);
         }
@@ -83,7 +83,7 @@ namespace HanabiTest
             var deckMatrixProvider = new FakeGameProvider
             {
                 Colors = new List<Color> {Color.Blue, Color.Red, Color.Green},
-                Numbers = new List<Number> {Number.One, Number.Two, Number.Three}
+                Nominals = new List<Nominal> {Nominal.One, Nominal.Two, Nominal.Three}
             };
 
             Matrix zeroMatrix = deckMatrixProvider.CreateEmptyMatrix();
@@ -101,18 +101,18 @@ namespace HanabiTest
             var deckMatrixProvider = new FakeGameProvider
             {
                 Colors = new List<Color> {Color.Blue, Color.Green, Color.Red},
-                Numbers = new List<Number> {Number.One, Number.Two, Number.Three},
+                Nominals = new List<Nominal> {Nominal.One, Nominal.Two, Nominal.Three},
             };
 
             Matrix input = deckMatrixProvider.CreateEmptyMatrix();
-            input[new Card(Color.Green, Number.Three)] = 1;
+            input[new Card(Color.Green, Nominal.Three)] = 1;
 
             CardsToMatrixConverter converter = new CardsToMatrixConverter(deckMatrixProvider);
             IReadOnlyList<Card> actual = converter.Decode(input);
 
             Assert.AreEqual(1, actual.Count);
 
-            Card greenThree = new Card(Number.Three, Color.Green);
+            Card greenThree = new Card(Nominal.Three, Color.Green);
             Assert.AreEqual(greenThree, actual[0]);
         }
     }

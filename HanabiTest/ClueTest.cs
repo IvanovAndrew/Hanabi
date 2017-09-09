@@ -9,11 +9,11 @@ namespace HanabiTest
         [Test]
         public void Revert_IsValueFive_ReturnsNotIsValueFive()
         {
-            Clue clue = new IsNominal(Number.Five);
+            Clue clue = new ClueAboutNominal(Nominal.Five);
 
             Clue revertedClue = clue.Revert();
 
-            Clue expectedClue = new IsNotNominal(Number.Five);
+            Clue expectedClue = new ClueAboutNotNominal(Nominal.Five);
 
             Assert.AreEqual(expectedClue, revertedClue);
         }
@@ -21,11 +21,11 @@ namespace HanabiTest
         [Test]
         public void Revert_IsNotValueFive_ReturnsIsValueFour()
         {
-            Clue clue = new IsNotNominal(Number.Four);
+            Clue clue = new ClueAboutNotNominal(Nominal.Four);
 
             Clue revertedClue = clue.Revert();
 
-            Clue expectedClue = new IsNominal(Number.Four);
+            Clue expectedClue = new ClueAboutNominal(Nominal.Four);
 
             Assert.AreEqual(expectedClue, revertedClue);
         }
@@ -33,11 +33,11 @@ namespace HanabiTest
         [Test]
         public void Revert_IsNotColorRed_ReturnsIsColorRed()
         {
-            Clue clue = new IsNotColor(Color.Red);
+            Clue clue = new ClueAboutNotColor(Color.Red);
 
             Clue revertedClue = clue.Revert();
 
-            Clue expectedClue = new IsColor(Color.Red);
+            Clue expectedClue = new ClueAboutColor(Color.Red);
 
             Assert.AreEqual(expectedClue, revertedClue);
         }
@@ -45,11 +45,11 @@ namespace HanabiTest
         [Test]
         public void Revert_IsColorRed_ReturnsIsNotColorRed()
         {
-            Clue clue = new IsColor(Color.Red);
+            Clue clue = new ClueAboutColor(Color.Red);
 
             Clue revertedClue = clue.Revert();
 
-            Clue expectedClue = new IsNotColor(Color.Red);
+            Clue expectedClue = new ClueAboutNotColor(Color.Red);
 
             Assert.AreEqual(expectedClue, revertedClue);
         }

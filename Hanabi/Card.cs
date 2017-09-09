@@ -5,17 +5,17 @@ namespace Hanabi
 {
     public class Card
     {
-        public Number Nominal { get; private set; }
+        public Nominal Nominal { get; private set; }
         public Color Color {get; private set; }
 
-        public Card(Number number, Color color) : this(color, number)
+        public Card(Nominal nominal, Color color) : this(color, nominal)
         {
             
         }
 
-        public Card(Color color, Number number)
+        public Card(Color color, Nominal nominal)
         {
-            Nominal = number;
+            Nominal = nominal;
             Color = color;
         }
 
@@ -48,9 +48,9 @@ namespace Hanabi
         {
             Contract.Requires<ArgumentNullException>(card != null);
 
-            Number? nextNumber = card.Nominal.GetNextNumber();
+            Nominal? nextNominal = card.Nominal.GetNextNumber();
 
-            return nextNumber != null ? new Card(nextNumber.Value, card.Color) : null;
+            return nextNominal != null ? new Card(nextNominal.Value, card.Color) : null;
         }
 
         
@@ -58,35 +58,9 @@ namespace Hanabi
         {
             Contract.Requires<ArgumentNullException>(card != null);
 
-            Number? previousNumber = card.Nominal.GetPreviousNumber();
+            Nominal? previousNominal = card.Nominal.GetPreviousNumber();
 
-            return previousNumber != null ? new Card(previousNumber.Value, card.Color) : null;
-        }
-    }
-
-    public enum Number
-    {
-        One = 0,
-        Two = 1,
-        Three = 2,
-        Four = 3,
-        Five = 4
-    }
-
-    public static class NumberExtension
-    {
-        public static Number? GetNextNumber(this Number number)
-        {
-            if (number == Number.Five) return null;
-
-            return (Number) ((int) number + 1);
-        }
-
-        public static Number? GetPreviousNumber(this Number number)
-        {
-            if (number == Number.One) return null;
-
-            return (Number) ((int) number - 1);
+            return previousNominal != null ? new Card(previousNominal.Value, card.Color) : null;
         }
     }
 

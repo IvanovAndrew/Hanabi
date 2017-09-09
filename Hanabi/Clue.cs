@@ -5,33 +5,31 @@
         public abstract Clue Revert();
 
         public abstract bool Accept(IClueVisitor visitor);
-
-        public abstract bool IsConcreteClue();
     }
 
-    public class IsNominal : Clue
+    public class ClueAboutNominal : Clue
     {
-        public Number Nominal { get; private set; }
+        public Nominal Nominal { get; private set; }
 
-        public IsNominal(Number nominal)
+        public ClueAboutNominal(Nominal nominal)
         {
             Nominal = nominal;
         }
 
         public override Clue Revert()
         {
-            return new IsNotNominal(Nominal);
+            return new ClueAboutNotNominal(Nominal);
         }
 
-        private bool EqualsCore(IsNominal clue)
+        private bool EqualsCore(ClueAboutNominal clue)
         {
             return Nominal == clue.Nominal;
         }
 
         public override bool Equals(object obj)
         {
-            if (obj is IsNominal)
-                return EqualsCore((IsNominal) obj);
+            if (obj is ClueAboutNominal)
+                return EqualsCore((ClueAboutNominal) obj);
             return false;
         }
 
@@ -43,11 +41,6 @@
         public override bool Accept(IClueVisitor visitor)
         {
             return visitor.Visit(this);
-        }
-
-        public override bool IsConcreteClue()
-        {
-            return true;
         }
 
         public override string ToString()
@@ -56,18 +49,18 @@
         }
     }
 
-    public class IsNotNominal : Clue
+    public class ClueAboutNotNominal : Clue
     {
-        public Number Nominal { get; private set; }
+        public Nominal Nominal { get; private set; }
 
-        public IsNotNominal(Number nominal)
+        public ClueAboutNotNominal(Nominal nominal)
         {
             Nominal = nominal;
         }
 
         public override Clue Revert()
         {
-            return new IsNominal(Nominal);
+            return new ClueAboutNominal(Nominal);
         }
 
         public override bool Accept(IClueVisitor visitor)
@@ -75,20 +68,15 @@
             return visitor.Visit(this);
         }
 
-        private bool EqualsCore(IsNotNominal clue)
+        private bool EqualsCore(ClueAboutNotNominal clue)
         {
             return Nominal == clue.Nominal;
         }
 
         public override bool Equals(object obj)
         {
-            if (obj is IsNotNominal)
-                return EqualsCore((IsNotNominal) obj);
-            return false;
-        }
-
-        public override bool IsConcreteClue()
-        {
+            if (obj is ClueAboutNotNominal)
+                return EqualsCore((ClueAboutNotNominal) obj);
             return false;
         }
 
@@ -98,18 +86,18 @@
         }
     }
 
-    public class IsColor : Clue
+    public class ClueAboutColor : Clue
     {
         public Color Color { get; private set; }
 
-        public IsColor(Color color)
+        public ClueAboutColor(Color color)
         {
             Color = color;
         }
 
         public override Clue Revert()
         {
- 	        return new IsNotColor(Color);
+ 	        return new ClueAboutNotColor(Color);
         }
 
         public override bool Accept(IClueVisitor visitor)
@@ -117,26 +105,21 @@
             return visitor.Visit(this);
         }
 
-        private bool EqualsCore(IsColor clue)
+        private bool EqualsCore(ClueAboutColor clue)
         {
             return Color == clue.Color;
         }
 
         public override bool Equals(object obj)
         {
-            if (obj is IsColor)
-                return EqualsCore(obj as IsColor);
+            if (obj is ClueAboutColor)
+                return EqualsCore(obj as ClueAboutColor);
             return false;
         }
 
         public override int GetHashCode()
         {
             return Color.GetHashCode();
-        }
-
-        public override bool IsConcreteClue()
-        {
-            return true;
         }
 
         public override string ToString()
@@ -145,18 +128,18 @@
         }
     }
 
-    public class IsNotColor : Clue
+    public class ClueAboutNotColor : Clue
     {
         public Color Color { get; private set; }
 
-        public IsNotColor(Color color)
+        public ClueAboutNotColor(Color color)
         {
             Color = color;
         }
 
         public override Clue Revert()
         {
-            return new IsColor(Color);
+            return new ClueAboutColor(Color);
         }
 
         public override bool Accept(IClueVisitor visitor)
@@ -169,20 +152,15 @@
             return Color.GetHashCode();
         }
 
-        private bool EqualsCore(IsNotColor clue)
+        private bool EqualsCore(ClueAboutNotColor clue)
         {
             return Color == clue.Color;
         }
 
-        public override bool IsConcreteClue()
-        {
-            return false;
-        }
-
         public override bool Equals(object obj)
         {
-            if (obj is IsNotColor)
-                return EqualsCore((IsNotColor) obj);
+            if (obj is ClueAboutNotColor)
+                return EqualsCore((ClueAboutNotColor) obj);
             return false;
         }
     }

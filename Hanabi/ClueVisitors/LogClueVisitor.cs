@@ -6,28 +6,28 @@ namespace Hanabi
     {
         readonly StringBuilder _stringBuilder = new StringBuilder();
 
-        public bool Visit(IsNominal clue)
+        public bool Visit(ClueAboutNominal clue)
         {
             if (_stringBuilder.Length > 0) _stringBuilder.Append(", ");
             _stringBuilder.Append(clue.Nominal);
             return true;
         }
 
-        public bool Visit(IsNotNominal clue)
+        public bool Visit(ClueAboutNotNominal clue)
         {
             if (_stringBuilder.Length > 0) _stringBuilder.Append(", ");
             _stringBuilder.Append("Not " + clue.Nominal);
             return true;
         }
 
-        public bool Visit(IsColor clue)
+        public bool Visit(ClueAboutColor clue)
         {
             if (_stringBuilder.Length > 0) _stringBuilder.Append(", ");
             _stringBuilder.Append(clue.Color);
             return true;
         }
 
-        public bool Visit(IsNotColor clue)
+        public bool Visit(ClueAboutNotColor clue)
         {
             if (_stringBuilder.Length > 0) _stringBuilder.Append(", ");
             _stringBuilder.Append("Not " + clue.Color);

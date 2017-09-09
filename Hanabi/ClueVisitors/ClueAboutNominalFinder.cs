@@ -2,29 +2,29 @@
 {
     public class ClueAboutNominalFinder : IClueVisitor
     {
-        private Number _nominal;
+        private Nominal _nominal;
 
-        public ClueAboutNominalFinder(Number nominal)
+        public ClueAboutNominalFinder(Nominal nominal)
         {
             _nominal = nominal;
         }
 
-        public bool Visit(IsNominal clue)
+        public bool Visit(ClueAboutNominal clue)
         {
             return clue.Nominal == _nominal;
         }
 
-        public bool Visit(IsNotNominal clue)
+        public bool Visit(ClueAboutNotNominal clue)
         {
             return false;
         }
 
-        public bool Visit(IsColor clue)
+        public bool Visit(ClueAboutColor clue)
         {
             return false;
         }
 
-        public bool Visit(IsNotColor clue)
+        public bool Visit(ClueAboutNotColor clue)
         {
             return false;
         }

@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
-using Hanabi;
-
 
 namespace Hanabi
 {
@@ -93,7 +91,7 @@ namespace Hanabi
 
         public IReadOnlyList<CardInHand> ShowCards(Player to)
         {
-            Contract.Requires<ArgumentException>(to != this);
+            Contract.Requires<HanabiException>(to != this);
 
             return _memory.GetHand();
         }
@@ -113,20 +111,20 @@ namespace Hanabi
 
             if (cards.Count == 1 && clue.Accept(visitor))
             {
-                Number nominalAboutClue = visitor.Nominal.Value;
+                Nominal nominalAboutClue = visitor.Nominal.Value;
 
-                if (nominalAboutClue != Number.Five)
+                if (nominalAboutClue != Nominal.Five)
                 {
                     bool prevFullFilled;
-                    Number? prevNumber = nominalAboutClue.GetPreviousNumber();
-                    if (prevNumber == null)
+                    Nominal? prevNominal = nominalAboutClue.GetPreviousNumber();
+                    if (prevNominal == null)
                     {
                         prevFullFilled = true;
                     }
                     else
                     {
                         prevFullFilled = 
-                            FireworkPile.Cards.Count(card => card.Nominal == prevNumber) == _provider.Colors.Count;
+                            FireworkPile.Cards.Count(card => card.Nominal == prevNominal) == _provider.Colors.Count;
                     }
                     
                     int cardsCount =
@@ -262,10 +260,10 @@ namespace Hanabi
                 playerToClue._memory.GetPreviousCluesAboutCard(cardToClue);
 
             IReadOnlyCollection<CardInHand> cardsToClue;
-            Clue clue = new IsNominal(cardToClue.Card.Nominal);
+            Clue clue = new ClueAboutNominal(cardToClue.Card.Nominal);
             if (previousClues.Contains(clue))
             {
-                clue = new IsColor(cardToClue.Card.Color);
+                clue = new ClueAboutColor(cardToClue.Card.Color);
                 cardsToClue = playerToClue.ShowCards(this)
                                         .Where(card => card.Card.Color == cardToClue.Card.Color)
                                         .ToList()
@@ -373,12 +371,12 @@ namespace Hanabi
                             .OrderBy(card => (int) card.Card.Nominal)
                             .ToList();
 
-            return cardsToPlay.Last().Card.Nominal == Number.Five ? cardsToPlay.Last() : cardsToPlay.First();
+            return cardsToPlay.Last().Card.Nominal == Nominal.Five ? cardsToPlay.Last() : cardsToPlay.First();
         }
 
         private CardInHand GetCardWithNominalOneToPlay()
         {
-            IClueVisitor clueFinder = new ClueAboutNominalFinder(Number.One);
+            IClueVisitor clueFinder = new ClueAboutNominalFinder(Nominal.One);
             // Если мы знаем, что одна из карт -- единица, то ходим ей.
             foreach (var card in _memory.GetHand())
             {
@@ -408,6 +406,12 @@ namespace Hanabi
         //Нужно как-то учесть критичность карты, чтобы ненароком не выбросить нужное.
         // P(карта сыграна U уже не может быть сыграна) -> max И
         // P(карта не критичная) -> min
+        //
+        // Сейчас алгоритм такой. 
+        // Сперва ищем среди тех карт, о которых известен номинал или цвет.
+        //      Если среди них есть карта, которую можно выкинуть, то выкидывает её.
+        // Иначе ищем среди тех карт, о которых ничего конкретно неизвестно, ту,
+        // P(карта не критичная) -> min
         private CardInHand GetCardToDiscard()
         {
             var uniqueCards = _pilesAnalyzer.GetUniqueCards(FireworkPile, DiscardPile);
@@ -416,13 +420,41 @@ namespace Hanabi
             var otherPlayerCards = GetOtherPlayersCards();
 
             var excludedCards = thrownCards.Concat(otherPlayerCards.Select(cardInHand => cardInHand.Card));
+
+            // разделим карты на две категории:
+            // (*) о которых что-то известно (номинал или цвет),
+            // (*) о которых ничего конкретного неизвестно.
+
+            // если из тех карт, о которых что-то известно, есть те, которые можно выкинуть,
+            // то выкидываем. 
+            var guessesAboutKnownCards = _memory.GetGuesses()
+                .Where(guess => guess.KnowAboutNominalOrColor());
             
+            Guess guessToDiscard = 
+                guessesAboutKnownCards
+                .Select(guess => new
+                    {
+                        Guess = guess, 
+                        Probability = Math.Abs(guess.GetProbability(uniqueCards, excludedCards))
+                    })
+                .Where(gp => gp.Probability < 0.05)
+                .Select(gp => gp.Guess)
+                .FirstOrDefault();
+
+            if (guessToDiscard != null)
+                return _memory.GetCardByGuess(guessToDiscard);
+
+            // что ж, тогда копаемся со второй группой.
             // для каждой карты оценим вероятность того, что она - карта - критичная
             // выбросим карту с наименьшей вероятностью
-            return _memory.GetCardByGuess(
-                            Guesses
-                                .OrderBy(guess => guess.GetProbability(uniqueCards, excludedCards))
-                                .First());
+            guessToDiscard = 
+                _memory.GetGuesses()
+                    .Except(guessesAboutKnownCards)
+                    .OrderBy(guess => guess.GetProbability(uniqueCards, excludedCards))
+                    .First();
+
+            
+            return _memory.GetCardByGuess(guessToDiscard);
         }
 
         private IReadOnlyList<CardInHand> GetOtherPlayersCards()
@@ -463,7 +495,7 @@ namespace Hanabi
                     candidate = new ClueCandidate
                     {
                         Player = player,
-                        Card = cards.Last().Card.Nominal == Number.Five ? cards.Last() : cards.First(),
+                        Card = cards.Last().Card.Nominal == Nominal.Five ? cards.Last() : cards.First(),
                     };
                     break;
                 }

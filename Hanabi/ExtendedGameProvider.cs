@@ -18,14 +18,14 @@ namespace Hanabi
             {
                 if (color == Color.Multicolor) continue;
 
-                result[Number.One, color] = 3;
-                result[Number.Two, color] = 2;
-                result[Number.Three, color] = 2;
-                result[Number.Four, color] = 2;
-                result[Number.Five, color] = 1;
+                result[Nominal.One, color] = 3;
+                result[Nominal.Two, color] = 2;
+                result[Nominal.Three, color] = 2;
+                result[Nominal.Four, color] = 2;
+                result[Nominal.Five, color] = 1;
             }
 
-            foreach (var number in Numbers)
+            foreach (var number in Nominals)
             {
                 result[number, Color.Multicolor] = 1;
             }
@@ -39,9 +39,9 @@ namespace Hanabi
                 return new[] { Color.Blue, Color.Green, Color.Red, Color.White, Color.Yellow, Color.Multicolor, };
             }
         }
-        public IReadOnlyList<Number> Numbers
+        public IReadOnlyList<Nominal> Nominals
         {
-            get { return new[] { Number.One, Number.Two, Number.Three, Number.Four, Number.Five, }; }
+            get { return new[] { Nominal.One, Nominal.Two, Nominal.Three, Nominal.Four, Nominal.Five, }; }
         }
 
         public int ColorToInt(Color color)
@@ -55,7 +55,7 @@ namespace Hanabi
 
         public int GetMaximumScore()
         {
-            return Colors.Count * Numbers.Count;
+            return Colors.Count * Nominals.Count;
         }
     }
 }

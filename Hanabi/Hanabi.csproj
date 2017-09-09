@@ -110,6 +110,7 @@
     <Compile Include="Logger.cs" />
     <Compile Include="Matrix.cs" />
     <Compile Include="GameProvider.cs" />
+    <Compile Include="Nominal.cs" />
     <Compile Include="Pile.cs" />
     <Compile Include="PilesAnalyzer.cs" />
     <Compile Include="Player.cs" />

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
@@ -18,13 +19,13 @@ namespace Hanabi
             _matrix = provider.CreateFullDeckMatrix();
         }
 
-        public bool Visit(IsColor clue)
+        public bool Visit(ClueAboutColor clue)
         {
             foreach (var color in _provider.Colors)
             {
                 if (color == clue.Color) continue;
 
-                foreach (Number number in _provider.Numbers)
+                foreach (Nominal number in _provider.Nominals)
                 {
                     _matrix[number, color] = 0;
                 }
@@ -33,9 +34,9 @@ namespace Hanabi
             return true;
         }
 
-        public bool Visit(IsNotColor clue)
+        public bool Visit(ClueAboutNotColor clue)
         {
-            foreach (var number in _provider.Numbers)
+            foreach (var number in _provider.Nominals)
             {
                 _matrix[number, clue.Color] = 0;
             }
@@ -43,9 +44,9 @@ namespace Hanabi
             return true;
         }
 
-        public bool Visit(IsNominal clue)
+        public bool Visit(ClueAboutNominal clue)
         {
-            foreach (var number in _provider.Numbers)
+            foreach (var number in _provider.Nominals)
             {
                 if (clue.Nominal == number) continue;
 
@@ -58,7 +59,7 @@ namespace Hanabi
             return true;
         }
 
-        public bool Visit(IsNotNominal clue)
+        public bool Visit(ClueAboutNotNominal clue)
         {
             foreach (var color in _provider.Colors)
             {
@@ -92,7 +93,7 @@ namespace Hanabi
                 cardsToSearch.Sum(card => guessMatrix[card.Nominal, card.Color]);
 
             int allWays = 0;
-            foreach (Number number in _provider.Numbers)
+            foreach (Nominal number in _provider.Nominals)
             {
                 foreach (var color in _provider.Colors)
                 {
@@ -107,7 +108,7 @@ namespace Hanabi
         {
             Matrix situation = _provider.CreateEmptyMatrix();
 
-            foreach (var number in _provider.Numbers)
+            foreach (var number in _provider.Nominals)
             {
                 foreach (var color in _provider.Colors)
                 {
@@ -123,6 +124,26 @@ namespace Hanabi
             return _converter.Decode(_matrix)
                         .Distinct()
                         .ToList().Count == 1;
+        }
+
+        public bool KnowAboutNominalOrColor()
+        {
+            IEnumerable<Card> cards = _converter.Decode(_matrix);
+            
+            bool knowAboutNominal = 
+                cards
+                    .Select(card => card.Nominal)
+                    .Distinct()
+                    .ToList()
+                    .Count == 1;
+
+            bool knowAboutColor =
+                cards.Select(card => card.Color)
+                    .Distinct()
+                    .ToList()
+                    .Count == 1;
+
+            return knowAboutNominal || knowAboutColor;
         }
     }
 }

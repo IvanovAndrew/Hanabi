@@ -19,7 +19,7 @@ namespace HanabiTest
         }
 
         public IReadOnlyList<Color> Colors { get; set; }
-        public IReadOnlyList<Number> Numbers { get; set; }
+        public IReadOnlyList<Nominal> Nominals { get; set; }
         
         public int ColorToInt(Color color)
         {
@@ -32,7 +32,7 @@ namespace HanabiTest
 
         public int GetMaximumScore()
         {
-            return Numbers.Count * Colors.Count;
+            return Nominals.Count * Colors.Count;
         }
     }
 
@@ -40,7 +40,7 @@ namespace HanabiTest
     {
         public static void AreMatrixEqual(Matrix expected, Matrix actual, IGameProvider provider)
         {
-            foreach (var number in provider.Numbers)
+            foreach (var number in provider.Nominals)
             {
                 foreach (var color in provider.Colors)
                 {

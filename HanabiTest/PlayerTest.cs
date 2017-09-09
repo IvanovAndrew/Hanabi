@@ -16,10 +16,10 @@ namespace HanabiTest
             Game game = new Game(factory, 2);
             Player player = new Player(game, factory);
 
-            CardInHand card = player.AddCardToHand(new Card(Number.One, Color.Blue));
+            CardInHand card = player.AddCardToHand(new Card(Nominal.One, Color.Blue));
 
-            player.ListenClue(new []{card}, new IsNominal(Number.One));
-            player.ListenClue(new []{card}, new IsColor(Color.Blue));
+            player.ListenClue(new []{card}, new ClueAboutNominal(Nominal.One));
+            player.ListenClue(new []{card}, new ClueAboutColor(Color.Blue));
 
             Assert.IsTrue(player.KnowAllAboutNominalAndColor(card));
         }
@@ -32,9 +32,9 @@ namespace HanabiTest
             Game game = new Game(factory, 2);
             Player player = new Player(game, factory);
 
-            CardInHand card = player.AddCardToHand(new Card(Color.Blue, Number.One));
+            CardInHand card = player.AddCardToHand(new Card(Color.Blue, Nominal.One));
 
-            player.ListenClue(new[] { card }, new IsNominal(Number.One));
+            player.ListenClue(new[] { card }, new ClueAboutNominal(Nominal.One));
 
             Assert.IsFalse(player.KnowAllAboutNominalAndColor(card));
         }
@@ -46,9 +46,9 @@ namespace HanabiTest
             Game game = new Game(factory, 2);
             Player player = new Player(game, factory);
 
-            CardInHand card = player.AddCardToHand(new Card(Color.Blue, Number.One));
+            CardInHand card = player.AddCardToHand(new Card(Color.Blue, Nominal.One));
 
-            player.ListenClue(new[] { card }, new IsColor(Color.Blue));
+            player.ListenClue(new[] { card }, new ClueAboutColor(Color.Blue));
 
             Assert.IsFalse(player.KnowAllAboutNominalAndColor(card));
         }
@@ -60,20 +60,20 @@ namespace HanabiTest
             Game game = new Game(factory, 2);
             Player player = new Player(game, factory);
 
-            CardInHand blueOneCard = player.AddCardToHand(new Card(Color.Blue, Number.One));
-            CardInHand redTwoCard = player.AddCardToHand(new Card(Color.Red, Number.Two));
-            CardInHand yellowThreeCard = player.AddCardToHand(new Card(Color.Yellow, Number.Three));
-            CardInHand whiteFourCard = player.AddCardToHand(new Card(Color.White, Number.Four));
-            CardInHand greenFiveCard = player.AddCardToHand(new Card(Color.Green, Number.Five));
+            CardInHand blueOneCard = player.AddCardToHand(new Card(Color.Blue, Nominal.One));
+            CardInHand redTwoCard = player.AddCardToHand(new Card(Color.Red, Nominal.Two));
+            CardInHand yellowThreeCard = player.AddCardToHand(new Card(Color.Yellow, Nominal.Three));
+            CardInHand whiteFourCard = player.AddCardToHand(new Card(Color.White, Nominal.Four));
+            CardInHand greenFiveCard = player.AddCardToHand(new Card(Color.Green, Nominal.Five));
 
             // clue about nominal blue one
-            player.ListenClue(new[] { blueOneCard }, new IsNominal(Number.One));
+            player.ListenClue(new[] { blueOneCard }, new ClueAboutNominal(Nominal.One));
 
             // clues about red, yellow, white and green colors
-            player.ListenClue(new[] { redTwoCard  }, new IsColor(Color.Red));
-            player.ListenClue(new[] { yellowThreeCard }, new IsColor(Color.Yellow));
-            player.ListenClue(new[] { whiteFourCard }, new IsColor(Color.White));
-            player.ListenClue(new[] { greenFiveCard }, new IsColor(Color.Green));
+            player.ListenClue(new[] { redTwoCard  }, new ClueAboutColor(Color.Red));
+            player.ListenClue(new[] { yellowThreeCard }, new ClueAboutColor(Color.Yellow));
+            player.ListenClue(new[] { whiteFourCard }, new ClueAboutColor(Color.White));
+            player.ListenClue(new[] { greenFiveCard }, new ClueAboutColor(Color.Green));
 
             Assert.IsTrue(player.KnowAllAboutNominalAndColor(blueOneCard));
         }
@@ -89,10 +89,10 @@ namespace HanabiTest
 
             var player = new Player(game, provider);
 
-            CardInHand firstWhiteOneCard = player.AddCardToHand(new Card(Color.White, Number.One));
-            CardInHand secondWhiteOneCard = player.AddCardToHand(new Card(Color.White, Number.One));
+            CardInHand firstWhiteOneCard = player.AddCardToHand(new Card(Color.White, Nominal.One));
+            CardInHand secondWhiteOneCard = player.AddCardToHand(new Card(Color.White, Nominal.One));
 
-            Clue clue = new IsNominal(Number.One);
+            Clue clue = new ClueAboutNominal(Nominal.One);
 
             player.ListenClue(new List<CardInHand>
             {
@@ -106,7 +106,7 @@ namespace HanabiTest
 
                 Assert.AreEqual(1, previousClues.Count);
 
-                Assert.IsTrue(previousClues[0] is IsNominal);
+                Assert.IsTrue(previousClues[0] is ClueAboutNominal);
             }
         }
 
@@ -119,10 +119,10 @@ namespace HanabiTest
 
             var player = new Player(game, provider);
 
-            CardInHand blueOneCard = player.AddCardToHand(new Card(Color.Blue, Number.One));
-            CardInHand redFiveCard = player.AddCardToHand(new Card(Color.Red, Number.Five));
+            CardInHand blueOneCard = player.AddCardToHand(new Card(Color.Blue, Nominal.One));
+            CardInHand redFiveCard = player.AddCardToHand(new Card(Color.Red, Nominal.Five));
 
-            Clue clue = new IsNominal(Number.Five);
+            Clue clue = new ClueAboutNominal(Nominal.Five);
 
             player.ListenClue(new List<CardInHand>
             {
@@ -132,7 +132,7 @@ namespace HanabiTest
             IReadOnlyList<Clue> previousClues = player.Memory.GetPreviousCluesAboutCard(blueOneCard);
 
             Assert.AreEqual(1, previousClues.Count);
-            Assert.IsTrue(previousClues[0] is IsNotNominal);
+            Assert.IsTrue(previousClues[0] is ClueAboutNotNominal);
         }
 
         public void GiveClue_Always_RaisesClueGivenEvent()
