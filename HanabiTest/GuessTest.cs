@@ -7,38 +7,20 @@ namespace HanabiTest
     [TestFixture]
     public class GuessTest
     {
-        private FakeGameProvider CreateGameProvider()
-        {
-            FakeGameProvider gameProvider = new FakeGameProvider
-            {
-                Colors = new List<Color> { Color.Yellow, Color.Red },
-                Nominals = new List<Nominal> { Nominal.One, Nominal.Two }
-            };
-
-            gameProvider.FullDeckMatrix = gameProvider.CreateEmptyMatrix();
-            gameProvider.FullDeckMatrix[Nominal.One, Color.Yellow] = 2;
-            gameProvider.FullDeckMatrix[Nominal.Two, Color.Yellow] = 2;
-            gameProvider.FullDeckMatrix[Nominal.One, Color.Red] = 2;
-            gameProvider.FullDeckMatrix[Nominal.Two, Color.Red] = 2;
-
-            return gameProvider;
-        }
-
-
         [Test]
-        public void GetProbability_ExcludeAllRedOneCards_ReturnsZeroForRedOneCard()
+        public void GetProbability_ExcludeAllRedTwoCards_ReturnsZeroForRedTwoCard()
         {
-            IGameProvider gameProvider = CreateGameProvider();
+            FakeGameProvider gameProvider = GameProviderFabric.Create(Color.Red);
 
             Guess guess = new Guess(gameProvider);
 
             List<Card> excludedCards = new List<Card>
             {
-                new Card(Color.Red, Nominal.One),
-                new Card(Color.Red, Nominal.One),
+                new Card(Color.Red, Nominal.Two),
+                new Card(Color.Red, Nominal.Two),
             };
 
-            List<Card> cardsToSearch = new List<Card>{new Card(Color.Red, Nominal.One)};
+            List<Card> cardsToSearch = new List<Card>{new Card(Color.Red, Nominal.Two)};
 
             double result = guess.GetProbability(cardsToSearch, excludedCards);
 
@@ -48,7 +30,7 @@ namespace HanabiTest
         [Test]
         public void GetProbability_ExcludeAllCardsExceptYellowTwo_ReturnsOneForYellowTwo()
         {
-            IGameProvider gameProvider = CreateGameProvider();
+            IGameProvider gameProvider = GameProviderFabric.Create(new List<Color>{Color.Red, Color.Yellow});
 
             Guess guess = new Guess(gameProvider);
 
@@ -56,10 +38,23 @@ namespace HanabiTest
             {
                 new Card(Color.Red, Nominal.One),
                 new Card(Color.Red, Nominal.One),
+                new Card(Color.Red, Nominal.One),
                 new Card(Color.Red, Nominal.Two),
                 new Card(Color.Red, Nominal.Two),
+                new Card(Color.Red, Nominal.Three),
+                new Card(Color.Red, Nominal.Three),
+                new Card(Color.Red, Nominal.Four),
+                new Card(Color.Red, Nominal.Four),
+                new Card(Color.Red, Nominal.Five),
                 new Card(Color.Yellow, Nominal.One),
-                new Card(Color.Yellow, Nominal.One)
+                new Card(Color.Yellow, Nominal.One),
+                new Card(Color.Yellow, Nominal.One),
+                // miss yellow two.
+                new Card(Color.Yellow, Nominal.Three),
+                new Card(Color.Yellow, Nominal.Three),
+                new Card(Color.Yellow, Nominal.Four),
+                new Card(Color.Yellow, Nominal.Four),
+                new Card(Color.Yellow, Nominal.Five),
             };
 
             List<Card> cardsToSearch = new List<Card> { new Card(Color.Yellow, Nominal.Two) };
@@ -72,7 +67,7 @@ namespace HanabiTest
         [Test]
         public void KnowAllAboutNominalAndColor_ClueAboutRedAndClueAboutTwo_ReturnsTrue()
         {
-            IGameProvider gameProvider = CreateGameProvider();
+            IGameProvider gameProvider = GameProviderFabric.Create(Color.Red);
 
             Guess guess = new Guess(gameProvider);
 
@@ -87,7 +82,7 @@ namespace HanabiTest
         [Test]
         public void KnowAllAboutNominalAndColor_ClueAboutColorOnly_ReturnsFalse()
         {
-            IGameProvider gameProvider = CreateGameProvider();
+            IGameProvider gameProvider = GameProviderFabric.Create(new List<Color>{Color.Red, Color.Yellow});
 
             Guess guess = new Guess(gameProvider);
             guess.Visit(new ClueAboutColor(Color.Red));
@@ -100,7 +95,7 @@ namespace HanabiTest
         [Test]
         public void KnowAllAboutNominalAndColor_ClueAboutNominalOnly_ReturnsFalse()
         {
-            IGameProvider gameProvider = CreateGameProvider();
+            IGameProvider gameProvider = GameProviderFabric.Create(Color.Red, Color.Yellow);
 
             Guess guess = new Guess(gameProvider);
             guess.Visit(new ClueAboutNominal(Nominal.Two));
@@ -113,7 +108,7 @@ namespace HanabiTest
         [Test]
         public void KnowAboutNominalOrColor_ClueAboutRedAndClueAboutTwo_ReturnsTrue()
         {
-            IGameProvider gameProvider = CreateGameProvider();
+            IGameProvider gameProvider = GameProviderFabric.Create(Color.Red, Color.Yellow);
 
             Guess guess = new Guess(gameProvider);
 
@@ -128,7 +123,7 @@ namespace HanabiTest
         [Test]
         public void KnowAboutNominalOrColor_ClueAboutColorOnly_ReturnsTrue()
         {
-            IGameProvider gameProvider = CreateGameProvider();
+            IGameProvider gameProvider = GameProviderFabric.Create(Color.Red, Color.Yellow);
 
             Guess guess = new Guess(gameProvider);
             guess.Visit(new ClueAboutColor(Color.Red));
@@ -141,7 +136,7 @@ namespace HanabiTest
         [Test]
         public void KnowAboutNominalOrColor_ClueAboutNominalOnly_ReturnsTrue()
         {
-            IGameProvider gameProvider = CreateGameProvider();
+            IGameProvider gameProvider = GameProviderFabric.Create(Color.Red, Color.Yellow);
 
             Guess guess = new Guess(gameProvider);
             guess.Visit(new ClueAboutNominal(Nominal.Two));
@@ -154,7 +149,7 @@ namespace HanabiTest
         [Test]
         public void KnowAboutNominalOrColor_Default_ReturnsFalse()
         {
-            IGameProvider gameProvider = CreateGameProvider();
+            IGameProvider gameProvider = GameProviderFabric.Create(Color.Red, Color.Yellow);
 
             Guess guess = new Guess(gameProvider);
 
@@ -166,7 +161,7 @@ namespace HanabiTest
         [Test]
         public void KnowAboutNominalOrColor_NotAnyColorsExceptRed_ReturnsTrue()
         {
-            IGameProvider gameProvider = CreateGameProvider();
+            IGameProvider gameProvider = GameProviderFabric.Create(Color.Red, Color.Yellow);
 
             Guess guess = new Guess(gameProvider);
             guess.Visit(new ClueAboutNotColor(Color.Yellow));

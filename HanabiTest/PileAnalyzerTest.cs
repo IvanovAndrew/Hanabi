@@ -13,17 +13,7 @@ namespace HanabiTest
         [Test]
         public void GetUniqueCards_DiscardBlueTwoCard_ContainsBlueTwoCard()
         {
-            FakeGameProvider gameProvider = new FakeGameProvider
-            {
-                Colors = new List<Color> {Color.Blue},
-                Nominals = new List<Nominal> {Nominal.One, Nominal.Two, Nominal.Three}
-            };
-
-            gameProvider.FullDeckMatrix = gameProvider.CreateEmptyMatrix();
-            gameProvider.FullDeckMatrix[Nominal.One, Color.Blue] = 3;
-            gameProvider.FullDeckMatrix[Nominal.Two, Color.Blue] = 2;
-            gameProvider.FullDeckMatrix[Nominal.Three, Color.Blue] = 2;
-
+            IGameProvider gameProvider = GameProviderFabric.Create(Color.Blue);
 
             FireworkPile fireworkPile = new FireworkPile(gameProvider);
             DiscardPile discardPile = new DiscardPile(gameProvider);
@@ -41,16 +31,7 @@ namespace HanabiTest
         [Test]
         public void GetUniqueCards_DiscardAllYellowOneCards_DoesNotContainYellowCards()
         {
-            FakeGameProvider provider = new FakeGameProvider();
-            provider.Colors = new List<Color> {Color.Yellow};
-            provider.Nominals = new List<Nominal> {Nominal.One, Nominal.Two, Nominal.Three, Nominal.Four, Nominal.Five};
-
-            provider.FullDeckMatrix = provider.CreateEmptyMatrix();
-            provider.FullDeckMatrix[Nominal.One, Color.Yellow] = 3;
-            provider.FullDeckMatrix[Nominal.Two, Color.Yellow] = 2;
-            provider.FullDeckMatrix[Nominal.Three, Color.Yellow] = 2;
-            provider.FullDeckMatrix[Nominal.Four, Color.Yellow] = 2;
-            provider.FullDeckMatrix[Nominal.Five, Color.Yellow] = 1;
+            IGameProvider provider = GameProviderFabric.Create(Color.Yellow);
 
             var fireworkPile = new FireworkPile(provider);
             var discardPile = new DiscardPile(provider);
@@ -69,15 +50,7 @@ namespace HanabiTest
         [Test]
         public void GetUniqueCards_PlayRedOneAndDiscardRedOne_DoesNotContainRedOne()
         {
-            FakeGameProvider provider = new FakeGameProvider
-            {
-                Colors = new List<Color> {Color.Red},
-                Nominals = new List<Nominal> {Nominal.One, Nominal.Two}
-            };
-
-            provider.FullDeckMatrix = provider.CreateEmptyMatrix();
-            provider.FullDeckMatrix[Nominal.One, Color.Red] = 3;
-            provider.FullDeckMatrix[Nominal.Two, Color.Red] = 2;
+            IGameProvider provider = GameProviderFabric.Create(Color.Red);
 
             var fireworkPile = new FireworkPile(provider);
 
@@ -100,11 +73,7 @@ namespace HanabiTest
         [Test]
         public void GetThrownCards_EmptyPiles_ReturnsEmptyList()
         {
-            IGameProvider gameProvider = new FakeGameProvider()
-            {
-                Colors = new List<Color> {Color.Blue},
-                Nominals = new List<Nominal> {Nominal.One},
-            };
+            IGameProvider gameProvider = GameProviderFabric.Create(Color.Multicolor);
 
             var pileAnalyzer = new PilesAnalyzer(gameProvider);
 
@@ -122,9 +91,7 @@ namespace HanabiTest
             //// arrange
 
             // create fake deck that contains blue one cards only
-            FakeGameProvider provider = new FakeGameProvider();
-            provider.Colors = new List<Color> { Color.Blue };
-            provider.Nominals = new List<Nominal> { Nominal.One};
+            FakeGameProvider provider = GameProviderFabric.Create(Color.Blue);
 
             // play blue one card
             var fireworkPile = new FireworkPile(provider);
@@ -148,19 +115,17 @@ namespace HanabiTest
         {
             //// arrange
 
-            FakeGameProvider provider = new FakeGameProvider();
-            provider.Colors = new List<Color> { Color.Blue, Color.Red };
-            provider.Nominals = new List<Nominal> { Nominal.One, Nominal.Two };
+            FakeGameProvider gameProvider =
+                GameProviderFabric.Create(new List<Color> {Color.Blue, Color.Red}.AsReadOnly());
 
             // play blue one card
-            var fireworkPile = new FireworkPile(provider);
+            var fireworkPile = new FireworkPile(gameProvider);
             fireworkPile.AddCard(new Card(Color.Blue, Nominal.One));
 
             // discard blue one card
-            var discardPile = new DiscardPile(provider);
+            var discardPile = new DiscardPile(gameProvider);
             discardPile.AddCard(new Card(Color.Blue, Nominal.One));
 
-            GameProvider gameProvider = new GameProvider();
             var pileAnalyzer = new PilesAnalyzer(gameProvider);
 
             //// act
@@ -177,55 +142,40 @@ namespace HanabiTest
         [Test]
         public void GetCardsWhateverToPlay_EmptyPiles_ReturnsAllUniqueCards()
         {
-            FakeGameProvider provider = new FakeGameProvider
-            {
-                Colors = new List<Color> { Color.White, Color.Red },
-                Nominals = new List<Nominal> { Nominal.One, Nominal.Two }
-            };
+            IGameProvider gameProvider = 
+                GameProviderFabric.Create(new List<Color> {Color.White, Color.Red});
 
-            provider.FullDeckMatrix = provider.CreateEmptyMatrix();
-            provider.FullDeckMatrix[Nominal.One, Color.White] = 3;
-            provider.FullDeckMatrix[Nominal.One, Color.Red] = 3;
-            provider.FullDeckMatrix[Nominal.Two, Color.White] = 2;
-            provider.FullDeckMatrix[Nominal.Two, Color.Red] = 2;
+            var fireworkPile = new FireworkPile(gameProvider);
+            var discardPile = new DiscardPile(gameProvider);
 
-            var fireworkPile = new FireworkPile(provider);
-            var discardPile = new DiscardPile(provider);
-
-            var pileAnalyzer = new PilesAnalyzer(provider);
+            var pileAnalyzer = new PilesAnalyzer(gameProvider);
 
             // act
             IReadOnlyList<Card> actual = pileAnalyzer.GetCardsWhateverToPlay(fireworkPile, discardPile);
             
             // assert
-            var actualMatrix = new CardsToMatrixConverter(provider).Encode(actual);
+            var actualMatrix = new CardsToMatrixConverter(gameProvider).Encode(actual);
 
-            var expectedMatrix = provider.CreateEmptyMatrix();
+            var expectedMatrix = gameProvider.CreateEmptyMatrix();
             expectedMatrix[Nominal.One, Color.White] = 1;
             expectedMatrix[Nominal.One, Color.Red] = 1;
             expectedMatrix[Nominal.Two, Color.White] = 1;
             expectedMatrix[Nominal.Two, Color.Red] = 1;
+            expectedMatrix[Nominal.Three, Color.White] = 1;
+            expectedMatrix[Nominal.Three, Color.Red] = 1;
+            expectedMatrix[Nominal.Four, Color.White] = 1;
+            expectedMatrix[Nominal.Four, Color.Red] = 1;
+            expectedMatrix[Nominal.Five, Color.White] = 1;
+            expectedMatrix[Nominal.Five, Color.Red] = 1;
 
-            TestHelper.AreMatrixEqual(expectedMatrix, actualMatrix, provider);
+            TestHelper.AreMatrixEqual(expectedMatrix, actualMatrix, gameProvider);
         }
 
         [Test]
         public void GetCardsWhateverToPlay_DiscardedAllWhiteOne_DoesNotContainWhiteCards()
         {
-            FakeGameProvider provider = new FakeGameProvider
-            {
-                Colors = new List<Color> { Color.White, Color.Red },
-                Nominals = new List<Nominal> { Nominal.One, Nominal.Two, Nominal.Three }
-            };
+            FakeGameProvider provider = GameProviderFabric.Create(new List<Color> {Color.White, Color.Red});
 
-            provider.FullDeckMatrix = provider.CreateEmptyMatrix();
-            provider.FullDeckMatrix[Nominal.One, Color.White] = 3;
-            provider.FullDeckMatrix[Nominal.One, Color.Red] = 3;
-            provider.FullDeckMatrix[Nominal.Two, Color.White] = 2;
-            provider.FullDeckMatrix[Nominal.Two, Color.Red] = 3;
-            provider.FullDeckMatrix[Nominal.Three, Color.White] = 2;
-            provider.FullDeckMatrix[Nominal.Three, Color.Red] = 2;
-            
             var fireworkPile = new FireworkPile(provider);
             var discardPile = new DiscardPile(provider);
             discardPile.AddCard(new Card(Color.White, Nominal.One));
