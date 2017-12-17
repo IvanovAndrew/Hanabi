@@ -87,9 +87,25 @@ namespace Hanabi
         public override string ToString()
         {
             Func<string, Card, string> func = 
-                (current, card) => String.Format("{0} {1} |", current, card.ToString());
+                (current, card) => $"{current} {card.ToString()} |";
 
             return GetLastCards().Aggregate("|", func);
+        }
+
+        public FireworkPile Clone()
+        {
+            var contractResult = Contract.Result<FireworkPile>();
+            Contract.Ensures(contractResult != null);
+            Contract.Ensures(Contract.ForAll(contractResult.Cards, this.Cards.Contains));
+
+            var newFirework = new FireworkPile(this.Provider);
+
+            foreach (var card in Cards)
+            {
+                if (!newFirework.AddCard(card)) throw new InvalidOperationException();
+            }
+
+            return newFirework;
         }
     }
 }

@@ -5,37 +5,40 @@
         public abstract Clue Revert();
 
         public abstract bool Accept(IClueVisitor visitor);
+
+        public bool IsStraightClue { get; protected set; }
     }
 
-    public class ClueAboutNominal : Clue
+    public class ClueAboutRank : Clue
     {
-        public Nominal Nominal { get; private set; }
+        public Rank Rank { get; }
 
-        public ClueAboutNominal(Nominal nominal)
+        public ClueAboutRank(Rank rank)
         {
-            Nominal = nominal;
+            Rank = rank;
+            IsStraightClue = true;
         }
 
         public override Clue Revert()
         {
-            return new ClueAboutNotNominal(Nominal);
+            return new ClueAboutNotRank(Rank);
         }
 
-        private bool EqualsCore(ClueAboutNominal clue)
+        private bool EqualsCore(ClueAboutRank clue)
         {
-            return Nominal == clue.Nominal;
+            return Rank == clue.Rank;
         }
 
         public override bool Equals(object obj)
         {
-            if (obj is ClueAboutNominal)
-                return EqualsCore((ClueAboutNominal) obj);
+            if (obj is ClueAboutRank rank)
+                return EqualsCore(rank);
             return false;
         }
 
         public override int GetHashCode()
         {
-            return Nominal.GetHashCode();
+            return Rank.GetHashCode();
         }
 
         public override bool Accept(IClueVisitor visitor)
@@ -45,22 +48,23 @@
 
         public override string ToString()
         {
-            return Nominal.ToString();
+            return Rank.ToString();
         }
     }
 
-    public class ClueAboutNotNominal : Clue
+    public class ClueAboutNotRank : Clue
     {
-        public Nominal Nominal { get; private set; }
+        public Rank Rank { get; }
 
-        public ClueAboutNotNominal(Nominal nominal)
+        public ClueAboutNotRank(Rank rank)
         {
-            Nominal = nominal;
+            Rank = rank;
+            IsStraightClue = false;
         }
 
         public override Clue Revert()
         {
-            return new ClueAboutNominal(Nominal);
+            return new ClueAboutRank(Rank);
         }
 
         public override bool Accept(IClueVisitor visitor)
@@ -68,36 +72,42 @@
             return visitor.Visit(this);
         }
 
-        private bool EqualsCore(ClueAboutNotNominal clue)
+        private bool EqualsCore(ClueAboutNotRank clue)
         {
-            return Nominal == clue.Nominal;
+            return Rank == clue.Rank;
         }
 
         public override bool Equals(object obj)
         {
-            if (obj is ClueAboutNotNominal)
-                return EqualsCore((ClueAboutNotNominal) obj);
+            if (obj is ClueAboutNotRank rank)
+                return EqualsCore(rank);
             return false;
         }
 
         public override int GetHashCode()
         {
-            return Nominal.GetHashCode();
+            return Rank.GetHashCode();
+        }
+
+        public override string ToString()
+        {
+            return $"Not {Rank}";
         }
     }
 
     public class ClueAboutColor : Clue
     {
-        public Color Color { get; private set; }
+        public Color Color { get; }
 
         public ClueAboutColor(Color color)
         {
             Color = color;
+            IsStraightClue = true;
         }
 
         public override Clue Revert()
         {
- 	        return new ClueAboutNotColor(Color);
+            return new ClueAboutNotColor(Color);
         }
 
         public override bool Accept(IClueVisitor visitor)
@@ -112,8 +122,8 @@
 
         public override bool Equals(object obj)
         {
-            if (obj is ClueAboutColor)
-                return EqualsCore(obj as ClueAboutColor);
+            if (obj is ClueAboutColor color)
+                return EqualsCore(color);
             return false;
         }
 
@@ -130,11 +140,12 @@
 
     public class ClueAboutNotColor : Clue
     {
-        public Color Color { get; private set; }
+        public Color Color { get; }
 
         public ClueAboutNotColor(Color color)
         {
             Color = color;
+            IsStraightClue = false;
         }
 
         public override Clue Revert()
@@ -159,9 +170,14 @@
 
         public override bool Equals(object obj)
         {
-            if (obj is ClueAboutNotColor)
-                return EqualsCore((ClueAboutNotColor) obj);
+            if (obj is ClueAboutNotColor color)
+                return EqualsCore(color);
             return false;
+        }
+
+        public override string ToString()
+        {
+            return $"Not {Color}";
         }
     }
 }

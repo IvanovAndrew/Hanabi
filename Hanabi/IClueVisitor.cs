@@ -2,8 +2,8 @@
 {
     public interface IClueVisitor
     {
-        bool Visit(ClueAboutNominal clue);
-        bool Visit(ClueAboutNotNominal clue);
+        bool Visit(ClueAboutRank clue);
+        bool Visit(ClueAboutNotRank clue);
 
         bool Visit(ClueAboutColor clue);
         bool Visit(ClueAboutNotColor clue);

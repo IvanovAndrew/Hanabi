@@ -18,14 +18,14 @@ namespace HanabiTest
             FireworkPile fireworkPile = new FireworkPile(gameProvider);
             DiscardPile discardPile = new DiscardPile(gameProvider);
 
-            Card blueTwoCard = new Card(Color.Blue, Nominal.Two);
+            Card blueTwoCard = new Card(Color.Blue, Rank.Two);
             discardPile.AddCard(blueTwoCard);
 
             var pileAnalyzer = new PilesAnalyzer(gameProvider);
 
             IReadOnlyList<Card> actual = pileAnalyzer.GetUniqueCards(fireworkPile, discardPile);
 
-            Assert.IsTrue(actual.Contains(new Card(Color.Blue, Nominal.Two)));
+            Assert.IsTrue(actual.Contains(new Card(Color.Blue, Rank.Two)));
         }
 
         [Test]
@@ -35,9 +35,9 @@ namespace HanabiTest
 
             var fireworkPile = new FireworkPile(provider);
             var discardPile = new DiscardPile(provider);
-            discardPile.AddCard(new Card(Color.Yellow, Nominal.One));
-            discardPile.AddCard(new Card(Color.Yellow, Nominal.One));
-            discardPile.AddCard(new Card(Color.Yellow, Nominal.One));
+            discardPile.AddCard(new Card(Color.Yellow, Rank.One));
+            discardPile.AddCard(new Card(Color.Yellow, Rank.One));
+            discardPile.AddCard(new Card(Color.Yellow, Rank.One));
 
             GameProvider gameProvider = new GameProvider();
             var pileAnalyzer = new PilesAnalyzer(gameProvider);
@@ -54,16 +54,16 @@ namespace HanabiTest
 
             var fireworkPile = new FireworkPile(provider);
 
-            fireworkPile.AddCard(new Card(Color.Red, Nominal.One));
+            fireworkPile.AddCard(new Card(Color.Red, Rank.One));
 
             var discardedPile = new DiscardPile(provider);
-            discardedPile.AddCard(new Card(Color.Red, Nominal.One));
+            discardedPile.AddCard(new Card(Color.Red, Rank.One));
 
             var pileAnalyzer = new PilesAnalyzer(provider);
 
             IReadOnlyList<Card> actual = pileAnalyzer.GetUniqueCards(fireworkPile, discardedPile);
 
-            Assert.IsFalse(actual.Contains(new Card(Color.Red, Nominal.One)));
+            Assert.IsFalse(actual.Contains(new Card(Color.Red, Rank.One)));
         }
 
         #endregion
@@ -95,11 +95,11 @@ namespace HanabiTest
 
             // play blue one card
             var fireworkPile = new FireworkPile(provider);
-            fireworkPile.AddCard(new Card(Color.Blue, Nominal.One));
+            fireworkPile.AddCard(new Card(Color.Blue, Rank.One));
 
             // discard blue one card
             var discardPile = new DiscardPile(provider);
-            discardPile.AddCard(new Card(Color.Blue, Nominal.One));
+            discardPile.AddCard(new Card(Color.Blue, Rank.One));
 
             GameProvider gameProvider = new GameProvider();
             var pileAnalyzer = new PilesAnalyzer(gameProvider);
@@ -120,11 +120,11 @@ namespace HanabiTest
 
             // play blue one card
             var fireworkPile = new FireworkPile(gameProvider);
-            fireworkPile.AddCard(new Card(Color.Blue, Nominal.One));
+            fireworkPile.AddCard(new Card(Color.Blue, Rank.One));
 
             // discard blue one card
             var discardPile = new DiscardPile(gameProvider);
-            discardPile.AddCard(new Card(Color.Blue, Nominal.One));
+            discardPile.AddCard(new Card(Color.Blue, Rank.One));
 
             var pileAnalyzer = new PilesAnalyzer(gameProvider);
 
@@ -132,7 +132,7 @@ namespace HanabiTest
             IReadOnlyList<Card> actual = pileAnalyzer.GetThrownCards(fireworkPile, discardPile);
 
             Assert.IsTrue(actual.Count > 0 &&
-                          actual.All(card => Equals(card, new Card(Color.Blue, Nominal.One))));
+                          actual.All(card => Equals(card, new Card(Color.Blue, Rank.One))));
         }
 
         #endregion
@@ -157,16 +157,16 @@ namespace HanabiTest
             var actualMatrix = new CardsToMatrixConverter(gameProvider).Encode(actual);
 
             var expectedMatrix = gameProvider.CreateEmptyMatrix();
-            expectedMatrix[Nominal.One, Color.White] = 1;
-            expectedMatrix[Nominal.One, Color.Red] = 1;
-            expectedMatrix[Nominal.Two, Color.White] = 1;
-            expectedMatrix[Nominal.Two, Color.Red] = 1;
-            expectedMatrix[Nominal.Three, Color.White] = 1;
-            expectedMatrix[Nominal.Three, Color.Red] = 1;
-            expectedMatrix[Nominal.Four, Color.White] = 1;
-            expectedMatrix[Nominal.Four, Color.Red] = 1;
-            expectedMatrix[Nominal.Five, Color.White] = 1;
-            expectedMatrix[Nominal.Five, Color.Red] = 1;
+            expectedMatrix[Rank.One, Color.White] = 1;
+            expectedMatrix[Rank.One, Color.Red] = 1;
+            expectedMatrix[Rank.Two, Color.White] = 1;
+            expectedMatrix[Rank.Two, Color.Red] = 1;
+            expectedMatrix[Rank.Three, Color.White] = 1;
+            expectedMatrix[Rank.Three, Color.Red] = 1;
+            expectedMatrix[Rank.Four, Color.White] = 1;
+            expectedMatrix[Rank.Four, Color.Red] = 1;
+            expectedMatrix[Rank.Five, Color.White] = 1;
+            expectedMatrix[Rank.Five, Color.Red] = 1;
 
             TestHelper.AreMatrixEqual(expectedMatrix, actualMatrix, gameProvider);
         }
@@ -178,9 +178,9 @@ namespace HanabiTest
 
             var fireworkPile = new FireworkPile(provider);
             var discardPile = new DiscardPile(provider);
-            discardPile.AddCard(new Card(Color.White, Nominal.One));
-            discardPile.AddCard(new Card(Color.White, Nominal.One));
-            discardPile.AddCard(new Card(Color.White, Nominal.One));
+            discardPile.AddCard(new Card(Color.White, Rank.One));
+            discardPile.AddCard(new Card(Color.White, Rank.One));
+            discardPile.AddCard(new Card(Color.White, Rank.One));
 
             GameProvider gameProvider = new GameProvider();
             var pileAnalyzer = new PilesAnalyzer(gameProvider);

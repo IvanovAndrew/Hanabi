@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.Contracts;
+﻿using System;
+using System.Diagnostics.Contracts;
 
 namespace Hanabi
 {
@@ -7,12 +8,7 @@ namespace Hanabi
         private const int MaxClueCounter = 8;
         private const int MaxBlowCounter = 3;
 
-        private readonly Deck _deck;
-
-        public Deck Deck
-        {
-            get { return _deck; }
-        }
+        public Deck Deck { get; }
 
         public FireworkPile FireworkPile;
         public DiscardPile DiscardPile;
@@ -20,28 +16,24 @@ namespace Hanabi
         private int _clueCounter;
         public int ClueCounter
         {
-            get
-            {
-                return _clueCounter;
-            }
+            get => _clueCounter;
             set
             {
-                if (0 <= value && value <= MaxClueCounter)
-                    _clueCounter = value;
+                Contract.Requires<ArgumentOutOfRangeException>(0 <= value && value <= MaxClueCounter);
+
+                _clueCounter = value;
             }
         }
 
         private int _blowCounter;
         public int BlowCounter
         {
-            get
-            {
-                return _blowCounter;
-            }
+            get => _blowCounter;
             set
             {
-                if (0 <= value && value <= MaxBlowCounter)
-                    _blowCounter = value;
+                Contract.Requires<ArgumentOutOfRangeException>(0 <= value && value <= MaxBlowCounter);
+
+                _blowCounter = value;
             }
         }
 
@@ -49,11 +41,12 @@ namespace Hanabi
         {
             ClueCounter = MaxClueCounter;
             BlowCounter = MaxBlowCounter;
-            _deck = deck;
+            Deck = deck;
         }
 
         public static Board Create(IGameProvider provider)
         {
+            Contract.Requires<ArgumentNullException>(provider != null);
             Contract.Ensures(Contract.Result<Board>() != null);
 
             var cards = new CardsToMatrixConverter(provider).Decode(provider.CreateFullDeckMatrix());

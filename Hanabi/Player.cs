@@ -13,132 +13,76 @@ namespace Hanabi
     public class Player
     {
         private readonly Knowledge _memory;
-        private readonly IGameProvider _provider;
-
-        public Knowledge Memory
-        {
-            get { return _memory; }
-        }
-
         private readonly PilesAnalyzer _pilesAnalyzer;
 
         public event EventHandler ClueGiven;
-        public event EventHandler Discarded;
-        public event EventHandler<CardAddedEventArgs> CardAdded;
-        public event EventHandler Blown;
 
-        private IReadOnlyList<Guess> Guesses
-        {
-            get { return _memory.GetGuesses(); }
-        }
+        private IReadOnlyList<Guess> Guesses => _memory.GetGuesses();
 
-        public string Name { get; set; }
+        public string Name { get; }
 
         private readonly Game _game;
 
-        public const double ProbabilityThreshold = 0.8;
+        public const double PlayProbabilityThreshold = 0.8;
+        public const double DiscardProbabilityThreshold = 0.05;
 
-        private DiscardPile DiscardPile
-        {
-            get
-            {
-                Contract.Ensures(Contract.Result<DiscardPile>() != null);
-                return _game.Board.DiscardPile;
-            }
-        }
+        private DiscardPile DiscardPile => _game.Board.DiscardPile;
 
-        private FireworkPile FireworkPile
-        {
-            get
-            {
-                Contract.Ensures(Contract.Result<FireworkPile>() != null);
+        private FireworkPile FireworkPile => _game.Board.FireworkPile;
 
-                return _game.Board.FireworkPile;
-            }
-        }
+        private int BlowCounter => _game.Board.BlowCounter;
 
-        private int BlowCounter
-        {
-            get { return _game.Board.BlowCounter; }
-        }
-
-        private int ClueCounter
-        {
-            get { return _game.Board.ClueCounter; }
-        }
+        int ClueCounter => _game.Board.ClueCounter;
 
         private IReadOnlyList<Player> Players
         {
             get
             {
-                Contract.Ensures(Contract.Result<IReadOnlyList<Player>>() != null);
+                var contractResult = Contract.Result<IReadOnlyList<Player>>();
+                Contract.Ensures(contractResult != null);
+                Contract.Ensures(contractResult.Any());
+                Contract.Ensures(Contract.ForAll(contractResult, player => player != this));
+
                 return _game.GetPlayersExcept(this);
             }
         }
 
+        public IGameProvider GameProvider => _game.GameProvider;
+
         private readonly List<CardInHand> _specialCards = new List<CardInHand>();
 
-        public Player(Game game, IGameProvider provider)
+        public Player(Game game, string name)
         {
             Contract.Requires<ArgumentNullException>(game != null);
-            Contract.Requires<ArgumentNullException>(provider != null);
 
-            _memory = new Knowledge(provider, this);
-            _pilesAnalyzer = new PilesAnalyzer(provider);
+            _memory = new Knowledge(game.GameProvider);
+            _pilesAnalyzer = new PilesAnalyzer(game.GameProvider);
             _game = game;
-            _provider = provider;
+            Name = name;
         }
 
         public IReadOnlyList<CardInHand> ShowCards(Player to)
         {
-            Contract.Requires<HanabiException>(to != this);
+            Contract.Requires<ArgumentNullException>(to != null);
+            Contract.Requires<HanabiException>(to != this, "You can't see your own cards!");
 
             return _memory.GetHand();
         }
 
-        public void ListenClue(IReadOnlyCollection<CardInHand> cards, Clue clue)
+        public void ListenClue(ICollection<CardInHand> cards, Clue clue)
         {
             Contract.Requires<ArgumentNullException>(cards != null);
-            Contract.Requires(cards.Any());
+            Contract.Requires<ArgumentException>(cards.Any());
+            Contract.Requires(Contract.ForAll(cards, card => card.Player == this));
 
             Contract.Requires<ArgumentNullException>(clue != null);
+            Contract.Requires(clue.IsStraightClue);
 
-            // эвристика:
-            // если на столе уже лежат 3-4 единицы/двойки/тройки/четвёрки 
-            // и указали на одну единицу/двойку/тройку/четвёрку, то ей надо ходить. 
-            // При этом если должны быть выложены карты всех цветов номиналом ниже.
-            ClueAboutNominalVisitor visitor = new ClueAboutNominalVisitor();
-
-            if (cards.Count == 1 && clue.Accept(visitor))
+            // эвристика
+            if (cards.Count == 1 && ClueDetailInfo.IsSubtleClue(FireworkPile, clue))
             {
-                Nominal nominalAboutClue = visitor.Nominal.Value;
-
-                if (nominalAboutClue != Nominal.Five)
-                {
-                    bool prevFullFilled;
-                    Nominal? prevNominal = nominalAboutClue.GetPreviousNumber();
-                    if (prevNominal == null)
-                    {
-                        prevFullFilled = true;
-                    }
-                    else
-                    {
-                        prevFullFilled = 
-                            FireworkPile.Cards.Count(card => card.Nominal == prevNominal) == _provider.Colors.Count;
-                    }
-                    
-                    int cardsCount =
-                        FireworkPile.Cards.Count(card => card.Nominal == nominalAboutClue);
-
-                    int diff = _provider.Colors.Count - cardsCount;
-
-                    if (prevFullFilled && 
-                        (diff == 1 || diff == 2))
-                    {
-                        Logger.Log.Info("It's a subtle clue");
-                        _specialCards.Add(cards.First());
-                    }
-                }
+                Logger.Log.Info("It's a subtle clue");
+                _specialCards.Add(cards.First());
             }
 
             _memory.Update(cards, clue);
@@ -162,15 +106,11 @@ namespace Hanabi
                 return;
             }
 
-            bool clueGiven;
+            bool clueGiven = false;
             if (ClueCounter > 0)
             {
                 LogPlayersCards();
                 clueGiven = OfferClue();
-            }
-            else
-            {
-                clueGiven = false;
             }
 
             if (!clueGiven)
@@ -183,9 +123,9 @@ namespace Hanabi
         /// <summary>
         /// The player takes a card from their hand and places it face up in front of them.
         /// There are then 2 possibilies:
-        /// (*) if the cardInHand can start, or can be added to a firework,
+        /// (*) if the card can start, or can be added to a firework,
         ///     it is placed face-up on that firework's pile
-        /// (*) if the cardInHand cannot be added to a firework, 
+        /// (*) if the card cannot be added to a firework, 
         ///     it is discarded, and the red counter is placed 
         ///     in the tin lid.
         ///
@@ -195,25 +135,11 @@ namespace Hanabi
         /// <param name="cardInHand"></param>
         public void PlayCard(CardInHand cardInHand)
         {
-            Logger.Log.InfoFormat("{0} is played", cardInHand);
+            Contract.Requires<ArgumentNullException>(cardInHand != null);
+            Contract.Requires(cardInHand.Player != this);
 
             _memory.Remove(cardInHand);
-            
-            bool added = FireworkPile.AddCard(cardInHand.Card);
-
-            if (added)
-            {
-                Logger.Log.InfoFormat("Firework pile: {0}", FireworkPile);
-                
-                RaiseCardAddedEvent(cardInHand.Card);
-            }
-            else
-            {
-                Logger.Log.InfoFormat("BLOW!");
-
-                DiscardPile.AddCard(cardInHand.Card);
-                RaiseBlownEvent();
-            }
+            _game.AddCardToFirework(this, cardInHand.Card);
         }
 
         /// <summary>
@@ -225,13 +151,10 @@ namespace Hanabi
         public void DiscardCard(CardInHand card)
         {
             Contract.Requires<ArgumentNullException>(card != null);
-
-            Logger.Log.InfoFormat("{0} discarded", card);
+            Contract.Requires(card.Player == this);
 
             _memory.Remove(card);
-
-            DiscardPile.AddCard(card.Card);
-            RaiseDiscardedEvent();
+            _game.AddCardToDiscardPile(this, card.Card);
         }
 
         /// <summary>
@@ -245,88 +168,87 @@ namespace Hanabi
         {
             if (ClueCounter <= 0) throw new HanabiException("Zero blue counter");
 
-            var candidate = FindClueCandidate();
-
-            // ну совсем нечего игроку подсказывать...
-            // тогда не будем ему ничего подсказывать
-            if (candidate == null) return false;
-
-            Player playerToClue = candidate.Player;
-            CardInHand cardToClue = candidate.Card;
+            HardSolution solution;
+            Player playerToClue = null;
+            Clue clue = null;
             
-            // чтобы подсказки не повторялись, посмотрим, 
-            // давали ли аналогичную подсказку раньше
-            IReadOnlyList<Clue> previousClues =
-                playerToClue._memory.GetPreviousCluesAboutCard(cardToClue);
+            if (ClueCounter == 1)
+            {
+                LastTinClueStrategy strategy = new LastTinClueStrategy(this, _game.Board, GameProvider);
+                solution = strategy.FindClueCandidate(_game.GetPlayersExcept(this));
 
-            IReadOnlyCollection<CardInHand> cardsToClue;
-            Clue clue = new ClueAboutNominal(cardToClue.Card.Nominal);
-            if (previousClues.Contains(clue))
-            {
-                clue = new ClueAboutColor(cardToClue.Card.Color);
-                cardsToClue = playerToClue.ShowCards(this)
-                                        .Where(card => card.Card.Color == cardToClue.Card.Color)
-                                        .ToList()
-                                        .AsReadOnly();
+                switch (solution.Situation)
+                {
+                    case ClueSituation.ClueExists:
+
+                        playerToClue = solution.PlayerToClue;
+                        clue = solution.Clue;
+                        break;
+
+                    case ClueSituation.ClueDoesntExist:
+                        Logger.Log.Info(String.Format($"Player {Name} has to discard, because there isn't a clue"));
+                        return false;
+                        break;
+
+                    default:
+                        break;
+                }
             }
-            else
+
+            if (clue == null && playerToClue == null)
             {
-                cardsToClue = playerToClue.ShowCards(this)
-                                        .Where(card => card.Card.Nominal == cardToClue.Card.Nominal)
-                                        .ToList()
-                                        .AsReadOnly();
+                BoardContext boardContext = BoardContext.Create(_game.Board, _pilesAnalyzer, PlayerCards());
+                var manyTinClueStrategy = new ManyTinClueStrategy(this, boardContext, GameProvider);
+
+                solution = manyTinClueStrategy.FindClueCandidate(Players);
+
+                if (solution.Situation == ClueSituation.ClueDoesntExist) return false;
+
+                clue = solution.Clue;
+                playerToClue = solution.PlayerToClue;
             }
+
+            var cardsToClue = ClueDetailInfo.GetCardsToClue(playerToClue.ShowCards(this), clue);
+            GiveClue(playerToClue, clue, cardsToClue);
+            return true;
+
+            IList<Card> PlayerCards()
+            {
+                return Players.Aggregate(new List<Card>(),
+                    (acc, player) => acc.Concat(player.ShowCards(this).Select(cardInHand => cardInHand.Card)).ToList());
+            }
+        }
+
+        private void GiveClue(Player playerToClue, Clue clue, ICollection<CardInHand> cardsToClue)
+        {
+            Contract.Requires<ArgumentNullException>(playerToClue != null);
+            Contract.Requires<ArgumentNullException>(clue != null);
+            Contract.Requires(clue.IsStraightClue, "You must say rank or color!");
+            Contract.Requires<ArgumentNullException>(cardsToClue != null);
+            Contract.Requires<ArgumentNullException>(cardsToClue.Any());
+            Contract.Requires(Contract.ForAll(cardsToClue, card => card.Player == playerToClue));
 
             playerToClue.ListenClue(cardsToClue, clue);
 
-            Logger.Log.InfoFormat("Player {0} gives clue to player {1}: {2}",
-                Name,
-                playerToClue.Name,
-                clue);
+            Logger.Log.Info(String.Format(
+                $"Player {Name} gives clue to player {playerToClue.Name}: {clue}"));
+
             RaiseClueGivenEvent();
-
-            return true;
         }
 
-        private ClueCandidate FindClueCandidate()
+        public void AddCard(CardInHand cardInHand)
         {
-            // cards that we can play at this turn
-            var needCards = FireworkPile.GetExpectedCards();
-
-            ClueCandidate candidate = FindCardsToPlayAtHands(needCards);
-
-            if (candidate == null)
-            {
-                // если нет карт, которыми игрок может сходить прямо сейчас, 
-                // то укажем на карты, которые ни в коем случае нельзя сбрасывать
-                var uniqueCards = _pilesAnalyzer.GetUniqueCards(FireworkPile, DiscardPile);
-                candidate = FindUniqueCardsAtHands(uniqueCards);
-            }
-
-            if (candidate == null)
-            {
-                // снова нет...
-                // тогда ищем карты, которыми игрок может сходить в будущем
-
-                var whateverPlayCards =
-                    _pilesAnalyzer.GetCardsWhateverToPlay(FireworkPile, DiscardPile);
-
-                candidate = FindWhateverPlayCardsAtHands(whateverPlayCards);
-            }
-
-            return candidate;
-        }
-        
-        public CardInHand AddCardToHand(Card card)
-        {
-            Contract.Requires<ArgumentNullException>(card != null);
-            Contract.Ensures(Contract.Result<CardInHand>() != null);
-
-            return _memory.Add(card);
+            Contract.Requires<ArgumentNullException>(cardInHand != null);
+            Contract.Requires(cardInHand.Player == this);
+            
+            _memory.Add(cardInHand);
         }
 
         private CardInHand GetCardToPlay()
         {
+            Contract.Ensures(Contract.Result<CardInHand>() == null ||
+                            Contract.Result<CardInHand>().Player == this);
+
             List<CardInHand> cardsToPlay = new List<CardInHand>();
             if (_specialCards.Count > 0)
             {
@@ -343,12 +265,12 @@ namespace Hanabi
                 var excludedCards =
                     _pilesAnalyzer.GetThrownCards(FireworkPile, DiscardPile)
                         .Concat(GetOtherPlayersCards().Select(cardInHand => cardInHand.Card));
-                
+
                 // поискать у себя карты из списка нужных
                 foreach (Guess guess in Guesses)
                 {
                     var probability = guess.GetProbability(neededCards, excludedCards);
-                    if (probability > ProbabilityThreshold)
+                    if (probability > PlayProbabilityThreshold)
                     {
                         cardsToPlay.Add(_memory.GetCardByGuess(guess));
                     }
@@ -357,34 +279,52 @@ namespace Hanabi
 
             // эвристика:
             // если игрок знает, что у него есть единица, то пусть играет ей.
-            if (cardsToPlay.Count == 0 && BlowCounter > 1)
+            // при условии, что ещё нужны единицы
+            if (
+                FireworkPile.GetExpectedCards().Any(card => card.Rank == Rank.One) &&
+                cardsToPlay.Count == 0 && 
+                BlowCounter > 1)
             {
-                CardInHand card = GetCardWithNominalOneToPlay();
+                CardInHand card = GetCardWithRankOneToPlay();
                 if (card != null)
+                {
+                    Logger.Log.Info("I know that I have One. I'll try to play it.");
                     cardsToPlay.Add(card);
+                }
             }
 
             if (cardsToPlay.Count == 0)
                 return null;
 
             cardsToPlay = cardsToPlay
-                            .OrderBy(card => (int) card.Card.Nominal)
-                            .ToList();
+                .OrderBy(card => (int) card.Card.Rank)
+                .ToList();
 
-            return cardsToPlay.Last().Card.Nominal == Nominal.Five ? cardsToPlay.Last() : cardsToPlay.First();
+            return cardsToPlay.Last().Card.Rank == Rank.Five ? cardsToPlay.Last() : cardsToPlay.First();
         }
 
-        private CardInHand GetCardWithNominalOneToPlay()
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        private CardInHand GetCardWithRankOneToPlay()
         {
-            IClueVisitor clueFinder = new ClueAboutNominalFinder(Nominal.One);
-            // Если мы знаем, что одна из карт -- единица, то ходим ей.
+            Contract.Ensures(
+                Contract.Result<CardInHand>() == null || 
+                Contract.Result<CardInHand>().Player == this && 
+                Contract.Result<CardInHand>().Card.Rank == Rank.One);
+
+            var clueFinder = new ClueAboutRankVisitor();
+            // Если мы знаем, что одна из карт -- единица неизвестного цвета, то ходим ей.
             foreach (var card in _memory.GetHand())
             {
-                foreach (var clue in _memory.GetPreviousCluesAboutCard(card))
+                foreach (var clue in _memory.GetCluesAboutCard(card))
                 {
-                    if (clue.Accept(clueFinder))
+                    if (clue.Accept(clueFinder) && 
+                        clueFinder.Rank == Rank.One &&
+                        !KnowAboutNominalAndColor(card))
                     {
-                        Logger.Log.InfoFormat("Player {0} finds cards with nominal One", Name);
+                        Logger.Log.InfoFormat("Player {0} finds cards with rank One", Name);
                         return card;
                     }
                 }
@@ -392,34 +332,30 @@ namespace Hanabi
             return null;
         }
 
-        private List<CardInHand> FindCardsAtPlayer(Player player, IEnumerable<Card> cardsToSearch)
-        {
-            // надо исключить карты, о которых игрок знает всё.
-            return player.ShowCards(this)
-                        .Where(cardInHand => cardsToSearch.Any(card => Equals(card, cardInHand.Card)))
-                        .ToList();
-        }
-
-        // нужно выбросить ту карту, которая не нужна.
-        //TODO пересмотреть реализацию метода
-        //Выбросить нужно ту карту, которая не нужна => P(карта сыграна U уже не может быть сыграна) -> max
-        //Нужно как-то учесть критичность карты, чтобы ненароком не выбросить нужное.
+        // Выбросить нужно ту карту, которая не нужна => P(карта сыграна U уже не может быть сыграна) -> max
+        // Нужно как-то учесть критичность карты, чтобы ненароком не выбросить нужное.
         // P(карта сыграна U уже не может быть сыграна) -> max И
-        // P(карта не критичная) -> min
-        //
-        // Сейчас алгоритм такой. 
-        // Сперва ищем среди тех карт, о которых известен номинал или цвет.
-        //      Если среди них есть карта, которую можно выкинуть, то выкидывает её.
-        // Иначе ищем среди тех карт, о которых ничего конкретно неизвестно, ту,
         // P(карта не критичная) -> min
         private CardInHand GetCardToDiscard()
         {
+            Contract.Ensures(Contract.Result<CardInHand>() != null);
+            Contract.Ensures(Contract.Result<CardInHand>().Player == this);
+
             var uniqueCards = _pilesAnalyzer.GetUniqueCards(FireworkPile, DiscardPile);
 
             var thrownCards = _pilesAnalyzer.GetThrownCards(FireworkPile, DiscardPile);
-            var otherPlayerCards = GetOtherPlayersCards();
+            var otherPlayerCards = GetOtherPlayersCards().Select(cih => cih.Card).ToList();
 
-            var excludedCards = thrownCards.Concat(otherPlayerCards.Select(cardInHand => cardInHand.Card));
+            var excludedCards = thrownCards.Concat(otherPlayerCards);
+
+            var boardContext = BoardContext.Create(_game.Board, _pilesAnalyzer, otherPlayerCards);
+            //var playerContext = new PlayerContext(this, );
+
+            //var discardStrategy = new DiscardStrategy();
+            //discardStrategy.EstimateDiscardProbability(boardContext, playerContext);
+
+            var cardsWhateverToPlay = 
+                _pilesAnalyzer.GetCardsWhateverToPlay(FireworkPile, DiscardPile);
 
             // разделим карты на две категории:
             // (*) о которых что-то известно (номинал или цвет),
@@ -427,19 +363,16 @@ namespace Hanabi
 
             // если из тех карт, о которых что-то известно, есть те, которые можно выкинуть,
             // то выкидываем. 
-            var guessesAboutKnownCards = _memory.GetGuesses()
-                .Where(guess => guess.KnowAboutNominalOrColor());
-            
-            Guess guessToDiscard = 
-                guessesAboutKnownCards
-                .Select(guess => new
-                    {
-                        Guess = guess, 
-                        Probability = Math.Abs(guess.GetProbability(uniqueCards, excludedCards))
-                    })
-                .Where(gp => gp.Probability < 0.05)
-                .Select(gp => gp.Guess)
-                .FirstOrDefault();
+            var guessesAboutKnownCards = 
+                    _memory
+                        .GetGuesses()
+                        .Where(guess => guess.KnowAboutRankOrColor());
+
+            bool Predicate(Guess guess) => 
+                guess.GetProbability(cardsWhateverToPlay, excludedCards) < DiscardProbabilityThreshold;
+
+            Guess guessToDiscard =
+                guessesAboutKnownCards.FirstOrDefault(guess => Predicate(guess));
 
             if (guessToDiscard != null)
                 return _memory.GetCardByGuess(guessToDiscard);
@@ -447,146 +380,84 @@ namespace Hanabi
             // что ж, тогда копаемся со второй группой.
             // для каждой карты оценим вероятность того, что она - карта - критичная
             // выбросим карту с наименьшей вероятностью
-            guessToDiscard = 
-                _memory.GetGuesses()
+            guessToDiscard =
+                Guesses
                     .Except(guessesAboutKnownCards)
                     .OrderBy(guess => guess.GetProbability(uniqueCards, excludedCards))
-                    .First();
+                    .FirstOrDefault();
 
-            
+            if (guessToDiscard == null)
+            {
+                guessToDiscard = guessesAboutKnownCards
+                    .OrderBy(guess => guess.GetProbability(uniqueCards, excludedCards))
+                    .First();
+            }
+
             return _memory.GetCardByGuess(guessToDiscard);
         }
 
         private IReadOnlyList<CardInHand> GetOtherPlayersCards()
         {
+            Contract.Ensures(Contract.Result<IReadOnlyList<CardInHand>>() != null);
+            Contract.Ensures(Contract.Result<IReadOnlyList<CardInHand>>().Any());
+
             List<CardInHand> result = new List<CardInHand>();
 
             return Players
-                    .Aggregate(result, (current, player) => current.Concat(player.ShowCards(this)).ToList())
-                    .Where(card => card != null)
-                    .ToList()
-                    .AsReadOnly();
+                .Aggregate(result, (cards, player) => cards.Concat(player.ShowCards(this)).ToList())
+                .Where(card => card != null)
+                .ToList()
+                .AsReadOnly();
         }
 
-        public bool KnowAllAboutNominalAndColor(CardInHand card)
+        public bool KnowAboutNominalAndColor(CardInHand cardInHand)
         {
-            Contract.Requires<ArgumentNullException>(card != null);
+            Contract.Requires<ArgumentNullException>(cardInHand != null);
+            Contract.Requires<ArgumentException>(cardInHand.Player == this);
 
-            return _memory.GetGuessAboutCard(card).KnowAboutNominalAndColor();
+            return _memory.GetGuessAboutCard(cardInHand).KnowAboutNominalAndColor();
         }
 
-        private ClueCandidate FindCardsToPlayAtHands(IEnumerable<Card> cardsToSearch)
+        public IReadOnlyList<Clue> GetCluesAboutCard(CardInHand cardInHand)
         {
-            ClueCandidate candidate = null;
-            foreach (Player player in Players)
-            {
-                var cards = FindCardsAtPlayer(player, cardsToSearch);
+            Contract.Requires<ArgumentNullException>(cardInHand != null);
+            Contract.Requires<ArgumentException>(cardInHand.Player == this);
 
-                // уберём карты, цвет и номинал которых игрок знает.
-                // упорядочим их по номиналу
-                cards = cards.FindAll(card => !player.KnowAllAboutNominalAndColor(card))
-                            .OrderBy(card => (int) card.Card.Nominal)
-                            .ToList();
-
-                if (cards.Count > 0)
-                {
-                    // если есть 5, то пусть ходит 5
-                    // иначе пусть ходит картой с наименьшим номиналом
-                    candidate = new ClueCandidate
-                    {
-                        Player = player,
-                        Card = cards.Last().Card.Nominal == Nominal.Five ? cards.Last() : cards.First(),
-                    };
-                    break;
-                }
-            }
-            return candidate;
+            return _memory.GetCluesAboutCard(cardInHand);
         }
 
-        private ClueCandidate FindUniqueCardsAtHands(IEnumerable<Card> uniqueCards)
+        public IList<Card> GetKnownCards()
         {
-            ClueCandidate candidate = null;
+            Contract.Ensures(Contract.Result<IList<Card>>() != null);
 
-            foreach (var player in Players)
-            {
-                var cardToClue = FindCardsAtPlayer(player, uniqueCards)
-                    .FindAll(card => !player.KnowAllAboutNominalAndColor(card))
-                    .FirstOrDefault();
-
-                if (cardToClue != null)
-                {
-                    candidate = new ClueCandidate
-                    {
-                        Card = cardToClue,
-                        Player = player,
-                    };
-                    break;
-                }
-            }
-
-            return candidate;
+            return
+                Guesses
+                    .Where(guess => guess.KnowAboutNominalAndColor())
+                    .Select(guess => _memory.GetCardByGuess(guess).Card)
+                    .ToList();
         }
 
-        private ClueCandidate FindWhateverPlayCardsAtHands(IEnumerable<Card> cardsToSearch)
-        {
-            ClueCandidate candidate = null;
-
-            foreach (var player in Players)
-            {
-                var cardToClue = FindCardsAtPlayer(player, cardsToSearch)
-                    .FindAll(card => !player.KnowAllAboutNominalAndColor(card))
-                    .FirstOrDefault();
-
-                if (cardToClue != null)
-                {
-                    candidate = new ClueCandidate
-                    {
-                        Card = cardToClue,
-                        Player = player,
-                    };
-                    break;
-                }
-            }
-
-            return candidate;
-        }
+        #region Raise events
 
         private void RaiseClueGivenEvent()
         {
-            if (ClueGiven != null)
-                ClueGiven(this, new EventArgs());
+            ClueGiven?.Invoke(this, new EventArgs());
         }
 
-        private void RaiseDiscardedEvent()
-        {
-            if (Discarded != null)
-                Discarded(this, new EventArgs());
-        }
-
-        private void RaiseCardAddedEvent(Card card)
-        {
-            if (CardAdded != null)
-                CardAdded(this, new CardAddedEventArgs {Card = card});
-        }
-
-        private void RaiseBlownEvent()
-        {
-            if (Blown != null)
-                Blown(this, new EventArgs());
-        }
+        #endregion
 
         private void LogPlayersCards()
         {
             string logEntry = string.Empty;
             foreach (var player in Players)
             {
-                logEntry += String.Format("Player {0} hand: {1}", player.Name, Environment.NewLine);
+                logEntry += $"Player {player.Name} hand: {Environment.NewLine}";
 
                 foreach (var card in player.ShowCards(this))
                 {
-                    string logString = String.Format("\t{0}", card);
+                    string logString = $"\t{card}";
                     var logClueVisitor = new LogClueVisitor();
-                    foreach (Clue clue in player._memory.GetPreviousCluesAboutCard(card))
+                    foreach (Clue clue in player._memory.GetCluesAboutCard(card))
                     {
                         clue.Accept(logClueVisitor);
                     }

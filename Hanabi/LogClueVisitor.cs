@@ -6,17 +6,17 @@ namespace Hanabi
     {
         readonly StringBuilder _stringBuilder = new StringBuilder();
 
-        public bool Visit(ClueAboutNominal clue)
+        public bool Visit(ClueAboutRank clue)
         {
             if (_stringBuilder.Length > 0) _stringBuilder.Append(", ");
-            _stringBuilder.Append(clue.Nominal);
+            _stringBuilder.Append(clue.Rank);
             return true;
         }
 
-        public bool Visit(ClueAboutNotNominal clue)
+        public bool Visit(ClueAboutNotRank clue)
         {
             if (_stringBuilder.Length > 0) _stringBuilder.Append(", ");
-            _stringBuilder.Append("Not " + clue.Nominal);
+            _stringBuilder.Append("Not " + clue.Rank);
             return true;
         }
 

@@ -8,7 +8,7 @@ namespace Hanabi
         Matrix CreateFullDeckMatrix();
 
         IReadOnlyList<Color> Colors { get; }
-        IReadOnlyList<Nominal> Nominals { get; }
+        IReadOnlyList<Rank> Nominals { get; }
 
         int ColorToInt(Color color);
         int GetMaximumScore();

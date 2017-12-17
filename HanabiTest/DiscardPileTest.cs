@@ -13,11 +13,11 @@ namespace HanabiTest
             IGameProvider provider = new FakeGameProvider()
             {
                 Colors = new List<Color>() {Color.Blue, Color.Green, Color.Red, Color.White},
-                Nominals = new List<Nominal> {Nominal.One, Nominal.Two, Nominal.Three, Nominal.Four},
+                Nominals = new List<Rank> {Rank.One, Rank.Two, Rank.Three, Rank.Four},
             };
             var discardPile = new DiscardPile(provider);
 
-            var blueThreeCard = new Card(Color.Blue, Nominal.Three);
+            var blueThreeCard = new Card(Color.Blue, Rank.Three);
 
             bool added = discardPile.AddCard(blueThreeCard);
             Assert.IsTrue(added);

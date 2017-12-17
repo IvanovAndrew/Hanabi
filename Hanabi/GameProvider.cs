@@ -19,11 +19,11 @@ namespace Hanabi
             {
                 if (color == Color.Multicolor) continue;
 
-                result[Nominal.One, color] = 3;
-                result[Nominal.Two, color] = 2;
-                result[Nominal.Three, color] = 2;
-                result[Nominal.Four, color] = 2;
-                result[Nominal.Five, color] = 1;
+                result[Rank.One, color] = 3;
+                result[Rank.Two, color] = 2;
+                result[Rank.Three, color] = 2;
+                result[Rank.Four, color] = 2;
+                result[Rank.Five, color] = 1;
             }
 
             return result;
@@ -39,22 +39,18 @@ namespace Hanabi
             {
                 for (int j = 0; j < Colors.Count; j++)
                 {
-                    result[(Nominal) i, Colors[j]] = table[i, j];
+                    result[(Rank) i, Colors[j]] = table[i, j];
                 }
             }
 
             return result;
         }
 
-        public IReadOnlyList<Color> Colors
-        {
-            get { return new[] { Color.Blue, Color.Green, Color.Red, Color.White, Color.Yellow }; }
-        }
+        public IReadOnlyList<Color> Colors => 
+            new[] { Color.Blue, Color.Green, Color.Red, Color.White, Color.Yellow };
 
-        public IReadOnlyList<Nominal> Nominals
-        {
-            get { return new[] { Nominal.One, Nominal.Two, Nominal.Three, Nominal.Four, Nominal.Five, }; }
-        }
+        public IReadOnlyList<Rank> Nominals => 
+            new[] { Rank.One, Rank.Two, Rank.Three, Rank.Four, Rank.Five, };
 
         public int GetMaximumScore()
         {

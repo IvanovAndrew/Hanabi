@@ -27,9 +27,11 @@ namespace HanabiTest
         [TestCase(5)]
         public void Game_CorrectNumberOfPlayers_NotThrowsException(int playersCount)
         {
-            FakeGameProvider provider = new FakeGameProvider();
-            provider.Colors = new List<Color> {Color.Blue};
-            provider.Nominals = new List<Nominal> { Nominal.One };
+            FakeGameProvider provider = new FakeGameProvider
+            {
+                Colors = new List<Color> {Color.Blue},
+                Nominals = new List<Rank> {Rank.One}
+            };
             provider.FullDeckMatrix = provider.CreateEmptyMatrix();
             new Game(provider, playersCount);
             Assert.Pass();
@@ -53,7 +55,7 @@ namespace HanabiTest
             FakeGameProvider provider = new FakeGameProvider
             {
                 Colors = new List<Color> {Color.Blue},
-                Nominals = new List<Nominal> {Nominal.One}
+                Nominals = new List<Rank> {Rank.One}
             };
             provider.FullDeckMatrix = provider.CreateEmptyMatrix();
 

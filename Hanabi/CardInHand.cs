@@ -2,8 +2,8 @@
 {
     public class CardInHand
     {
-        public Card Card { get; private set; }
-        public Player Player { get; private set; }
+        public Card Card { get; }
+        public Player Player { get; }
 
         public CardInHand(Player player, Card card) : this(card, player) { }
 

@@ -4,6 +4,7 @@ using System.Diagnostics.Contracts;
 
 namespace Hanabi
 {
+    [ContractClass(typeof(PileContract))]
     public abstract class Pile
     {
         protected Matrix Matrix;
@@ -19,11 +20,24 @@ namespace Hanabi
             Converter = new CardsToMatrixConverter(provider);
         }
 
-        public IReadOnlyList<Card> Cards
-        {
-            get { return Converter.Decode(Matrix); }
-        }
+        public IReadOnlyList<Card> Cards => Converter.Decode(Matrix);
 
         public abstract bool AddCard(Card card);
+    }
+
+    [ContractClassFor(typeof(Pile))]
+    public abstract class PileContract : Pile
+    {
+        public override bool AddCard(Card card)
+        {
+            Contract.Requires<ArgumentNullException>(card != null);
+
+            throw new NotImplementedException();
+        }
+
+        protected PileContract(IGameProvider provider) : base(provider)
+        {
+            Contract.Requires<ArgumentNullException>(provider != null);
+        }
     }
 }

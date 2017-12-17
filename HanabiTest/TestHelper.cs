@@ -1,10 +1,49 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Hanabi;
 using NUnit.Framework;
 
 namespace HanabiTest
 {
+    #region Stubs
+    public class PlayerContextStub : IPlayerContext
+    {
+        public Player Player { get; set; }
+        public IEnumerable<CardInHand> Hand { get; set; }
+        public Clue PossibleClue { get; set; }
+
+        public Predicate<CardInHand> IsSubtleCluePredicate { get; set; }
+        public Predicate<CardInHand> KnowAboutRankOrColorPredicate { get; set; }
+        
+        public bool IsSubtleClue(CardInHand cardInHand, FireworkPile firework)
+        {
+            return IsSubtleCluePredicate(cardInHand);
+        }
+
+        public IList<Clue> GetCluesAboutCard(CardInHand cardInHand)
+        {
+            return new List<Clue>();
+        }
+
+        public bool KnowAboutRankOrColor(CardInHand cardInHand)
+        {
+            return KnowAboutRankOrColorPredicate(cardInHand);
+        }
+    }
+    
+    public class BoardContextStub : IBoardContext
+    {
+        public FireworkPile Firework { get; set; }
+        public DiscardPile DiscardPile { get; set; }
+        public IEnumerable<Card> UniqueCards { get; set; }
+        public IEnumerable<Card> WhateverToPlayCards { get; set; }
+        public IEnumerable<Card> ExcludedCards { get; set; }
+    }
+
+    #endregion
+    
+
     public class FakeGameProvider : IGameProvider
     {
         public Matrix FullDeckMatrix { get; set; }
@@ -20,7 +59,7 @@ namespace HanabiTest
         }
 
         public IReadOnlyList<Color> Colors { get; set; }
-        public IReadOnlyList<Nominal> Nominals { get; set; }
+        public IReadOnlyList<Rank> Nominals { get; set; }
         
         public int ColorToInt(Color color)
         {
@@ -54,21 +93,37 @@ namespace HanabiTest
             FakeGameProvider gameProvider = new FakeGameProvider
             {
                 Colors = colors.ToList(),
-                Nominals = new List<Nominal> { Nominal.One, Nominal.Two, Nominal.Three, Nominal.Four, Nominal.Five }
+                Nominals = new List<Rank> { Rank.One, Rank.Two, Rank.Three, Rank.Four, Rank.Five }
             };
 
             gameProvider.FullDeckMatrix = gameProvider.CreateEmptyMatrix();
 
             foreach (var color in colors)
             {
-                gameProvider.FullDeckMatrix[Nominal.One, color] = 3;
-                gameProvider.FullDeckMatrix[Nominal.Two, color] = 2;
-                gameProvider.FullDeckMatrix[Nominal.Three, color] = 2;
-                gameProvider.FullDeckMatrix[Nominal.Four, color] = 2;
-                gameProvider.FullDeckMatrix[Nominal.Five, color] = 1;
+                gameProvider.FullDeckMatrix[Rank.One, color] = 3;
+                gameProvider.FullDeckMatrix[Rank.Two, color] = 2;
+                gameProvider.FullDeckMatrix[Rank.Three, color] = 2;
+                gameProvider.FullDeckMatrix[Rank.Four, color] = 2;
+                gameProvider.FullDeckMatrix[Rank.Five, color] = 1;
             }
 
             return gameProvider;
+        }
+    }
+
+    public static class PlayerContextFabric
+    {
+        public static PlayerContextStub CreateStub(Player player, IEnumerable<CardInHand> hand)
+        {
+            var playerContext = new PlayerContextStub
+            {
+                Player = player,
+                Hand = hand,
+                IsSubtleCluePredicate = cardInHand => false,
+                KnowAboutRankOrColorPredicate = cardInHand => false,
+            };
+
+            return playerContext;
         }
     }
 

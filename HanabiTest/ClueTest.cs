@@ -9,11 +9,11 @@ namespace HanabiTest
         [Test]
         public void Revert_IsValueFive_ReturnsNotIsValueFive()
         {
-            Clue clue = new ClueAboutNominal(Nominal.Five);
+            Clue clue = new ClueAboutRank(Rank.Five);
 
             Clue revertedClue = clue.Revert();
 
-            Clue expectedClue = new ClueAboutNotNominal(Nominal.Five);
+            Clue expectedClue = new ClueAboutNotRank(Rank.Five);
 
             Assert.AreEqual(expectedClue, revertedClue);
         }
@@ -21,11 +21,11 @@ namespace HanabiTest
         [Test]
         public void Revert_IsNotValueFive_ReturnsIsValueFour()
         {
-            Clue clue = new ClueAboutNotNominal(Nominal.Four);
+            Clue clue = new ClueAboutNotRank(Rank.Four);
 
             Clue revertedClue = clue.Revert();
 
-            Clue expectedClue = new ClueAboutNominal(Nominal.Four);
+            Clue expectedClue = new ClueAboutRank(Rank.Four);
 
             Assert.AreEqual(expectedClue, revertedClue);
         }

@@ -10,6 +10,8 @@ namespace Hanabi
 
         public CardsToMatrixConverter(IGameProvider provider)
         {
+            Contract.Requires<ArgumentNullException>(provider != null);
+
             _provider = provider;
         }
 

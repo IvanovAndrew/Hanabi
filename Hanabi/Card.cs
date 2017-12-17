@@ -5,28 +5,28 @@ namespace Hanabi
 {
     public class Card
     {
-        public Nominal Nominal { get; private set; }
-        public Color Color {get; private set; }
+        public Rank Rank { get; }
+        public Color Color {get; }
 
-        public Card(Nominal nominal, Color color) : this(color, nominal)
+        public Card(Rank rank, Color color) : this(color, rank)
         {
             
         }
 
-        public Card(Color color, Nominal nominal)
+        public Card(Color color, Rank rank)
         {
-            Nominal = nominal;
+            Rank = rank;
             Color = color;
         }
 
         public override String ToString()
         {
-            return String.Format("{0} {1}", Color, Nominal);
+            return $"{Color} {Rank}";
         }
 
         private bool EqualsCore(Card card)
         {
-            return Color == card.Color && Nominal == card.Nominal;
+            return Color == card.Color && Rank == card.Rank;
         }
 
         public override bool Equals(object obj)
@@ -39,7 +39,7 @@ namespace Hanabi
         {
             unchecked
             {
-                return ((int) Nominal * 397) ^ (int) Color;
+                return ((int) Rank * 397) ^ (int) Color;
             }
         }
 
@@ -48,9 +48,9 @@ namespace Hanabi
         {
             Contract.Requires<ArgumentNullException>(card != null);
 
-            Nominal? nextNominal = card.Nominal.GetNextNumber();
+            Rank? nextRank = card.Rank.GetNextNumber();
 
-            return nextNominal != null ? new Card(nextNominal.Value, card.Color) : null;
+            return nextRank != null ? new Card(nextRank.Value, card.Color) : null;
         }
 
         
@@ -58,9 +58,21 @@ namespace Hanabi
         {
             Contract.Requires<ArgumentNullException>(card != null);
 
-            Nominal? previousNominal = card.Nominal.GetPreviousNumber();
+            Rank? previousRank = card.Rank.GetPreviousNumber();
 
-            return previousNominal != null ? new Card(previousNominal.Value, card.Color) : null;
+            return previousRank != null ? new Card(previousRank.Value, card.Color) : null;
+        }
+
+        public static bool operator ==(Card first, Card second)
+        {
+            if (Object.Equals(first, null)) return Object.Equals(second, null);
+
+            return first.Equals(second);
+        }
+
+        public static bool operator !=(Card first, Card second)
+        {
+            return !(first == second);
         }
     }
 
@@ -72,5 +84,14 @@ namespace Hanabi
         Yellow,
         White,
         Multicolor,
+    }
+
+    public enum Rank
+    {
+        One = 0,
+        Two = 1,
+        Three = 2,
+        Four = 3,
+        Five = 4
     }
 }

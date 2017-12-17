@@ -1,21 +1,20 @@
 ﻿namespace Hanabi
 {
-    public class ClueAboutNominalVisitor : IClueVisitor
+    public class ClueAboutRankVisitor : IClueVisitor
     {
-        private Nominal? _nominal;
-
-        public Nominal? Nominal
+        public Rank? Rank
         {
-            get { return _nominal; }
+            get;
+            private set;
         }
 
-        public bool Visit(ClueAboutNominal clue)
+        public bool Visit(ClueAboutRank clue)
         {
-            _nominal = clue.Nominal;
+            Rank = clue.Rank;
             return true;
         }
 
-        public bool Visit(ClueAboutNotNominal clue)
+        public bool Visit(ClueAboutNotRank clue)
         {
             return false;
         }

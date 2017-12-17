@@ -14,10 +14,10 @@ namespace Hanabi
             _matrix = new int[provider.Nominals.Count, provider.Colors.Count];
         }
 
-        public int this[Nominal nominal, Color color]
+        public int this[Rank rank, Color color]
         {
-            get { return _matrix[(int) nominal, _gameProvider.ColorToInt(color)]; }
-            set { _matrix[(int)nominal, _gameProvider.ColorToInt(color)] = value; } 
+            get => _matrix[(int) rank, _gameProvider.ColorToInt(color)];
+            set => _matrix[(int) rank, _gameProvider.ColorToInt(color)] = value;
         }
 
         public int this[Card card]
@@ -26,13 +26,13 @@ namespace Hanabi
             {
                 Contract.Requires<ArgumentNullException>(card != null);
 
-                return this[card.Nominal, card.Color];
+                return this[card.Rank, card.Color];
             }
             set
             {
                 Contract.Requires<ArgumentNullException>(card != null);
 
-                this[card.Nominal, card.Color] = value;
+                this[card.Rank, card.Color] = value;
             }
         }
     }

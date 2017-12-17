@@ -25,7 +25,7 @@ namespace HanabiTest
 
             foreach (var color in provider.Colors)
             {
-                Assert.AreEqual(3, actualMatrix[Nominal.One, color]);
+                Assert.AreEqual(3, actualMatrix[Rank.One, color]);
             }
         }
 
@@ -37,7 +37,7 @@ namespace HanabiTest
 
             foreach (var color in provider.Colors)
             {
-                Assert.AreEqual(2, actualMatrix[Nominal.Two, color]);
+                Assert.AreEqual(2, actualMatrix[Rank.Two, color]);
             }
         }
 
@@ -49,7 +49,7 @@ namespace HanabiTest
 
             foreach (var color in provider.Colors)
             {
-                Assert.AreEqual(2, actualMatrix[Nominal.Three, color]);
+                Assert.AreEqual(2, actualMatrix[Rank.Three, color]);
             }
         }
 
@@ -61,7 +61,7 @@ namespace HanabiTest
 
             foreach (var color in provider.Colors)
             {
-                Assert.AreEqual(2, actualMatrix[Nominal.Four, color]);
+                Assert.AreEqual(2, actualMatrix[Rank.Four, color]);
             }
         }
 
@@ -73,7 +73,7 @@ namespace HanabiTest
 
             foreach (var color in provider.Colors)
             {
-                Assert.AreEqual(1, actualMatrix[Nominal.Five, color]);
+                Assert.AreEqual(1, actualMatrix[Rank.Five, color]);
             }
         }
     }

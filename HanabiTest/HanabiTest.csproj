@@ -45,14 +45,20 @@
   <ItemGroup>
     <Compile Include="CardsToMatrixConverterTest.cs" />
     <Compile Include="CardTest.cs" />
+    <Compile Include="ClueAndCardMatcherTest.cs" />
+    <Compile Include="ClueDetailInfoTest.cs" />
     <Compile Include="ClueTest.cs" />
     <Compile Include="DeckTest.cs" />
+    <Compile Include="DiscardEstimatorTest.cs" />
     <Compile Include="DiscardPileTest.cs" />
+    <Compile Include="DiscardStrategyTest.cs" />
     <Compile Include="FireworkPileTest.cs" />
     <Compile Include="GameTest.cs" />
     <Compile Include="GuessTest.cs" />
     <Compile Include="GameProviderTest.cs" />
-    <Compile Include="NumberTest.cs" />
+    <Compile Include="PlayCardEstimatorTest.cs" />
+    <Compile Include="PlayCardStrategyTest.cs" />
+    <Compile Include="RankTest.cs" />
     <Compile Include="PileAnalyzerTest.cs" />
     <Compile Include="PlayerTest.cs" />
     <Compile Include="TestHelper.cs" />

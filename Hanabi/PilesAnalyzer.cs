@@ -88,6 +88,12 @@ namespace Hanabi
             return _converter.Decode(resultMatrix);
         }
 
+        /// <summary>
+        /// Возвращает карты, которые уже вне игры: то есть карты из сброса и фейерверка.
+        /// </summary>
+        /// <param name="fireworkPile"></param>
+        /// <param name="discardPile"></param>
+        /// <returns></returns>
         public IReadOnlyList<Card> GetThrownCards(FireworkPile fireworkPile, DiscardPile discardPile)
         {
             Contract.Requires<ArgumentNullException>(fireworkPile != null);
@@ -100,6 +106,12 @@ namespace Hanabi
                 .AsReadOnly();
         }
 
+        /// <summary>
+        /// Возвращает карты, которые могут быть добавлены в фейерверк
+        /// </summary>
+        /// <param name="fireworkPile"></param>
+        /// <param name="discardPile"></param>
+        /// <returns></returns>
         public IReadOnlyList<Card> GetCardsWhateverToPlay(FireworkPile fireworkPile, DiscardPile discardPile)
         {
             Contract.Requires<ArgumentNullException>(fireworkPile != null);

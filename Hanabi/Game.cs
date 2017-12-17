@@ -14,13 +14,19 @@ namespace Hanabi
 
         public Deck Deck
         {
-            get { return Board.Deck; }
+            get
+            {
+                Contract.Ensures(Contract.Result<Deck>() != null);
+                return Board.Deck;
+            }
         }
 
-        public int Score;
-
         private readonly List<Player> _players;
-        private readonly IGameProvider _provider;
+
+        public IGameProvider GameProvider
+        {
+            get;
+        }
 
         public Game(IGameProvider provider, int playersCount)
         {
@@ -28,69 +34,63 @@ namespace Hanabi
             Contract.Requires<ArgumentOutOfRangeException>(playersCount <= MaxPlayerCount, "Too many players!");
             Contract.Requires<ArgumentNullException>(provider != null);
 
-            _provider = provider;
+            GameProvider = provider;
             _players = new List<Player>();
 
             for (int i = 0; i < playersCount; i++)
             {
-                Player player = new Player(this, provider) { Name = i.ToString() };
-                player.CardAdded += OnCardAdded;
+                Player player = new Player(this, i.ToString());
                 player.ClueGiven += OnClueGiven;
-                player.Discarded += OnDiscarded;
-                player.Blown += OnBlow;
 
                 _players.Add(player);
             }
 
             Board = Board.Create(provider);
-            Score = 0;
         }
 
-        void OnDiscarded(Object sender, EventArgs args)
+        public void AddCardToFirework(Player player, Card card)
         {
-            Contract.Requires<ArgumentException>(sender is Player);
-            Contract.Ensures(Contract.OldValue(Board.ClueCounter) <= Board.ClueCounter);
+            Contract.Requires<ArgumentNullException>(player != null);
+            Contract.Requires<ArgumentNullException>(card != null);
 
+            Logger.Log.InfoFormat("{0} is played", card);
+
+            bool added = Board.FireworkPile.AddCard(card);
+
+            if (added)
+            {
+                Logger.Log.InfoFormat("Card added");
+
+                if (card.Rank == Rank.Five)
+                    Board.ClueCounter++;
+            }
+            else
+            {
+                Logger.Log.InfoFormat("BLOW!");
+            
+                Board.DiscardPile.AddCard(card);
+                Board.BlowCounter--;
+            }
+
+            if (!Deck.IsEmpty())
+                AddCardToPlayer(player);
+        }
+
+        public void AddCardToDiscardPile(Player player, Card card)
+        {
+            Contract.Requires<ArgumentNullException>(player != null);
+            Contract.Requires<ArgumentNullException>(card != null);
+            Contract.Ensures(Contract.OldValue(Board.ClueCounter) + 1 == Board.ClueCounter);
+
+            Logger.Log.InfoFormat("{0} discarded", card);
+
+            Board.DiscardPile.AddCard(card);
+            
             Board.ClueCounter += 1;
             Logger.Log.Info("Clues: " + Board.ClueCounter);
             if (!Deck.IsEmpty())
             {
-                AddCardToPlayer((Player) sender);
-            }
-        }
-
-        void OnBlow(Object sender, EventArgs args)
-        {
-            Contract.Requires<ArgumentException>(sender is Player);
-            Contract.Ensures(Board.BlowCounter < Contract.OldValue(Board.BlowCounter));
-
-            Board.BlowCounter -= 1;
-            
-            Logger.Log.Info("Blows remained: " + Board.BlowCounter);
-
-            if (!Deck.IsEmpty())
-            {
-                AddCardToPlayer(sender as Player);
-            }
-            
-        }
-
-        void OnCardAdded(Object sender, CardAddedEventArgs args)
-        {
-            Contract.Requires<ArgumentException>(sender is Player);
-            Contract.Ensures(Contract.OldValue(Score) < Score);
-
-            Score++;
-
-            if (args.Card.Nominal == Nominal.Five)
-            {
-                Board.ClueCounter++;
-                Logger.Log.InfoFormat("Clue counter: {0}", Board.ClueCounter);
-            }
-
-            if (!Deck.IsEmpty())
-            {
-                AddCardToPlayer(sender as Player);
+                AddCardToPlayer(player);
             }
         }
 
@@ -105,13 +105,18 @@ namespace Hanabi
         private void AddCardToPlayer(Player player)
         {
             Contract.Requires<ArgumentNullException>(player != null);
+            Contract.Requires(!Deck.IsEmpty());
 
             Card newCard = Deck.PopCard();
-            player.AddCardToHand(newCard);
+            CardInHand cardInHand = new CardInHand(player, newCard);
+
+            player.AddCard(cardInHand);
         }
 
         public int Play()
         {
+            Contract.Ensures(Contract.Result<int>() >= 0);
+
             PrepareForGame();
 
             var playersEnumerator = NextTurn();
@@ -123,13 +128,15 @@ namespace Hanabi
                 player = playersEnumerator.Current;
 
                 Logger.Log.InfoFormat("Player {0} turns!", player.Name);
-                
+                Logger.Log.InfoFormat("Firework: {0}", Board.FireworkPile);
+                Logger.Log.InfoFormat(String.Empty);
+
                 player.Turn();
 
                 Logger.Log.Info("");
             }
 
-            if (Deck.IsEmpty())
+            if (Deck.IsEmpty() && Board.BlowCounter > 0)
             {
                 Player playerLastTurn = player;
 
@@ -139,16 +146,25 @@ namespace Hanabi
                     player = playersEnumerator.Current;
 
                     Logger.Log.InfoFormat("Player {0} turns!", player.Name);
+                    Logger.Log.InfoFormat("Firework: {0}", Board.FireworkPile);
+                    Logger.Log.InfoFormat(String.Empty);
+                    
+
                     player.Turn();
-                } while (player != playerLastTurn);
+                } while (player != playerLastTurn && Board.BlowCounter > 0);
             }
 
-            return GetScore();
+            return Score;
         }
 
-        private int GetScore()
+        public int Score
         {
-            return Board.BlowCounter == 0 ? 0 : Score;
+            get
+            {
+                Contract.Ensures(Contract.Result<int>() >= 0);
+
+                return Board.BlowCounter == 0 ? 0 : Board.FireworkPile.Cards.Count;
+            }
         }
 
         private void PrepareForGame()
@@ -185,17 +201,17 @@ namespace Hanabi
 
             List<Player> result = new List<Player>();
             bool found = false;
-            foreach (var player1 in _players.Concat(_players))
+            foreach (var otherPlayer in _players.Concat(_players))
             {
                 if (!found)
                 {
-                    found = player1 == player;
+                    found = otherPlayer == player;
                 }
                 else
                 {
-                    if (player1 == player) break;
+                    if (otherPlayer == player) break;
 
-                    result.Add(player1);
+                    result.Add(otherPlayer);
                 }
 
             }
@@ -216,7 +232,7 @@ namespace Hanabi
 
         private bool IsGameOver()
         {
-            return Score == _provider.GetMaximumScore() ||
+            return Score == GameProvider.GetMaximumScore() ||
                    Board.BlowCounter == 0 ||
                    Deck.IsEmpty();
         }
