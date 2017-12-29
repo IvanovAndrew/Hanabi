@@ -30,13 +30,13 @@ namespace Hanabi
 
             // сперва ищем те, которые точно можно выкинуть
             var cardsToDiscard = discardEstimates
-                .Where(entry => entry.Value == 1.0)
+                .Where(entry => entry.Value == Probability.Maximum)
                 .Select(dp => dp.Key.Card)
                 .ToList();
 
             if (cardsToDiscard.Any()) return cardsToDiscard;
 
-            double maxProbability;
+            Probability maxProbability;
             // не нашли. 
             // тогда поищем среди тех карт, на которые не было прямых подсказок
             if (playerContext.Hand.Any(cardInHand => !knowAboutRankOrColorDict[cardInHand]))

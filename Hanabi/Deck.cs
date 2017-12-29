@@ -33,13 +33,13 @@ namespace Hanabi
 
         public Card PopCard()
         {
+            Contract.Requires<InvalidOperationException>(!IsEmpty(), "Deck is empty");
             Contract.Ensures(Contract.Result<Card>() != null);
             
-            if (IsEmpty()) throw new InvalidOperationException("Deck is empty");
-
             return _cards.Pop();
         }
 
+        [Pure]
         public bool IsEmpty()
         {
             return _cards.Count == 0;

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
@@ -23,11 +24,11 @@ namespace Hanabi
         /// </summary>
         /// <param name="boardContext"></param>
         /// <returns></returns>
-        public CardProbability EstimateCardToPlayProbability(IBoardContext boardContext)
+        public IDictionary<CardInHand, Probability> EstimateCardToPlayProbability(IBoardContext boardContext)
         {
             var cardsToPlay = boardContext.Firework.GetExpectedCards();
 
-            var dict = new CardProbability();
+            var dict = new ConcurrentDictionary<CardInHand, Probability>();
             Parallel.ForEach(
                 _guesses,
                 guess =>

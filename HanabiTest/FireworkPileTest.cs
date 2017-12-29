@@ -16,7 +16,7 @@ namespace HanabiTest
             IGameProvider provider = new FakeGameProvider()
             {
                 Colors = new List<Color>{Color.Green, Color.Red},
-                Nominals = new List<Rank> { Rank.One, Rank.Two}
+                Ranks = new List<Rank> { Rank.One, Rank.Two}
             };
             var pile = new FireworkPile(provider);
             var greenOneCard = new Card(Color.Green, Rank.One);
@@ -31,7 +31,7 @@ namespace HanabiTest
             IGameProvider provider = new FakeGameProvider()
             {
                 Colors = new List<Color> { Color.Green, Color.Red, Color.White },
-                Nominals = new List<Rank> { Rank.One, Rank.Two }
+                Ranks = new List<Rank> { Rank.One, Rank.Two }
             };
             
             var pile = new FireworkPile(provider);
@@ -47,7 +47,7 @@ namespace HanabiTest
             IGameProvider provider = new FakeGameProvider()
             {
                 Colors = new List<Color> { Color.Green, Color.White },
-                Nominals = new List<Rank> { Rank.One, Rank.Two, Rank.Three }
+                Ranks = new List<Rank> { Rank.One, Rank.Two, Rank.Three }
             };
 
             var firework = new FireworkPile(provider);
@@ -70,7 +70,7 @@ namespace HanabiTest
             IGameProvider provider = new FakeGameProvider()
             {
                 Colors = new List<Color> { Color.Blue, Color.Red,} ,
-                Nominals = new List<Rank> { Rank.One, Rank.Two, Rank.Three, Rank.Four }
+                Ranks = new List<Rank> { Rank.One, Rank.Two, Rank.Three, Rank.Four }
             };
             var firework = new FireworkPile(provider);
 
@@ -98,7 +98,7 @@ namespace HanabiTest
             IGameProvider provider = new FakeGameProvider()
             {
                 Colors = new List<Color> {Color.Blue, Color.White},
-                Nominals = new List<Rank> {Rank.One, Rank.Two, Rank.Three, Rank.Four, Rank.Five},
+                Ranks = new List<Rank> {Rank.One, Rank.Two, Rank.Three, Rank.Four, Rank.Five},
             };
 
             var pile = new FireworkPile(provider);
@@ -120,7 +120,7 @@ namespace HanabiTest
             IGameProvider provider = new FakeGameProvider()
             {
                 Colors = new List<Color> {Color.Blue, Color.Green, Color.Red, Color.White, Color.Yellow},
-                Nominals = new List<Rank> {Rank.One}
+                Ranks = new List<Rank> {Rank.One}
             };
 
 
@@ -137,7 +137,7 @@ namespace HanabiTest
             IGameProvider provider = new FakeGameProvider()
             {
                 Colors = new List<Color> {Color.Blue},
-                Nominals = new List<Rank> {Rank.One, Rank.Two, Rank.Three, Rank.Four, Rank.Five}
+                Ranks = new List<Rank> {Rank.One, Rank.Two, Rank.Three, Rank.Four, Rank.Five}
             };
             var fireworkPile = new FireworkPile(provider);
 
@@ -159,7 +159,7 @@ namespace HanabiTest
             IGameProvider provider = new FakeGameProvider()
             {
                 Colors = new List<Color>{Color.Red, Color.Blue},
-                Nominals = new List<Rank>{Rank.One, Rank.Two, Rank.Three, Rank.Four, Rank.Five},
+                Ranks = new List<Rank>{Rank.One, Rank.Two, Rank.Three, Rank.Four, Rank.Five},
             };
 
             var fireworkPile = new FireworkPile(provider);
@@ -181,7 +181,7 @@ namespace HanabiTest
             IGameProvider provider = new FakeGameProvider()
             {
                 Colors = new List<Color> {Color.Blue, Color.Green},
-                Nominals = new List<Rank> { Rank.One, Rank.Two},
+                Ranks = new List<Rank> { Rank.One, Rank.Two},
             };
 
             var fireworkPile = new FireworkPile(provider);
@@ -213,7 +213,7 @@ namespace HanabiTest
             IGameProvider provider = new FakeGameProvider()
             {
                 Colors = new List<Color> {Color.Blue, Color.Green, Color.Red, Color.White, Color.Yellow},
-                Nominals = new List<Rank> {Rank.One, Rank.Two},
+                Ranks = new List<Rank> {Rank.One, Rank.Two},
             };
 
             var pile = new FireworkPile(provider);
@@ -229,7 +229,7 @@ namespace HanabiTest
             IGameProvider provider = new FakeGameProvider()
             {
                 Colors = new List<Color> {Color.Green, Color.Blue},
-                Nominals = new List<Rank> {Rank.One, Rank.Two},
+                Ranks = new List<Rank> {Rank.One, Rank.Two},
             };
             var pile = new FireworkPile(provider);
 

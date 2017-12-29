@@ -10,15 +10,15 @@ namespace HanabiTest
         public IGameProvider GameProvider { get; set; }
         public Player Player { get; set; }
         public List<CardInHand> Hand { get; set; }
-        public CardProbability DiscardProbabilities { get; set; }
+        public IDictionary<CardInHand, Probability> DiscardProbabilities { get; set; }
 
         public DiscardStrategyStub()
         {
             Hand = new List<CardInHand>();
-            DiscardProbabilities = new CardProbability();
+            DiscardProbabilities = new Dictionary<CardInHand, Probability>();
         }
 
-        public CardProbability EstimateDiscardProbability(IBoardContext boardContext)
+        public IDictionary<CardInHand, Probability> EstimateDiscardProbability(IBoardContext boardContext)
         {
             return DiscardProbabilities;
         }
@@ -45,7 +45,7 @@ namespace HanabiTest
 
             DiscardStrategyStub stub = new DiscardStrategyStub
             {
-                Player = new Player(new Game(gameProvider, 4), ""),
+                Player = new Player(new Game(gameProvider, 4)),
                 GameProvider = gameProvider,
             };
 
@@ -57,7 +57,7 @@ namespace HanabiTest
             foreach (var entry in dict)
             {
                 var cardInHand = discardStrategy.Hand.First(cih => cih.Card == entry.Key);
-                discardStrategy.DiscardProbabilities[cardInHand] = entry.Value;
+                discardStrategy.DiscardProbabilities[cardInHand] = new Probability(entry.Value);
             }
         }
 
@@ -88,7 +88,6 @@ namespace HanabiTest
             SetProbabilities(discardStrategyStub, dict);
             
             var boardContext = new BoardContextStub();
-                //new BoardContext(new FireworkPile(discardStrategyStub.GameProvider), new Card[0], new Card[0]);
             var playerContext = PlayerContextFabric.CreateStub(discardStrategyStub.Player, discardStrategyStub.Hand);
 
             // act

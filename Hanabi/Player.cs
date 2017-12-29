@@ -23,8 +23,6 @@ namespace Hanabi
 
         private readonly Game _game;
 
-        public const double PlayProbabilityThreshold = 0.8;
-        public const double DiscardProbabilityThreshold = 0.05;
 
         private DiscardPile DiscardPile => _game.Board.DiscardPile;
 
@@ -32,7 +30,9 @@ namespace Hanabi
 
         private int BlowCounter => _game.Board.BlowCounter;
 
-        int ClueCounter => _game.Board.ClueCounter;
+        public int ClueCounter => _game.Board.ClueCounter;
+        public static Probability PlayProbabilityThreshold => new Probability(0.8);
+        public static Probability DiscardProbabilityThreshold => new Probability(0.05);
 
         private IReadOnlyList<Player> Players
         {
@@ -48,10 +48,11 @@ namespace Hanabi
         }
 
         public IGameProvider GameProvider => _game.GameProvider;
+        public int CardsCount => _memory.GetHand().Count;
 
         private readonly List<CardInHand> _specialCards = new List<CardInHand>();
 
-        public Player(Game game, string name)
+        public Player(Game game, string name = "")
         {
             Contract.Requires<ArgumentNullException>(game != null);
 
@@ -136,7 +137,7 @@ namespace Hanabi
         public void PlayCard(CardInHand cardInHand)
         {
             Contract.Requires<ArgumentNullException>(cardInHand != null);
-            Contract.Requires(cardInHand.Player != this);
+            Contract.Requires(cardInHand.Player == this);
 
             _memory.Remove(cardInHand);
             _game.AddCardToFirework(this, cardInHand.Card);
@@ -166,7 +167,7 @@ namespace Hanabi
         /// </summary>
         public bool OfferClue()
         {
-            if (ClueCounter <= 0) throw new HanabiException("Zero blue counter");
+            Contract.Requires<HanabiException>(ClueCounter > 0, "Zero blue counter");
 
             HardSolution solution;
             Player playerToClue = null;
@@ -372,7 +373,7 @@ namespace Hanabi
                 guess.GetProbability(cardsWhateverToPlay, excludedCards) < DiscardProbabilityThreshold;
 
             Guess guessToDiscard =
-                guessesAboutKnownCards.FirstOrDefault(guess => Predicate(guess));
+                guessesAboutKnownCards.FirstOrDefault(Predicate);
 
             if (guessToDiscard != null)
                 return _memory.GetCardByGuess(guessToDiscard);

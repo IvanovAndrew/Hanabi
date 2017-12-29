@@ -29,7 +29,7 @@ namespace Hanabi
             {
                 if (color == clue.Color) continue;
 
-                foreach (Rank number in _provider.Nominals)
+                foreach (Rank number in _provider.Ranks)
                 {
                     _matrix[number, color] = 0;
                 }
@@ -40,7 +40,7 @@ namespace Hanabi
 
         public bool Visit(ClueAboutNotColor clue)
         {
-            foreach (var number in _provider.Nominals)
+            foreach (var number in _provider.Ranks)
             {
                 _matrix[number, clue.Color] = 0;
             }
@@ -50,7 +50,7 @@ namespace Hanabi
 
         public bool Visit(ClueAboutRank clue)
         {
-            foreach (var number in _provider.Nominals)
+            foreach (var number in _provider.Ranks)
             {
                 if (clue.Rank == number) continue;
 
@@ -83,13 +83,12 @@ namespace Hanabi
         /// <param name="cardsToSearch"></param>
         /// <param name="excludedCards"></param>
         /// <returns></returns>
-        public double GetProbability(IEnumerable<Card> cardsToSearch, IEnumerable<Card> excludedCards)
+        public Probability GetProbability(IEnumerable<Card> cardsToSearch, IEnumerable<Card> excludedCards)
         {
             Contract.Requires<ArgumentNullException>(cardsToSearch != null);
             Contract.Requires<ArgumentNullException>(excludedCards != null);
 
-            Contract.Ensures(0.0 <= Contract.Result<double>());
-            Contract.Ensures(Contract.Result<double>() <= 1.0);
+            Contract.Ensures(Contract.Result<Probability>() != null);
 
             Matrix excludedCardsMatrix = _converter.Encode(excludedCards);
 
@@ -99,7 +98,7 @@ namespace Hanabi
                 cardsToSearch.Sum(card => guessMatrix[card.Rank, card.Color]);
 
             int allWays = 0;
-            foreach (Rank number in _provider.Nominals)
+            foreach (Rank number in _provider.Ranks)
             {
                 foreach (var color in _provider.Colors)
                 {
@@ -107,14 +106,17 @@ namespace Hanabi
                 }
             }
 
-            return positiveWays / (double) allWays;
+            return new Probability(positiveWays / (double) allWays);
         }
 
         private Matrix GetCorrectedGuess(Matrix excludedCards)
         {
+            Contract.Requires<ArgumentNullException>(excludedCards != null);
+            Contract.Ensures(Contract.Result<Matrix>().Sum() > 0);
+
             Matrix situation = _provider.CreateEmptyMatrix();
 
-            foreach (var number in _provider.Nominals)
+            foreach (var number in _provider.Ranks)
             {
                 foreach (var color in _provider.Colors)
                 {

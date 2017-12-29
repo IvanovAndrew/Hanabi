@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using System.Linq;
 
 namespace Hanabi
 {
@@ -21,6 +23,31 @@ namespace Hanabi
             _playerContext = playerContext;
             _playCardStrategy = playCardStrategy;
             _discardStrategy = discardStrategy;
+        }
+
+        public Clue CreateClueToPlay(IPlayerContext playerContext)
+        {
+            var expectedCards = _boardContext.Firework.GetExpectedCards().ToList();
+
+            // сразу уберём карты, о которых игрок знает.
+            var cardsToSearch = expectedCards.Except(playerContext.Player.GetKnownCards()).ToList();
+
+            if (!cardsToSearch.Any()) return null;
+
+            var cardsToPlay =
+                playerContext.Hand
+                    .Where(cardInHand => cardsToSearch.Contains(cardInHand.Card))
+                    .ToList();
+
+            if (!cardsToPlay.Any()) return null;
+
+            cardsToPlay =
+                cardsToPlay.OrderBy(cardInHand => (int)cardInHand.Card.Rank).ToList();
+
+            var clues = new List<Clue>();
+
+
+            return null;
         }
 
         public Clue CreateClue()

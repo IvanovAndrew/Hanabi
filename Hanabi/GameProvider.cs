@@ -31,11 +31,11 @@ namespace Hanabi
 
         public Matrix CreateMatrix(int[,] table)
         {
-            Contract.Requires(table.GetLength(0) == Nominals.Count);
+            Contract.Requires(table.GetLength(0) == Ranks.Count);
             Contract.Requires(table.GetLength(1) == Colors.Count);
 
             Matrix result = CreateEmptyMatrix();
-            for (int i = 0; i < Nominals.Count; i++)
+            for (int i = 0; i < Ranks.Count; i++)
             {
                 for (int j = 0; j < Colors.Count; j++)
                 {
@@ -49,12 +49,12 @@ namespace Hanabi
         public IReadOnlyList<Color> Colors => 
             new[] { Color.Blue, Color.Green, Color.Red, Color.White, Color.Yellow };
 
-        public IReadOnlyList<Rank> Nominals => 
+        public IReadOnlyList<Rank> Ranks => 
             new[] { Rank.One, Rank.Two, Rank.Three, Rank.Four, Rank.Five, };
 
         public int GetMaximumScore()
         {
-            return Colors.Count * Nominals.Count;
+            return Colors.Count * Ranks.Count;
         }
 
         public int ColorToInt(Color color)

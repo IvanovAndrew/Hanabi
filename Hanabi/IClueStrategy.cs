@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
-using System.Linq;
 
 namespace Hanabi
 {
@@ -27,8 +26,7 @@ namespace Hanabi
                 contractResult.Situation != ClueSituation.ClueExists ||
                 contractResult.Situation == ClueSituation.ClueExists &&
                 contractResult.PlayerToClue != null &&
-                contractResult.Clue != null &&
-                contractResult.CardsToClue.Any());
+                contractResult.Clue != null);
 
             throw new NotSupportedException();
         }

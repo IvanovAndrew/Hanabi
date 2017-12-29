@@ -10,7 +10,6 @@ namespace Hanabi
         public Player PlayerToClue { get; set; }
         public Clue Clue { get; set; }
         public ClueSituation Situation;
-        public IReadOnlyList<CardInHand> CardsToClue;
     }
 
     public enum ClueSituation
@@ -56,9 +55,13 @@ namespace Hanabi
             //      игрок сбрасывает критичную карту, есть подсказка --> дать подсказку, оценить действия следующего игрока
             HardSolution solution = null;
             HardSolution optionalSolution = null;
+            bool willDiscard = false;
+
+            LogUniqueCards();
 
             var fireworkPile = _board.FireworkPile.Clone();
             var discardPile = _board.DiscardPile.Clone();
+            var possiblePlayedCards = new List<Card>();
 
             foreach (var playerToClue in players)
             {
@@ -66,7 +69,7 @@ namespace Hanabi
 
                 var playerHand = playerToClue.ShowCards(_clueGiver);
 
-                BoardContext boardContext = BoardContext.Create(fireworkPile, discardPile, _pilesAnalyzer, otherPlayerCards);
+                BoardContext boardContext = BoardContext.Create(fireworkPile, discardPile, _pilesAnalyzer, otherPlayerCards, possiblePlayedCards);
                 PlayerContext playerContext = new PlayerContext(playerToClue, playerHand);
 
                 // надо оценить, что будет делать другой игрок.
@@ -81,6 +84,11 @@ namespace Hanabi
                 // подсказываем, если хотели подсказать. Иначе расслабляемся.
                 if (action.AddsClueAfter && action.PlayCard || action is DiscardNoNeedCard)
                 {
+                    willDiscard |= true;
+                    Logger.Log.Info(
+                        $"Player {_clueGiver.Name} thinks " +
+                        $"that player {playerToClue.Name} " +
+                        $"discards no need cards or plays five-ranked card");
                     break;
                 }
 
@@ -88,16 +96,23 @@ namespace Hanabi
                 // Переходим к следующему игроку
                 if (action.PlayCard)
                 {
-                    fireworkPile.AddCard((action as PlayCardAction).CardsToPlay.First());
+                    var playCardAction = action as PlayCardAction;
+                    var card = playCardAction.CardsToPlay.First();
+                    fireworkPile.AddCard(card);
+                    possiblePlayedCards.Add(card);
+
+                    Logger.Log.Info($"Player {_clueGiver.Name} thinks " +
+                                    $"that player {playerToClue.Name} " +
+                                    $"plays {playCardAction.CardsToPlay.First()}");
+
                     continue;
                 }
 
                 // игрок хочет сбросить карту, которую когда-нибудь можно будет сыграть.
                 // если получится, то воспрепятствуем
-                if (action is DiscardCardWhateverToPlayAction)
+                if (action is DiscardCardWhateverToPlayAction discardAction)
                 {
                     // подберём потенциальную подсказку
-
                     if (optionalSolution == null)
                     {
                         var clueAndAction =
@@ -105,16 +120,28 @@ namespace Hanabi
 
                         if (clueAndAction != null)
                         {
+                            willDiscard |= clueAndAction.Action.Discard;
                             optionalSolution = new HardSolution
                             {
                                 Clue = clueAndAction.Clue,
                                 Situation = ClueSituation.ClueExists,
                                 PlayerToClue = playerToClue,
-                                CardsToClue = ClueDetailInfo.GetCardsToClue(playerHand, clueAndAction.Clue).ToList(),
                             };
                         }
+                        else
+                        {
+                            willDiscard = true;
+                        }
                     }
-                    
+                    else
+                    {
+                        willDiscard = true;
+                    }
+
+                    Logger.Log.Info($"Player {_clueGiver.Name} thinks " +
+                                    $"that player {playerToClue.Name} " +
+                                    $"discards {discardAction.CardsToDiscard.First()}");
+
                     continue;
                 }
 
@@ -122,41 +149,95 @@ namespace Hanabi
                 // срочно вмешиваемся. 
                 if (action is BlowCardAction || action is DiscardUniqueCardAction)
                 {
+                    if (action is BlowCardAction b)
+                    {
+                        Logger.Log.Info($"Player {_clueGiver.Name} thinks " +
+                                        $"that player {playerToClue.Name} " +
+                                        $"blows {b.CardsToBlow.First()}");
+                    }
+                    else if (action is DiscardUniqueCardAction d)
+                    {
+                        Logger.Log.Info($"Player {_clueGiver.Name} thinks " +
+                                        $"that player {playerToClue.Name} " +
+                                        $"discards uniqueCard {d.CardsToDiscard.First()}");
+                    }
+                    
+
                     // кому-то ранее потребовалась срочная подсказка. Ситуация безвыходная. Придётся сбрасывать самому.
                     if (solution != null)
                     {
-                        solution = new HardSolution {Situation = ClueSituation.ClueDoesntExist,};
-                        break;
+                        if (!willDiscard)
+                        {
+                            solution = new HardSolution {Situation = ClueSituation.ClueDoesntExist,};
+                            break;
+                        }
                     }
 
-                    var clueAndAction = action.CreateClueToAvoid(boardContext, playerContext, playCardStrategy, discardStrategy);
+                    ClueAndAction clueAndAction = 
+                        action.CreateClueToAvoid(boardContext, playerContext, playCardStrategy, discardStrategy);
 
                     if (clueAndAction == null)
                     {
-                        // с помощью подсказки никак не избежать...
-                        solution = new HardSolution {Situation = ClueSituation.ClueDoesntExist};
-                        break;
+                        if (!willDiscard)
+                        {
+                            // даже с помощью подсказки беды никак не избежать...
+                            solution = new HardSolution { Situation = ClueSituation.ClueDoesntExist };
+                            break;
+                        }
+                        else
+                        {
+                            IEnumerable<Card> cards = new List<Card>();
+                            if (action is BlowCardAction b1)
+                            {
+                                cards = b1.CardsToBlow;
+                            }
+                            else if (action is DiscardUniqueCardAction d1)
+                            {
+                                cards = d1.CardsToDiscard;
+                            }
+
+                            // придумать подсказку про запас
+                            solution = new HardSolution
+                            {
+                                Situation = ClueSituation.ClueExists,
+                                Clue = CreateClue(playerContext, cards),
+                                PlayerToClue = playerContext.Player
+                            };
+
+                            break;
+                        }
                     }
 
                     if (clueAndAction.Action is PlayCardWithRankFiveAction ||
-                        clueAndAction.Action is DiscardNoNeedCard)
+                        clueAndAction.Action is DiscardNoNeedCard ||
+                        clueAndAction.Action is DiscardCardWhateverToPlayAction)
                     {
                         solution = new HardSolution
                         {
                             Situation = ClueSituation.ClueExists,
                             Clue = clueAndAction.Clue,
                             PlayerToClue = playerToClue,
-                            CardsToClue = ClueDetailInfo.GetCardsToClue(playerHand, clueAndAction.Clue).ToList(),
+                        };
+                        break;
+                    }
+                    else if (clueAndAction.Action is PlayCardAction)
+                    {
+                        solution = new HardSolution
+                        {
+                            Situation = ClueSituation.ClueExists,
+                            Clue = clueAndAction.Clue,
+                            PlayerToClue = playerToClue,
                         };
                     }
                     else
                     {
-                        // непонятно, что тут делать...
+                        
                     }
                 }
             }
 
 
+            Logger.Log.Info("");
             if (solution != null) return solution;
             if (optionalSolution != null) return optionalSolution;
 
@@ -184,6 +265,33 @@ namespace Hanabi
             }
 
             return cards;
+        }
+
+        private Clue CreateClue(IPlayerContext playerContext, IEnumerable<Card> cards)
+        {
+            Contract.Requires<ArgumentNullException>(playerContext != null);
+            Contract.Requires(cards.Any());
+            Contract.Ensures(Contract.Result<Clue>() != null);
+            Contract.Ensures(Contract.Result<Clue>().IsStraightClue);
+
+            foreach (var cardInHand in playerContext.Hand.Where(c => cards.Contains(c.Card)))
+            {
+                var clues = ClueDetailInfo.CreateClues(cardInHand, playerContext.Player);
+                if (clues.Any()) return clues.First();
+            }
+            throw new InvalidOperationException();
+        }
+
+        private void LogUniqueCards()
+        {
+            var str = "Unique cards: ";
+            foreach (var card in _pilesAnalyzer
+                                    .GetUniqueCards(_board.FireworkPile, _board.DiscardPile)
+                                    .OrderBy(c => c.Rank))
+            {
+                str += $"{card}; ";
+            }
+            Logger.Log.Info(str);
         }
     }
 }

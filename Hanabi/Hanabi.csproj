@@ -121,7 +121,6 @@
     <Compile Include="PlayerActionPredictor.cs" />
     <Compile Include="PlayCardEstimator.cs" />
     <Compile Include="PlayerContext.cs" />
-    <Compile Include="PlayProbability.cs" />
     <Compile Include="CardInHand.cs" />
     <Compile Include="CardsToMatrixConverter.cs" />
     <Compile Include="Clue.cs" />
@@ -149,6 +148,7 @@
     <Compile Include="Matrix.cs" />
     <Compile Include="GameProvider.cs" />
     <Compile Include="PlayStrategyFabric.cs" />
+    <Compile Include="Probability.cs" />
     <Compile Include="Rank.cs" />
     <Compile Include="Pile.cs" />
     <Compile Include="PilesAnalyzer.cs" />

@@ -59,7 +59,7 @@ namespace HanabiTest
         }
 
         public IReadOnlyList<Color> Colors { get; set; }
-        public IReadOnlyList<Rank> Nominals { get; set; }
+        public IReadOnlyList<Rank> Ranks { get; set; }
         
         public int ColorToInt(Color color)
         {
@@ -72,7 +72,7 @@ namespace HanabiTest
 
         public int GetMaximumScore()
         {
-            return Nominals.Count * Colors.Count;
+            return Ranks.Count * Colors.Count;
         }
     }
 
@@ -93,7 +93,7 @@ namespace HanabiTest
             FakeGameProvider gameProvider = new FakeGameProvider
             {
                 Colors = colors.ToList(),
-                Nominals = new List<Rank> { Rank.One, Rank.Two, Rank.Three, Rank.Four, Rank.Five }
+                Ranks = new List<Rank> { Rank.One, Rank.Two, Rank.Three, Rank.Four, Rank.Five }
             };
 
             gameProvider.FullDeckMatrix = gameProvider.CreateEmptyMatrix();
@@ -131,7 +131,7 @@ namespace HanabiTest
     {
         public static void AreMatrixEqual(Matrix expected, Matrix actual, IGameProvider provider)
         {
-            foreach (var number in provider.Nominals)
+            foreach (var number in provider.Ranks)
             {
                 foreach (var color in provider.Colors)
                 {

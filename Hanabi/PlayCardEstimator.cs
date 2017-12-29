@@ -33,7 +33,7 @@ namespace Hanabi
 
             if (!result.Any())
             {
-                double maxProbability = estimates.Values.Max();
+                Probability maxProbability = estimates.Values.Max();
 
                 if (maxProbability >= Player.PlayProbabilityThreshold)
                 {

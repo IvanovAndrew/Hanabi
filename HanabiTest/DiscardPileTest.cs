@@ -13,7 +13,7 @@ namespace HanabiTest
             IGameProvider provider = new FakeGameProvider()
             {
                 Colors = new List<Color>() {Color.Blue, Color.Green, Color.Red, Color.White},
-                Nominals = new List<Rank> {Rank.One, Rank.Two, Rank.Three, Rank.Four},
+                Ranks = new List<Rank> {Rank.One, Rank.Two, Rank.Three, Rank.Four},
             };
             var discardPile = new DiscardPile(provider);
 

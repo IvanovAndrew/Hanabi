@@ -13,7 +13,7 @@ namespace HanabiTest
             var deckMatrixProvider = new FakeGameProvider
             {
                 Colors = new List<Color> { Color.Blue, Color.Green, Color.Red },
-                Nominals = new List<Rank> { Rank.One, Rank.Two, Rank.Three, }
+                Ranks = new List<Rank> { Rank.One, Rank.Two, Rank.Three, }
             };
 
             Matrix emptyMatrix = deckMatrixProvider.CreateEmptyMatrix();
@@ -32,7 +32,7 @@ namespace HanabiTest
             var deckMatrixProvider = new FakeGameProvider
             {
                 Colors = new List<Color> {Color.Yellow, Color.White},
-                Nominals = new List<Rank> {Rank.One, Rank.Two, Rank.Three}
+                Ranks = new List<Rank> {Rank.One, Rank.Two, Rank.Three}
             };
 
             List<Card> list = new List<Card>{new Card(Rank.One, Color.White)};
@@ -56,7 +56,7 @@ namespace HanabiTest
             var deckMatrixProvider = new FakeGameProvider()
             {
                 Colors = new List<Color>() {Color.Yellow, Color.Red},
-                Nominals = new List<Rank>() { Rank.One, Rank.Two, Rank.Three, Rank.Four},
+                Ranks = new List<Rank>() { Rank.One, Rank.Two, Rank.Three, Rank.Four},
             };
 
             List<Card> list = new List<Card>
@@ -83,7 +83,7 @@ namespace HanabiTest
             var deckMatrixProvider = new FakeGameProvider
             {
                 Colors = new List<Color> {Color.Blue, Color.Red, Color.Green},
-                Nominals = new List<Rank> {Rank.One, Rank.Two, Rank.Three}
+                Ranks = new List<Rank> {Rank.One, Rank.Two, Rank.Three}
             };
 
             Matrix zeroMatrix = deckMatrixProvider.CreateEmptyMatrix();
@@ -101,7 +101,7 @@ namespace HanabiTest
             var deckMatrixProvider = new FakeGameProvider
             {
                 Colors = new List<Color> {Color.Blue, Color.Green, Color.Red},
-                Nominals = new List<Rank> {Rank.One, Rank.Two, Rank.Three},
+                Ranks = new List<Rank> {Rank.One, Rank.Two, Rank.Three},
             };
 
             Matrix input = deckMatrixProvider.CreateEmptyMatrix();

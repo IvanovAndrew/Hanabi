@@ -120,15 +120,16 @@ namespace Hanabi
             PrepareForGame();
 
             var playersEnumerator = NextTurn();
-            Player player = null;
 
-            while (!IsGameOver())
+            int turnsLeft = _players.Count;
+
+            while (!IsGameOver(ref turnsLeft))
             {
                 playersEnumerator.MoveNext();
-                player = playersEnumerator.Current;
+                Player player = playersEnumerator.Current;
 
-                Logger.Log.InfoFormat("Player {0} turns!", player.Name);
-                Logger.Log.InfoFormat("Firework: {0}", Board.FireworkPile);
+                Logger.Log.InfoFormat(String.Format($"Player {player.Name} turns!"));
+                Logger.Log.InfoFormat(String.Format($"Firework: {Board.FireworkPile}"));
                 Logger.Log.InfoFormat(String.Empty);
 
                 player.Turn();
@@ -136,24 +137,7 @@ namespace Hanabi
                 Logger.Log.Info("");
             }
 
-            if (Deck.IsEmpty() && Board.BlowCounter > 0)
-            {
-                Player playerLastTurn = player;
-
-                do
-                {
-                    playersEnumerator.MoveNext();
-                    player = playersEnumerator.Current;
-
-                    Logger.Log.InfoFormat("Player {0} turns!", player.Name);
-                    Logger.Log.InfoFormat("Firework: {0}", Board.FireworkPile);
-                    Logger.Log.InfoFormat(String.Empty);
-                    
-
-                    player.Turn();
-                } while (player != playerLastTurn && Board.BlowCounter > 0);
-            }
-
+            Logger.Log.InfoFormat(String.Format($"Firework: {Board.FireworkPile}"));
             return Score;
         }
 
@@ -162,6 +146,7 @@ namespace Hanabi
             get
             {
                 Contract.Ensures(Contract.Result<int>() >= 0);
+                Contract.Ensures(Contract.Result<int>() <= GameProvider.GetMaximumScore());
 
                 return Board.BlowCounter == 0 ? 0 : Board.FireworkPile.Cards.Count;
             }
@@ -171,9 +156,7 @@ namespace Hanabi
         {
             Deck.Shuffle();
 
-            int playersCount = _players.Count;
-
-            int cardsInHand = playersCount > 3 ? 4 : 5;
+            int cardsInHand = GetCardInHandsCount(_players.Count);
 
             for (int i = 0; i < cardsInHand; i++)
             {
@@ -195,6 +178,7 @@ namespace Hanabi
         /// <param name="player"></param>
         /// <returns></returns>
         public IReadOnlyList<Player> GetPlayersExcept(Player player)
+        
         {
             Contract.Requires<ArgumentNullException>(player != null);
             Contract.Ensures(Contract.Result<IReadOnlyList<Player>>().All(p => p != player));
@@ -219,6 +203,11 @@ namespace Hanabi
             return result.AsReadOnly();
         }
 
+        private int GetCardInHandsCount(int playersCount)
+        {
+            return playersCount > 3 ? 4 : 5;
+        }
+
         private IEnumerator<Player> NextTurn()
         {
             while (true)
@@ -230,11 +219,17 @@ namespace Hanabi
             }
         }
 
-        private bool IsGameOver()
+        private bool IsGameOver(ref int turnsCount)
         {
-            return Score == GameProvider.GetMaximumScore() ||
-                   Board.BlowCounter == 0 ||
-                   Deck.IsEmpty();
+            Contract.Requires(turnsCount >= 0);
+
+            if (Score == GameProvider.GetMaximumScore()) return true;
+            if (Board.BlowCounter == 0) return true;
+
+            if (!Deck.IsEmpty()) return false;
+            Logger.Log.Info("EMPTY DECK!");
+
+            return turnsCount-- == 0;
         }
     }
 }

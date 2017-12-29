@@ -10,8 +10,10 @@ namespace Hanabi
 
         public Matrix(IGameProvider provider)
         {
+            Contract.Requires<ArgumentNullException>(provider != null);
+
             _gameProvider = provider;
-            _matrix = new int[provider.Nominals.Count, provider.Colors.Count];
+            _matrix = new int[provider.Ranks.Count, provider.Colors.Count];
         }
 
         public int this[Rank rank, Color color]
@@ -34,6 +36,21 @@ namespace Hanabi
 
                 this[card.Rank, card.Color] = value;
             }
+        }
+
+        [Pure]
+        public int Sum()
+        {
+            int sum = 0;
+            foreach (var rank in _gameProvider.Ranks)
+            {
+                foreach (var color in _gameProvider.Colors)
+                {
+                    sum += this[rank, color];
+                }
+            }
+
+            return sum;
         }
     }
 }

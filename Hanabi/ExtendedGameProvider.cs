@@ -25,7 +25,7 @@ namespace Hanabi
                 result[Rank.Five, color] = 1;
             }
 
-            foreach (var number in Nominals)
+            foreach (var number in Ranks)
             {
                 result[number, Color.Multicolor] = 1;
             }
@@ -35,7 +35,7 @@ namespace Hanabi
         public IReadOnlyList<Color> Colors => 
             new[] { Color.Blue, Color.Green, Color.Red, Color.White, Color.Yellow, Color.Multicolor, };
 
-        public IReadOnlyList<Rank> Nominals => 
+        public IReadOnlyList<Rank> Ranks => 
             new[] { Rank.One, Rank.Two, Rank.Three, Rank.Four, Rank.Five, };
 
         public int ColorToInt(Color color)
@@ -49,7 +49,7 @@ namespace Hanabi
 
         public int GetMaximumScore()
         {
-            return Colors.Count * Nominals.Count;
+            return Colors.Count * Ranks.Count;
         }
     }
 }

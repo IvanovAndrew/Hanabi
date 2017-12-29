@@ -30,9 +30,9 @@ namespace HanabiTest
 
             List<Card> cardsToSearch = new List<Card>{new Card(Color.Red, Rank.Two)};
 
-            double result = guess.GetProbability(cardsToSearch, excludedCards);
+            Probability result = guess.GetProbability(cardsToSearch, excludedCards);
 
-            Assert.AreEqual(0, result);
+            Assert.AreEqual(0, result.Value);
         }
 
         [Test]
@@ -68,9 +68,9 @@ namespace HanabiTest
 
             List<Card> cardsToSearch = new List<Card> { new Card(Color.Yellow, Rank.Two) };
 
-            double result = guess.GetProbability(cardsToSearch, cardsToExclude);
+            Probability result = guess.GetProbability(cardsToSearch, cardsToExclude);
 
-            Assert.AreEqual(1.0, result);
+            Assert.AreEqual(1.0, result.Value);
         }
 
         [Test]
@@ -84,9 +84,9 @@ namespace HanabiTest
             List<Card> excludedCards = new List<Card>();
             List<Card> cardsToSearch = new List<Card>();
 
-            double result = guess.GetProbability(cardsToSearch, excludedCards);
+            Probability result = guess.GetProbability(cardsToSearch, excludedCards);
 
-            Assert.AreEqual(0, result);
+            Assert.AreEqual(0, result.Value);
         }
 
         [Test]

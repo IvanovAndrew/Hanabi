@@ -29,7 +29,7 @@ namespace Hanabi
 
         private Card GetLastCardInFirework(Color color)
         {
-            foreach (var number in Provider.Nominals.Reverse())
+            foreach (var number in Provider.Ranks.Reverse())
             {
                 if (Matrix[number, color] == 1)
                 {
@@ -41,7 +41,7 @@ namespace Hanabi
 
         private Card GetExpectedCardInFirework(Color color)
         {
-            foreach (var number in Provider.Nominals)
+            foreach (var number in Provider.Ranks)
             {
                 if (Matrix[number, color] == 0)
                 {

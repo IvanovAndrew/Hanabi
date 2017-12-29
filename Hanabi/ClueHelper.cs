@@ -71,7 +71,7 @@ namespace Hanabi
             else
             {
                 // тонкая подсказка на цвет может быть только на пятёрку
-                var rankFive = Rank.Five;
+                var rankFive = Hanabi.Rank.Five;
                 return expectedCards.Any(card => card.Color == clueDetail.Color && card.Rank == rankFive);
             }
         }

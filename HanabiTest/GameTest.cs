@@ -30,7 +30,7 @@ namespace HanabiTest
             FakeGameProvider provider = new FakeGameProvider
             {
                 Colors = new List<Color> {Color.Blue},
-                Nominals = new List<Rank> {Rank.One}
+                Ranks = new List<Rank> {Rank.One}
             };
             provider.FullDeckMatrix = provider.CreateEmptyMatrix();
             new Game(provider, playersCount);
@@ -55,7 +55,7 @@ namespace HanabiTest
             FakeGameProvider provider = new FakeGameProvider
             {
                 Colors = new List<Color> {Color.Blue},
-                Nominals = new List<Rank> {Rank.One}
+                Ranks = new List<Rank> {Rank.One}
             };
             provider.FullDeckMatrix = provider.CreateEmptyMatrix();
 

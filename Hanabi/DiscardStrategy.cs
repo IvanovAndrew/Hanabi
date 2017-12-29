@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
@@ -23,9 +24,9 @@ namespace Hanabi
         /// </summary>
         /// <param name="boardContext"></param>
         /// <returns></returns>
-        public CardProbability EstimateDiscardProbability(IBoardContext boardContext)
+        public IDictionary<CardInHand, Probability> EstimateDiscardProbability(IBoardContext boardContext)
         {
-            var result = new CardProbability();
+            var result = new ConcurrentDictionary<CardInHand, Probability>();
 
             // для каждой карты посчитаем вероятность того, что она будет сброшена
             Parallel.ForEach(
@@ -35,8 +36,9 @@ namespace Hanabi
                     // я считаю вероятность того, что карта будет сброшена
                     // в идеале можно определить как вероятность того, что эта карта принадлежит множеству карт, которые уже не нужны
                     // то есть {все карты} \ {карты, которые ещё можно положить на стол}
+                    var temp = guess.GetProbability(boardContext.UniqueCards, boardContext.ExcludedCards);
 
-                    var probability = 1 - guess.GetProbability(boardContext.UniqueCards, boardContext.ExcludedCards);
+                    var probability = new Probability(1 - temp.Value);
 
                     if (!result.TryAdd(guess.CardInHand, probability))
                     {

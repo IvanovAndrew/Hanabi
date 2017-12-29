@@ -37,7 +37,7 @@ namespace Hanabi
 
             var result = new List<Card>();
 
-            foreach (var number in _provider.Nominals)
+            foreach (var number in _provider.Ranks)
             {
                 foreach (var color in _provider.Colors)
                 {

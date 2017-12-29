@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Hanabi
@@ -19,11 +20,13 @@ namespace Hanabi
     
     public abstract class PlayerAction
     {
+        protected IList<Type> ActionsToAvoid = new List<Type> { typeof(BlowCardAction), typeof(DiscardUniqueCardAction) };
+
         public abstract bool PlayCard { get; }
         public abstract bool AddsClueAfter { get; }
         public abstract bool RequiresImmediateClue { get; }
 
-        //public abstract Clue Accept(ClueCreator clueCreator);
+        public abstract bool Discard { get; }
 
         public abstract ClueAndAction CreateClueToAvoid(IBoardContext boardContext, IPlayerContext playerContext, IPlayCardStrategy playCardStrategy, IDiscardStrategy discardStrategy);
     }
@@ -36,6 +39,7 @@ namespace Hanabi
 
         public override bool AddsClueAfter => false;
         public override bool RequiresImmediateClue => false;
+        public override bool Discard => false;
 
         public override ClueAndAction CreateClueToAvoid(
             IBoardContext boardContext, 
@@ -61,6 +65,7 @@ namespace Hanabi
         public override bool AddsClueAfter => false;
 
         public override bool RequiresImmediateClue => true;
+        public override bool Discard => false;
 
         public override ClueAndAction CreateClueToAvoid(
             IBoardContext boardContext, 
@@ -111,6 +116,7 @@ namespace Hanabi
         public override bool PlayCard => false;
 
         public override bool AddsClueAfter => true;
+        public override bool Discard => true;
 
         public override ClueAndAction CreateClueToAvoid(
             IBoardContext boardContext, 
@@ -168,20 +174,13 @@ namespace Hanabi
         }
     }
 
-    public class DiscardUniqueCardAction : PlayerAction
+    public class DiscardUniqueCardAction : DiscardAction
     {
-        public IList<Card> CardsToDiscard;
-
         public override bool PlayCard => false;
 
         public override bool AddsClueAfter => false;
 
         public override bool RequiresImmediateClue => true;
-
-        //public override Clue Accept(ClueCreator clueCreator)
-        //{
-        //    return clueCreator.CreateClueToAvoidAction(this);
-        //}
 
         public override ClueAndAction CreateClueToAvoid(
             IBoardContext boardContext, 
@@ -189,7 +188,56 @@ namespace Hanabi
             IPlayCardStrategy playCardStrategy,
             IDiscardStrategy discardStrategy)
         {
-            return null;
+            // 1. Поищем подсказки, после которых игрок точно сходит
+
+
+            var possibleCluesAndActions = new List<ClueAndAction>();
+
+            foreach (var card in CardsToDiscard)
+            {
+                var cardInHand = playerContext.Hand.First(c => c.Card == card);
+                foreach (var clue in ClueDetailInfo.CreateClues(cardInHand, playerContext.Player))
+                {
+                    // применим подсказку и посмотрим, будет ли всё хорошо
+                    playerContext.PossibleClue = clue;
+
+                    // контекст должен чуток измениться...
+                    var playerPredictor = new PlayerActionPredictor(boardContext, playerContext);
+                    var newAction = playerPredictor.Predict(playCardStrategy, discardStrategy);
+
+                    // если новое действие не ведёт к взрыву или сбросу нужной карты, то считаем подсказку приемлемой
+                    if (ActionsToAvoid.All(a => a != newAction.GetType()))
+                    {
+                        var clueAndAction = new ClueAndAction{Clue = clue, Action = newAction};
+                        possibleCluesAndActions.Add(clueAndAction);
+                    }
+                }
+            }
+
+            // на этой стадии отобраны возможны такие последствия:
+            // игрок ходит 5,
+            // игрок сбрасывает ненужную карту,
+            // игрок ходит не 5,
+            // игрок сбрасывает нужную некритичную карту
+            // выводим именно в таком порядке.
+
+            var result = 
+                possibleCluesAndActions.FirstOrDefault(ca => ca.Action is PlayCardWithRankFiveAction);
+
+            if (result != null) return result;
+
+            result =
+                possibleCluesAndActions.FirstOrDefault(ca => ca.Action is DiscardNoNeedCard);
+
+            if (result != null) return result;
+
+            result =
+                possibleCluesAndActions.FirstOrDefault(ca => ca.Action is PlayCardAction);
+            if (result != null) return result;
+
+            result = possibleCluesAndActions.FirstOrDefault(ca => ca.Action is DiscardCardWhateverToPlayAction);
+
+            return result;
         }
     }
 

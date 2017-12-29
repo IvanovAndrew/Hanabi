@@ -9,7 +9,7 @@ namespace Hanabi
     {
         private readonly Player _clueGiver;
         private readonly BoardContext _boardContext;
-        private readonly IGameProvider _gameProvider;
+        //private readonly IGameProvider _gameProvider;
         private readonly PilesAnalyzer _pilesAnalyzer;
 
         public ManyTinClueStrategy(Player clueGiver, BoardContext boardContext, IGameProvider gameProvider)
@@ -20,8 +20,8 @@ namespace Hanabi
 
             _clueGiver = clueGiver;
             _boardContext = boardContext;
-            _gameProvider = gameProvider;
-            _pilesAnalyzer = new PilesAnalyzer(_gameProvider);
+            //_gameProvider = gameProvider;
+            _pilesAnalyzer = new PilesAnalyzer(gameProvider);
         }
 
         public HardSolution FindClueCandidate(IReadOnlyList<Player> players)
@@ -38,7 +38,6 @@ namespace Hanabi
 
                 return new HardSolution
                 {
-                    CardsToClue = ClueDetailInfo.GetCardsToClue(player.ShowCards(_clueGiver), clue).ToList(),
                     Clue = clue,
                     PlayerToClue = player,
                     Situation = ClueSituation.ClueExists,
@@ -55,7 +54,6 @@ namespace Hanabi
 
                 return new HardSolution
                 {
-                    CardsToClue = ClueDetailInfo.GetCardsToClue(player.ShowCards(_clueGiver), clue).ToList(),
                     Clue = clue,
                     PlayerToClue = player,
                     Situation = ClueSituation.ClueExists,
@@ -75,7 +73,6 @@ namespace Hanabi
 
                 return new HardSolution
                 {
-                    CardsToClue = ClueDetailInfo.GetCardsToClue(player.ShowCards(_clueGiver), clue).ToList(),
                     Clue = clue,
                     PlayerToClue = player,
                     Situation = ClueSituation.ClueExists,
@@ -96,6 +93,7 @@ namespace Hanabi
                 playerToClue
                     .ShowCards(_clueGiver)
                     .Where(cardInHand => cardsToSearch.Contains(cardInHand.Card))
+                    .Where(cardInHand => !isKnownOneRankedCard(cardInHand))
                     .ToList();
 
             if (!cardsToPlay.Any()) return null;
@@ -107,6 +105,13 @@ namespace Hanabi
                 cardsToPlay.Last().Card.Rank == Rank.Five ? cardsToPlay.Last() : cardsToPlay.First();
 
             return ClueDetailInfo.CreateClues(cardToClue, playerToClue).FirstOrDefault();
+
+            bool isKnownOneRankedCard(CardInHand cardInHand)
+            {
+                return playerToClue.GetCluesAboutCard(cardInHand)
+                    .Where(clue => clue.IsStraightClue)
+                    .Any(clue => ClueDetailInfo.GetClueInfo(clue).Rank == Rank.One);
+            }
         }
 
         private Clue FindClueToDiscard(Player playerToClue, IEnumerable<Card> uniqueCards)

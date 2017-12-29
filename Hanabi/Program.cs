@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Threading;
 
 namespace Hanabi
 {
@@ -11,7 +10,6 @@ namespace Hanabi
             while (n-- > 0)
             {
                 Play();
-                Thread.Sleep(1000);
             }
         }
 

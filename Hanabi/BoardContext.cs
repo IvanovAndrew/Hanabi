@@ -13,17 +13,21 @@ namespace Hanabi
 
         public IEnumerable<Card> WhateverToPlayCards => _pilesAnalyzer.GetCardsWhateverToPlay(Firework, DiscardPile);
 
-        public IEnumerable<Card> ExcludedCards => _pilesAnalyzer.GetThrownCards(Firework, DiscardPile).Concat(_otherPlayerCards);
+        public IEnumerable<Card> ExcludedCards => _pilesAnalyzer.GetThrownCards(Firework, DiscardPile).Concat(_otherPlayerCards).Except(PossiblePlayed);
+
+        public IEnumerable<Card> PossiblePlayed { get; }
 
         private readonly PilesAnalyzer _pilesAnalyzer;
         private readonly IEnumerable<Card> _otherPlayerCards;
 
-        private BoardContext(FireworkPile firework, DiscardPile discardPile, PilesAnalyzer pilesAnalyzer, IEnumerable<Card> otherPlayerCards)
+        private BoardContext(FireworkPile firework, DiscardPile discardPile, PilesAnalyzer pilesAnalyzer, IEnumerable<Card> otherPlayerCards, IEnumerable<Card> possiblePlayed = null)
         {
             Firework = firework;
             DiscardPile = discardPile;
             _pilesAnalyzer = pilesAnalyzer;
             _otherPlayerCards = otherPlayerCards;
+
+            PossiblePlayed = possiblePlayed?? new List<Card>();
         }
 
         public static BoardContext Create(Board board, PilesAnalyzer pilesAnalyzer, IEnumerable<Card> otherPlayersCards)
@@ -41,14 +45,15 @@ namespace Hanabi
             FireworkPile fireworkPile,
             DiscardPile discardPile,
             PilesAnalyzer pilesAnalyzer,
-            IEnumerable<Card> otherPlayersCards)
+            IEnumerable<Card> otherPlayersCards,
+            IEnumerable<Card> cardPossiblePlayed = null)
         {
             Contract.Requires<ArgumentNullException>(fireworkPile != null);
             Contract.Requires<ArgumentNullException>(discardPile != null);
             Contract.Requires<ArgumentNullException>(pilesAnalyzer != null);
             Contract.Requires<ArgumentNullException>(otherPlayersCards != null);
 
-            return new BoardContext(fireworkPile, discardPile, pilesAnalyzer, otherPlayersCards);
+            return new BoardContext(fireworkPile, discardPile, pilesAnalyzer, otherPlayersCards, cardPossiblePlayed);
         }
 
         [ContractInvariantMethod]

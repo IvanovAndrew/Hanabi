@@ -9,9 +9,9 @@ namespace HanabiTest
     {
         public Player Player { get; set; }
         public List<CardInHand> Hand = new List<CardInHand>();
-        public CardProbability ProbabilitiesToReturn = new CardProbability();
+        public IDictionary<CardInHand, Probability> ProbabilitiesToReturn = new Dictionary<CardInHand, Probability>();
 
-        public CardProbability EstimateCardToPlayProbability(IBoardContext boardContext)
+        public IDictionary<CardInHand, Probability> EstimateCardToPlayProbability(IBoardContext boardContext)
         {
             return ProbabilitiesToReturn;
         }
@@ -44,9 +44,9 @@ namespace HanabiTest
         {
             foreach (var entry in dict)
             {
-                strategy.ProbabilitiesToReturn.TryAdd(
+                strategy.ProbabilitiesToReturn.Add(
                     strategy.Hand.First(cih => cih.Card == entry.Key), 
-                    entry.Value);
+                    new Probability(entry.Value));
             }
         }
         
