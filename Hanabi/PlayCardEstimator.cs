@@ -15,7 +15,8 @@ namespace Hanabi
         /// <summary>
         /// Возвращает
         /// {карты, по которым есть тонкая подсказка} U
-        /// {карты, \forall P(play) >= play_threshold}
+        /// {карты, \forall P(play) >= play_threshold} U
+        /// {единицы, о которых игрок знает при условии, что единицу можно сыграть}
         /// </summary>
         /// <param name="boardContext"></param>
         /// <param name="playerContext"></param>
@@ -27,7 +28,7 @@ namespace Hanabi
             var result =
                 playerContext
                     .Hand
-                    .Where(cardInHand => playerContext.IsSubtleClue(cardInHand, boardContext.Firework))
+                    .Where(cardInHand => playerContext.IsSubtleClue(cardInHand, boardContext.GetExpectedCards()))
                     .Select(cardInHand => cardInHand.Card)
                     .ToList();
 
@@ -42,6 +43,27 @@ namespace Hanabi
                             where e.Value == maxProbability
                             orderby e.Value descending
                             select e.Key.Card).ToList();
+                }
+            }
+
+            if (!result.Any())
+            {
+                if (boardContext.GetExpectedCards().Any(c => c.Rank == Rank.One))
+                {
+                    var cards = playerContext.Hand.Where(c => c.Card.Rank == Rank.One);
+
+                    foreach (CardInHand card in cards)
+                    {
+                        var knowsAboutRank
+                            = playerContext.GetCluesAboutCard(card)
+                                .Where(c => c.IsStraightClue)
+                                .Any(c => ClueDetailInfo.GetClueInfo(c).Rank == Rank.One);
+
+                        if (knowsAboutRank)
+                        {
+                            result.Add(card.Card);
+                        }
+                    }
                 }
             }
 

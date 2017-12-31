@@ -46,13 +46,13 @@ namespace Hanabi
             return guess.KnowAboutRankOrColor();
         }
 
-        public bool IsSubtleClue(CardInHand cardInHand, FireworkPile firework)
+        public bool IsSubtleClue(CardInHand cardInHand, IEnumerable<Card> expectedCards)
         {
             if (PossibleClue == null) return false;
 
             var clue = ClueAndCardMatcher.Match(cardInHand.Card, PossibleClue);
 
-            return clue.IsStraightClue && ClueDetailInfo.IsSubtleClue(firework, PossibleClue);
+            return clue.IsStraightClue && PossibleClue.IsSubtleClue(expectedCards);
         }
 
         public PlayerContext Clone()

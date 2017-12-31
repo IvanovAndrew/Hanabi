@@ -1,4 +1,7 @@
-﻿namespace Hanabi
+﻿using System.Collections.Generic;
+using System.Linq;
+
+namespace Hanabi
 {
     public abstract class Clue
     {
@@ -7,6 +10,8 @@
         public abstract bool Accept(IClueVisitor visitor);
 
         public bool IsStraightClue { get; protected set; }
+
+        public abstract bool IsSubtleClue(IEnumerable<Card> expectedCards);
     }
 
     public class ClueAboutRank : Clue
@@ -46,6 +51,19 @@
             return visitor.Visit(this);
         }
 
+        public override bool IsSubtleClue(IEnumerable<Card> expectedCards)
+        {
+            // тонкая подсказка на ранг карты
+            // тогда среди ожидаемых карт должна существовать одна или две карты таким же рангом.
+            // все остальные должны быть рангом старше
+            int diff = expectedCards.Count(card => card.Rank == Rank);
+
+            return (diff == 1 || diff == 2) &&
+                   expectedCards
+                       .Where(card => card.Rank != Rank)
+                       .All(card => card.Rank > Rank);
+        }
+
         public override string ToString()
         {
             return Rank.ToString();
@@ -70,6 +88,11 @@
         public override bool Accept(IClueVisitor visitor)
         {
             return visitor.Visit(this);
+        }
+
+        public override bool IsSubtleClue(IEnumerable<Card> expectedCards)
+        {
+            return false;
         }
 
         private bool EqualsCore(ClueAboutNotRank clue)
@@ -115,6 +138,14 @@
             return visitor.Visit(this);
         }
 
+        public override bool IsSubtleClue(IEnumerable<Card> expectedCards)
+        {
+            // тонкая подсказка на цвет может быть только на максимальный ранг
+            // TODO 
+            var rankFive = Hanabi.Rank.Five;
+            return expectedCards.Any(card => card.Color == Color && card.Rank == rankFive);
+        }
+
         private bool EqualsCore(ClueAboutColor clue)
         {
             return Color == clue.Color;
@@ -156,6 +187,11 @@
         public override bool Accept(IClueVisitor visitor)
         {
             return visitor.Visit(this);
+        }
+
+        public override bool IsSubtleClue(IEnumerable<Card> expectedCards)
+        {
+            return false;
         }
 
         public override int GetHashCode()

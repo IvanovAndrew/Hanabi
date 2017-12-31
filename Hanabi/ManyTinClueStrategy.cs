@@ -8,27 +8,23 @@ namespace Hanabi
     class ManyTinClueStrategy : IClueStrategy
     {
         private readonly Player _clueGiver;
-        private readonly BoardContext _boardContext;
-        //private readonly IGameProvider _gameProvider;
-        private readonly PilesAnalyzer _pilesAnalyzer;
+        private readonly IBoardContext _boardContext;
 
-        public ManyTinClueStrategy(Player clueGiver, BoardContext boardContext, IGameProvider gameProvider)
+        public ManyTinClueStrategy(Player clueGiver, IBoardContext boardContext)
         {
             Contract.Requires<ArgumentNullException>(clueGiver != null);
             Contract.Requires<ArgumentNullException>(boardContext != null);
-            Contract.Requires<ArgumentNullException>(gameProvider != null);
 
             _clueGiver = clueGiver;
             _boardContext = boardContext;
-            //_gameProvider = gameProvider;
-            _pilesAnalyzer = new PilesAnalyzer(gameProvider);
         }
 
         public HardSolution FindClueCandidate(IReadOnlyList<Player> players)
         {
+            Logger.Log.Info($"Many tin clue strategy. First player is {players[0].Name}");
             // поищем подсказки "на ход"
 
-            var expectedCards = _boardContext.Firework.GetExpectedCards();
+            var expectedCards = _boardContext.GetExpectedCards();
 
             foreach (var player in players)
             {
@@ -44,7 +40,7 @@ namespace Hanabi
                 };
             }
 
-            var uniqueCards = _pilesAnalyzer.GetUniqueCards(_boardContext.Firework, _boardContext.DiscardPile);
+            var uniqueCards = _boardContext.GetUniqueCards();
             // поищем подсказки из серии "как бы чего не вышло"
             foreach (var player in players)
             {
@@ -63,7 +59,8 @@ namespace Hanabi
 
             // поищем подсказки из серии "на будущее"
             var whateverToPlayCards =
-                _pilesAnalyzer.GetCardsWhateverToPlay(_boardContext.Firework, _boardContext.DiscardPile).ToList();
+                _boardContext.GetWhateverToPlayCards();
+                //_pilesAnalyzer.GetCardsWhateverToPlay(_boardContext.Firework, _boardContext.DiscardPile).ToList();
 
             foreach (var player in players)
             {
@@ -93,7 +90,7 @@ namespace Hanabi
                 playerToClue
                     .ShowCards(_clueGiver)
                     .Where(cardInHand => cardsToSearch.Contains(cardInHand.Card))
-                    .Where(cardInHand => !isKnownOneRankedCard(cardInHand))
+                    .Where(cardInHand => !IsKnownOneRankedCard(cardInHand))
                     .ToList();
 
             if (!cardsToPlay.Any()) return null;
@@ -106,7 +103,7 @@ namespace Hanabi
 
             return ClueDetailInfo.CreateClues(cardToClue, playerToClue).FirstOrDefault();
 
-            bool isKnownOneRankedCard(CardInHand cardInHand)
+            bool IsKnownOneRankedCard(CardInHand cardInHand)
             {
                 return playerToClue.GetCluesAboutCard(cardInHand)
                     .Where(clue => clue.IsStraightClue)
@@ -183,3 +180,4 @@ namespace Hanabi
         }
     }
 }
+

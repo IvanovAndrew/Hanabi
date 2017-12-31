@@ -15,15 +15,19 @@ namespace HanabiTest
 
         public Predicate<CardInHand> IsSubtleCluePredicate { get; set; }
         public Predicate<CardInHand> KnowAboutRankOrColorPredicate { get; set; }
+
+        public Dictionary<CardInHand, List<Clue>> CluesAboutCard { get; set; } = new Dictionary<CardInHand, List<Clue>>();
         
-        public bool IsSubtleClue(CardInHand cardInHand, FireworkPile firework)
+        public bool IsSubtleClue(CardInHand cardInHand, IEnumerable<Card> expectedCards)
         {
             return IsSubtleCluePredicate(cardInHand);
         }
 
         public IList<Clue> GetCluesAboutCard(CardInHand cardInHand)
         {
-            return new List<Clue>();
+            return CluesAboutCard.ContainsKey(cardInHand)? 
+                CluesAboutCard[cardInHand] : 
+                new List<Clue>();
         }
 
         public bool KnowAboutRankOrColor(CardInHand cardInHand)
@@ -36,9 +40,40 @@ namespace HanabiTest
     {
         public FireworkPile Firework { get; set; }
         public DiscardPile DiscardPile { get; set; }
+        public IEnumerable<Card> ExpectedCards { get; set; }
         public IEnumerable<Card> UniqueCards { get; set; }
         public IEnumerable<Card> WhateverToPlayCards { get; set; }
         public IEnumerable<Card> ExcludedCards { get; set; }
+
+        public IEnumerable<Card> GetExpectedCards()
+        {
+            return ExpectedCards;
+        }
+
+        public IEnumerable<Card> GetUniqueCards()
+        {
+            return UniqueCards;
+        }
+
+        public IEnumerable<Card> GetWhateverToPlayCards()
+        {
+            return WhateverToPlayCards;
+        }
+
+        public IEnumerable<Card> GetExcludedCards()
+        {
+            return ExcludedCards;
+        }
+
+        public void AddToFirework(Card card)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Discard(Card card)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     #endregion

@@ -36,47 +36,6 @@ namespace Hanabi
         }
 
         /// <summary>
-        /// Подсказка считается тонкой, если на столе лежат 3-4 единицы/двойки/тройки/четвёрки, 
-        /// и при этом дана подсказка на единицу/двойку/тройку/четвёрку.
-        /// 
-        /// Или на столе лежат 4 карты одного цвета и подсказка была на пятую карту этого цвета
-        /// 
-        /// Надо как-то учитывать контекст...
-        /// </summary>
-        /// <param name="firework"></param>
-        /// <param name="clue"></param>
-        /// <returns></returns>
-        public static bool IsSubtleClue(FireworkPile firework, Clue clue)
-        {
-            Contract.Requires(firework != null);
-            Contract.Requires(clue != null);
-            Contract.Assume(clue.IsStraightClue);
-
-            var expectedCards = firework.GetExpectedCards();
-
-            var clueDetail = GetClueInfo(clue);
-
-            if (clueDetail.Rank != null)
-            {
-                // тонкая подсказка на ранг карты
-                // тогда среди ожидаемых карт должна существовать одна или две карты таким же рангом.
-                // все остальные должны быть рангом старше
-                int diff = expectedCards.Count(card => card.Rank == clueDetail.Rank);
-                
-                return (diff == 1 || diff == 2) &&
-                    expectedCards
-                        .Where(card => card.Rank != clueDetail.Rank)
-                        .All(card => card.Rank > clueDetail.Rank);
-            }
-            else
-            {
-                // тонкая подсказка на цвет может быть только на пятёрку
-                var rankFive = Hanabi.Rank.Five;
-                return expectedCards.Any(card => card.Color == clueDetail.Color && card.Rank == rankFive);
-            }
-        }
-
-        /// <summary>
         /// Возвращает подсказки, которые можно дать игроку на карту.
         /// Убирает подсказки, которые давали игроку ранее
         /// </summary>

@@ -36,38 +36,15 @@ namespace Hanabi
                     // я считаю вероятность того, что карта будет сброшена
                     // в идеале можно определить как вероятность того, что эта карта принадлежит множеству карт, которые уже не нужны
                     // то есть {все карты} \ {карты, которые ещё можно положить на стол}
-                    var temp = guess.GetProbability(boardContext.UniqueCards, boardContext.ExcludedCards);
+                    var temp = guess.GetProbability(boardContext.GetWhateverToPlayCards(), boardContext.GetExcludedCards());
 
                     var probability = new Probability(1 - temp.Value);
 
-                    if (!result.TryAdd(guess.CardInHand, probability))
-                    {
-                        throw new Exception("Не получилось добавить в словарь.");
-                    }
+                    result.TryAdd(guess.CardInHand, probability);
                 }
             );
             
             return result;
         }
-
-        /// <summary>
-        /// Анализирует последствия возможной подсказки
-        /// Возвращает true, если сброшенная карта не будет уникальной
-        /// </summary>
-        /// <param name="boardContext"></param>
-        /// <param name="playerContext"></param>
-        /// <returns></returns>
-        //public bool CheckIfRightClue(IBoardContext boardContext, IPlayerContext playerContext)
-        //{
-        //    IEstimator discardEstimator = new DiscardEstimator(this);
-        //    IList<Card> cardsToDiscard = discardEstimator.GetPossibleCards(boardContext, playerContext);
-
-        //    //var cardsWhateverToPlay = _pilesAnalyzer.GetCardsWhateverToPlay(_board.FireworkPile, _board.DiscardPile);
-        //    //if (!cardsWhateverToPlay.Contains(cardToDiscard.Card)) return true;
-            
-        //    var uniqueCards = _pilesAnalyzer.GetUniqueCards(_board.FireworkPile, _board.DiscardPile);
-
-        //    return !cardsToDiscard.Intersect(uniqueCards).Any();
-        //}
     }
 }

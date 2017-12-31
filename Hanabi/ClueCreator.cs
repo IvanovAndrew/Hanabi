@@ -27,7 +27,7 @@ namespace Hanabi
 
         public Clue CreateClueToPlay(IPlayerContext playerContext)
         {
-            var expectedCards = _boardContext.Firework.GetExpectedCards().ToList();
+            var expectedCards = _boardContext.GetExpectedCards();
 
             // сразу уберём карты, о которых игрок знает.
             var cardsToSearch = expectedCards.Except(playerContext.Player.GetKnownCards()).ToList();

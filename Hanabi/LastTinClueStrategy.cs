@@ -10,6 +10,7 @@ namespace Hanabi
         public Player PlayerToClue { get; set; }
         public Clue Clue { get; set; }
         public ClueSituation Situation;
+        public IBoardContext BoardContext { get; set; }
     }
 
     public enum ClueSituation
@@ -69,8 +70,8 @@ namespace Hanabi
 
                 var playerHand = playerToClue.ShowCards(_clueGiver);
 
-                BoardContext boardContext = BoardContext.Create(fireworkPile, discardPile, _pilesAnalyzer, otherPlayerCards, possiblePlayedCards);
-                PlayerContext playerContext = new PlayerContext(playerToClue, playerHand);
+                IBoardContext boardContext = BoardContext.Create(fireworkPile, discardPile, _pilesAnalyzer, otherPlayerCards, possiblePlayedCards);
+                IPlayerContext playerContext = new PlayerContext(playerToClue, playerHand);
 
                 // надо оценить, что будет делать другой игрок.
                 IPlayCardStrategy playCardStrategy = PlayStrategyFabric.Create(_gameProvider, playerContext);
@@ -195,16 +196,21 @@ namespace Hanabi
                             {
                                 cards = d1.CardsToDiscard;
                             }
-
+                            
                             // придумать подсказку про запас
-                            solution = new HardSolution
-                            {
-                                Situation = ClueSituation.ClueExists,
-                                Clue = CreateClue(playerContext, cards),
-                                PlayerToClue = playerContext.Player
-                            };
 
-                            break;
+                            var possibleClue = CreateClue(playerContext, cards);
+                            if (possibleClue != null)
+                            {
+                                solution = new HardSolution
+                                {
+                                    Situation = ClueSituation.ClueExists,
+                                    Clue = possibleClue,
+                                    PlayerToClue = playerContext.Player
+                                };
+                                break;
+                            }
+                            continue;
                         }
                     }
 
@@ -271,15 +277,14 @@ namespace Hanabi
         {
             Contract.Requires<ArgumentNullException>(playerContext != null);
             Contract.Requires(cards.Any());
-            Contract.Ensures(Contract.Result<Clue>() != null);
-            Contract.Ensures(Contract.Result<Clue>().IsStraightClue);
+            Contract.Ensures(Contract.Result<Clue>() == null || Contract.Result<Clue>().IsStraightClue);
 
             foreach (var cardInHand in playerContext.Hand.Where(c => cards.Contains(c.Card)))
             {
                 var clues = ClueDetailInfo.CreateClues(cardInHand, playerContext.Player);
                 if (clues.Any()) return clues.First();
             }
-            throw new InvalidOperationException();
+            return null;
         }
 
         private void LogUniqueCards()

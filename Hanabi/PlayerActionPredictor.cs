@@ -26,7 +26,7 @@ namespace Hanabi
             IEstimator playCardEstimator = new PlayCardEstimator(playCardStrategy);
             var cardsToPlay = playCardEstimator.GetPossibleCards(_boardContext, _playerContext).ToList();
 
-            var expectedCards = _boardContext.Firework.GetExpectedCards();
+            var expectedCards = _boardContext.GetExpectedCards();
 
             if (cardsToPlay.Any())
             {
@@ -55,11 +55,11 @@ namespace Hanabi
             IEstimator discardEstimator = new DiscardEstimator(discardStrategy);
             var cardsToDiscard = discardEstimator.GetPossibleCards(_boardContext, _playerContext);
 
-            var uniqueCardsToDiscard = cardsToDiscard.Intersect(_boardContext.UniqueCards).ToList();
+            var uniqueCardsToDiscard = cardsToDiscard.Intersect(_boardContext.GetUniqueCards()).ToList();
             if (uniqueCardsToDiscard.Any())
                 return new DiscardUniqueCardAction() {CardsToDiscard = uniqueCardsToDiscard};
 
-            var cardsWhateverToPlay = cardsToDiscard.Intersect(_boardContext.WhateverToPlayCards).ToList();
+            var cardsWhateverToPlay = cardsToDiscard.Intersect(_boardContext.GetWhateverToPlayCards()).ToList();
             if (cardsWhateverToPlay.Any())
                 return new DiscardCardWhateverToPlayAction() {CardsToDiscard = cardsWhateverToPlay};
             

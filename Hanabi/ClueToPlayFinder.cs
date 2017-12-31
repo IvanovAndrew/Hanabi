@@ -20,7 +20,7 @@ namespace Hanabi
 
         public Clue Find(IPlayCardStrategy playStrategy, IDiscardStrategy discardStrategy)
         {
-            var expectedCards = _boardContext.Firework.GetExpectedCards();
+            var expectedCards = _boardContext.GetExpectedCards();
 
             var cardsToPlay =
                 _playerContext.Hand.Where(cih => expectedCards.Contains(cih.Card))

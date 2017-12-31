@@ -80,7 +80,7 @@ namespace Hanabi
             Contract.Requires(clue.IsStraightClue);
 
             // эвристика
-            if (cards.Count == 1 && ClueDetailInfo.IsSubtleClue(FireworkPile, clue))
+            if (cards.Count == 1 && clue.IsSubtleClue(FireworkPile.GetExpectedCards()))
             {
                 Logger.Log.Info("It's a subtle clue");
                 _specialCards.Add(cards.First());
@@ -176,7 +176,7 @@ namespace Hanabi
             if (ClueCounter == 1)
             {
                 LastTinClueStrategy strategy = new LastTinClueStrategy(this, _game.Board, GameProvider);
-                solution = strategy.FindClueCandidate(_game.GetPlayersExcept(this));
+                solution = strategy.FindClueCandidate(Players);
 
                 switch (solution.Situation)
                 {
@@ -198,8 +198,8 @@ namespace Hanabi
 
             if (clue == null && playerToClue == null)
             {
-                BoardContext boardContext = BoardContext.Create(_game.Board, _pilesAnalyzer, PlayerCards());
-                var manyTinClueStrategy = new ManyTinClueStrategy(this, boardContext, GameProvider);
+                IBoardContext boardContext = BoardContext.Create(_game.Board, _pilesAnalyzer, PlayerCards());
+                var manyTinClueStrategy = new ManyTinClueStrategy(this, boardContext);
 
                 solution = manyTinClueStrategy.FindClueCandidate(Players);
 

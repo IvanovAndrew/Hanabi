@@ -7,64 +7,53 @@ namespace Hanabi
     [ContractClass(typeof(BoardContextContract))]
     public interface IBoardContext
     {
-        FireworkPile Firework { get; }
-        DiscardPile DiscardPile { get; }
-        IEnumerable<Card> UniqueCards { get; }
-        IEnumerable<Card> WhateverToPlayCards { get; }
-        IEnumerable<Card> ExcludedCards { get; }
+        IEnumerable<Card> GetExpectedCards();
+        IEnumerable<Card> GetUniqueCards();
+        IEnumerable<Card> GetWhateverToPlayCards();
+        IEnumerable<Card> GetExcludedCards();
+
+        void AddToFirework(Card card);
+        void Discard(Card card);
     }
 
     [ContractClassFor(typeof(IBoardContext))]
     abstract class BoardContextContract : IBoardContext
     {
-        public FireworkPile Firework
+        public IEnumerable<Card> GetUniqueCards()
         {
-            get
-            {
-                Contract.Ensures(Contract.Result<FireworkPile>() != null);
+            Contract.Ensures(Contract.Result<IEnumerable<Card>>() != null);
 
-                throw new NotSupportedException();
-            }
+            throw new NotSupportedException();
         }
 
-        public DiscardPile DiscardPile
+        public IEnumerable<Card> GetWhateverToPlayCards()
         {
-            get
-            {
-                Contract.Ensures(Contract.Result<DiscardPile>() != null);
+            Contract.Ensures(Contract.Result<IEnumerable<Card>>() != null);
 
-                throw new NotSupportedException();
-            }
+            throw new NotSupportedException();
         }
 
-        public IEnumerable<Card> UniqueCards
+        public IEnumerable<Card> GetExcludedCards()
         {
-            get
-            {
-                Contract.Ensures(Contract.Result<IEnumerable<Card>>() != null);
+            Contract.Ensures(Contract.Result<IEnumerable<Card>>() != null);
 
-                throw new NotSupportedException();
-            }
+            throw new NotSupportedException();
         }
 
-        public IEnumerable<Card> WhateverToPlayCards
+        public IEnumerable<Card> GetExpectedCards()
         {
-            get
-            {
-                Contract.Ensures(Contract.Result<IEnumerable<Card>>() != null);
-
-                throw new NotSupportedException();
-            }
+            Contract.Ensures(Contract.Result<IEnumerable<Card>>() != null);
+            throw new NotSupportedException();
         }
 
-        public IEnumerable<Card> ExcludedCards
+        public void AddToFirework(Card card)
         {
-            get
-            {
-                Contract.Ensures(Contract.Result<IEnumerable<Card>>() != null);
+            Contract.Requires(card != null);
+        }
 
-                throw new NotSupportedException();
-            }
+        public void Discard(Card card)
+        {
+            Contract.Requires(card != null);
         }
     }
 }

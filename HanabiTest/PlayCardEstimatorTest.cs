@@ -34,19 +34,19 @@ namespace HanabiTest
         {
             var playCardStrategyMock = new PlayCardStrategyStub();
             var game = new Game(gameProvider, 4);
-            var player = new Player(game, "");
+            var player = new Player(game);
             playCardStrategyMock.Player = player;
 
             return playCardStrategyMock;
         }
 
-        private void SetProbabilities(PlayCardStrategyStub strategy, Dictionary<Card, double> dict)
+        private void SetProbabilities(PlayCardStrategyStub strategy, Dictionary<Card, Probability> dict)
         {
             foreach (var entry in dict)
             {
                 strategy.ProbabilitiesToReturn.Add(
                     strategy.Hand.First(cih => cih.Card == entry.Key), 
-                    new Probability(entry.Value));
+                    entry.Value);
             }
         }
         
@@ -58,6 +58,7 @@ namespace HanabiTest
         [Test]
         public void PlayCardEstimator_NoSubtleCluesAndAllProbabilitiesLessThanThreshold_ReturnsEmpty()
         {
+            // arrange
             var blueOneCard = new Card(Color.Blue, Rank.One);
             var whiteTwoCard = new Card(Color.White, Rank.Two);
             var blueThreeCard = new Card(Color.Blue, Rank.Three);
@@ -70,22 +71,27 @@ namespace HanabiTest
             playStrategyStub.AddCardInHand(blueThreeCard);
             playStrategyStub.AddCardInHand(whiteFourCard);
 
-            var dict = new Dictionary<Card, double>
+            var dict = new Dictionary<Card, Probability>
             {
-                {blueOneCard, 0.2},
-                {whiteTwoCard, 0.3},
-                {blueThreeCard, 0.4},
-                {whiteFourCard, 0.5}
+                {blueOneCard, new Probability(0.2)},
+                {whiteTwoCard, new Probability(0.3)},
+                {blueThreeCard, new Probability(0.4)},
+                {whiteFourCard, new Probability(0.5)}
             };
             SetProbabilities(playStrategyStub, dict);
 
-            var boardContext = new BoardContextStub();
-                //new BoardContext(new FireworkPile(gameProvider), new Card[0], new Card[0]);
+            var boardContext = new BoardContextStub
+            {
+                ExpectedCards = new[] {new Card(Color.Blue, Rank.One), new Card(Color.White, Rank.One),}
+            };
+            
             var playerContext = PlayerContextFabric.CreateStub(playStrategyStub.Player, playStrategyStub.Hand);
 
+            // act
             var playCardEstimator = new PlayCardEstimator(playStrategyStub);
             var possibleCards = playCardEstimator.GetPossibleCards(boardContext, playerContext);
 
+            // assert
             Assert.IsTrue(!possibleCards.Any());
         }
 
@@ -97,6 +103,7 @@ namespace HanabiTest
         [Test]
         public void PlayCardEstimator_TwoSubtleCluesWithDifferentProbabilies_ReturnsTwoCards()
         {
+            // arrange
             var blueOneCard = new Card(Color.Blue, Rank.One);
             var whiteTwoCard = new Card(Color.White, Rank.Two);
             var blueThreeCard = new Card(Color.Blue, Rank.Three);
@@ -109,12 +116,12 @@ namespace HanabiTest
             playStrategyStub.AddCardInHand(blueThreeCard);
             playStrategyStub.AddCardInHand(whiteFourCard);
 
-            var dict = new Dictionary<Card, double>
+            var dict = new Dictionary<Card, Probability>
             {
-                {blueOneCard, 0.2},
-                {whiteTwoCard, 0.3},
-                {blueThreeCard, 0.4},
-                {whiteFourCard, 0.5}
+                {blueOneCard, new Probability(0.2)},
+                {whiteTwoCard, new Probability(0.3)},
+                {blueThreeCard, new Probability(0.4)},
+                {whiteFourCard, new Probability(0.5)}
             };
 
             SetProbabilities(playStrategyStub, dict);
@@ -125,14 +132,103 @@ namespace HanabiTest
 
             var boardContext = new BoardContextStub();
             
-                //new BoardContext(new FireworkPile(gameProvider), new Card[0], new Card[0]);
+            // act
+            var playCardEstimator = new PlayCardEstimator(playStrategyStub);
+            var possibleCards = playCardEstimator.GetPossibleCards(boardContext, playerContext);
+
+            // assert
+            Assert.AreEqual(2, possibleCards.Count);
+            Assert.IsTrue(possibleCards.Contains(blueOneCard));
+            Assert.IsTrue(possibleCards.Contains(whiteTwoCard));
+        }
+
+        /// <summary>
+        /// Нет тонких подсказок. 
+        /// По всем картам вероятность ниже порога.
+        /// Но игрок знает об одной единице. На столе ожидается единица.
+        /// </summary>
+        [Test]
+        public void PlayCardEstimator_PlayOneRankedCardInDefaultIfPossible_ReturnsOne()
+        {
+            // arrange
+            var blueOneCard = new Card(Color.Blue, Rank.One);
+            var whiteTwoCard = new Card(Color.White, Rank.Two);
+            var blueThreeCard = new Card(Color.Blue, Rank.Three);
+
+            var gameProvider = GameProviderFabric.Create(Color.White, Color.Blue);
+            var playStrategyStub = InitPlayStrategy(gameProvider);
+            playStrategyStub.AddCardInHand(blueOneCard);
+            playStrategyStub.AddCardInHand(whiteTwoCard);
+            playStrategyStub.AddCardInHand(blueThreeCard);
+
+            var dict = new Dictionary<Card, Probability>
+            {
+                {blueOneCard, new Probability(0.2)},
+                {whiteTwoCard, new Probability(0.3)},
+                {blueThreeCard, new Probability(0.4)},
+            };
+            SetProbabilities(playStrategyStub, dict);
+
+            var boardContext = new BoardContextStub
+            {
+                ExpectedCards = new[] { new Card(Color.Blue, Rank.One), new Card(Color.White, Rank.Two), }
+            };
+
+            var playerContext = PlayerContextFabric.CreateStub(playStrategyStub.Player, playStrategyStub.Hand);
+
+            var clueAboutOneRank = new ClueAboutRank(Rank.One);
+            var blueOneInHand = playStrategyStub.Hand.First(card => card.Card == blueOneCard);
+            playerContext.CluesAboutCard[blueOneInHand] = new List<Clue> {clueAboutOneRank};
+
+            // act
+            var playCardEstimator = new PlayCardEstimator(playStrategyStub);
+            var possibleCards = playCardEstimator.GetPossibleCards(boardContext, playerContext).ToList();
+
+            // assert
+            Assert.IsTrue(possibleCards.Count == 1);
+            Assert.AreEqual(blueOneCard, possibleCards.First());
+        }
+
+        /// <summary>
+        /// Нет тонких подсказок. 
+        /// По всем картам вероятность ниже порога.
+        /// Но игрок знает об одной единице. На столе единиц не ожидается.
+        /// </summary>
+        [Test]
+        public void PlayCardEstimator_PlayOneRankedCardInDefaultIfPossible_ReturnsEmpty()
+        {
+            var blueOneCard = new Card(Color.Blue, Rank.One);
+            var whiteTwoCard = new Card(Color.White, Rank.Two);
+            var blueThreeCard = new Card(Color.Blue, Rank.Three);
+
+            var gameProvider = GameProviderFabric.Create(Color.White, Color.Blue);
+            var playStrategyStub = InitPlayStrategy(gameProvider);
+            playStrategyStub.AddCardInHand(blueOneCard);
+            playStrategyStub.AddCardInHand(whiteTwoCard);
+            playStrategyStub.AddCardInHand(blueThreeCard);
+
+            var dict = new Dictionary<Card, Probability>
+            {
+                {blueOneCard, new Probability(0.2)},
+                {whiteTwoCard, new Probability(0.3)},
+                {blueThreeCard, new Probability(0.4)},
+            };
+            SetProbabilities(playStrategyStub, dict);
+
+            var boardContext = new BoardContextStub
+            {
+                ExpectedCards = new[] { new Card(Color.Blue, Rank.Two), new Card(Color.White, Rank.Two), }
+            };
+
+            var playerContext = PlayerContextFabric.CreateStub(playStrategyStub.Player, playStrategyStub.Hand);
+
+            var blueOneInHand = playStrategyStub.Hand.First(card => card.Card == blueOneCard);
+            playerContext.CluesAboutCard[blueOneInHand] = new List<Clue> { new ClueAboutRank(Rank.One) };
 
             var playCardEstimator = new PlayCardEstimator(playStrategyStub);
             var possibleCards = playCardEstimator.GetPossibleCards(boardContext, playerContext);
 
-            Assert.AreEqual(2, possibleCards.Count);
-            Assert.IsTrue(possibleCards.Contains(blueOneCard));
-            Assert.IsTrue(possibleCards.Contains(whiteTwoCard));
+            Assert.IsTrue(!possibleCards.Any());
         }
     }
 }

@@ -16,8 +16,6 @@ namespace Hanabi
         public IDictionary<CardInHand, Probability> EstimateCardToPlayProbability(IBoardContext boardContext)
         {
             Contract.Requires<ArgumentNullException>(boardContext != null);
-            Contract.Requires<ArgumentException>(boardContext.Firework != null);
-            Contract.Requires<ArgumentException>(boardContext.ExcludedCards != null);
 
             var result = Contract.Result<IDictionary<CardInHand, Probability>>();
             Contract.Ensures(result != null);

@@ -9,14 +9,14 @@ namespace HanabiTest
         private Guess CreateGuess(IGameProvider gameProvider, Card card)
         {
             var game = new Game(gameProvider, 2);
-            var player = new Player(game, "");
+            var player = new Player(game);
 
             var cardInHand = new CardInHand(card, player);
 
             return new Guess(gameProvider, cardInHand);
         }
         
-        [Test]
+        //[Test]
         void EstimateDiscardProbability__()
         {
             // arrange

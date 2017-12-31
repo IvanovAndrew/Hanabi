@@ -7,41 +7,40 @@ namespace Hanabi
 {
     public class BoardContext : IBoardContext
     {
-        public FireworkPile Firework { get; }
-        public DiscardPile DiscardPile { get; }
-        public IEnumerable<Card> UniqueCards => _pilesAnalyzer.GetUniqueCards(Firework, DiscardPile);
+        private FireworkPile _fireworkPile;
+        private DiscardPile _discardPile;
 
-        public IEnumerable<Card> WhateverToPlayCards => _pilesAnalyzer.GetCardsWhateverToPlay(Firework, DiscardPile);
-
-        public IEnumerable<Card> ExcludedCards => _pilesAnalyzer.GetThrownCards(Firework, DiscardPile).Concat(_otherPlayerCards).Except(PossiblePlayed);
+        
+        private readonly IList<Card> _possiblePlayed = new List<Card>();
+        private IList<Card> _possibleDiscarded = new List<Card>();
 
         public IEnumerable<Card> PossiblePlayed { get; }
 
         private readonly PilesAnalyzer _pilesAnalyzer;
         private readonly IEnumerable<Card> _otherPlayerCards;
 
-        private BoardContext(FireworkPile firework, DiscardPile discardPile, PilesAnalyzer pilesAnalyzer, IEnumerable<Card> otherPlayerCards, IEnumerable<Card> possiblePlayed = null)
+        private BoardContext(FireworkPile fireworkPile, DiscardPile discardPile, PilesAnalyzer pilesAnalyzer, IEnumerable<Card> otherPlayerCards, IEnumerable<Card> possiblePlayed = null)
         {
-            Firework = firework;
-            DiscardPile = discardPile;
+            _fireworkPile = fireworkPile;
+            _discardPile = discardPile;
             _pilesAnalyzer = pilesAnalyzer;
             _otherPlayerCards = otherPlayerCards;
 
             PossiblePlayed = possiblePlayed?? new List<Card>();
         }
 
-        public static BoardContext Create(Board board, PilesAnalyzer pilesAnalyzer, IEnumerable<Card> otherPlayersCards)
+        public static IBoardContext Create(Board board, PilesAnalyzer pilesAnalyzer, IEnumerable<Card> otherPlayersCards)
         {
             Contract.Requires<ArgumentNullException>(board != null);
             Contract.Requires<ArgumentNullException>(pilesAnalyzer != null);
             Contract.Requires<ArgumentNullException>(otherPlayersCards != null);
 
-            Contract.Ensures(Contract.Result<BoardContext>() != null);
+            Contract.Ensures(Contract.Result<IBoardContext>() != null);
             
             return new BoardContext(board.FireworkPile, board.DiscardPile, pilesAnalyzer, otherPlayersCards);
         }
 
-        public static BoardContext Create(
+        public static IBoardContext Create(
             FireworkPile fireworkPile,
             DiscardPile discardPile,
             PilesAnalyzer pilesAnalyzer,
@@ -56,13 +55,62 @@ namespace Hanabi
             return new BoardContext(fireworkPile, discardPile, pilesAnalyzer, otherPlayersCards, cardPossiblePlayed);
         }
 
-        [ContractInvariantMethod]
-        private void CardContextInvariant()
+        public void AddToFirework(Card card)
         {
-            Contract.Invariant(Firework != null);
-            Contract.Invariant(UniqueCards != null);
-            Contract.Invariant(ExcludedCards != null);
+            _possiblePlayed.Add(card);
+        }
+
+        public IEnumerable<Card> GetExpectedCards()
+        {
+            return GetPossibleFireworkPile().GetExpectedCards();
+        }
+
+        public IEnumerable<Card> GetUniqueCards()
+        {
+            var possibleFirework = GetPossibleFireworkPile();
+            var possibleDiscardPile = GetPossibleDiscardPile();
+
+            return _pilesAnalyzer.GetUniqueCards(possibleFirework, possibleDiscardPile);
+        }
+
+        public IEnumerable<Card> GetWhateverToPlayCards()
+        {
+            var possibleFirework = GetPossibleFireworkPile();
+            var possibleDiscardPile = GetPossibleDiscardPile();
+
+            return _pilesAnalyzer.GetCardsWhateverToPlay(possibleFirework, possibleDiscardPile);
+        }
+
+        public IEnumerable<Card> GetExcludedCards()
+        {
+            return _pilesAnalyzer.GetThrownCards(_fireworkPile, _discardPile).Concat(_otherPlayerCards);
+        }
+
+
+        private FireworkPile GetPossibleFireworkPile()
+        {
+            var possibleFirework = _fireworkPile.Clone();
+            foreach (var card in _possiblePlayed)
+            {
+                possibleFirework.AddCard(card);
+            }
+            return possibleFirework;
+        }
+
+        private DiscardPile GetPossibleDiscardPile()
+        {
+            var possibleDiscardPile = _discardPile.Clone();
+            foreach (var card in _possibleDiscarded)
+            {
+                possibleDiscardPile.AddCard(card);
+            }
+            return possibleDiscardPile;
+        }
+
+
+        public void Discard(Card card)
+        {
+            _possibleDiscarded.Add(card);
         }
     }
 }
-

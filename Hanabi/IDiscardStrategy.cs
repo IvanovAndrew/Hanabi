@@ -8,7 +8,6 @@ namespace Hanabi
     public interface IDiscardStrategy
     {
         IDictionary<CardInHand, Probability> EstimateDiscardProbability(IBoardContext boardContext);
-        //bool CheckIfRightClue(IBoardContext boardContext, IPlayerContext playerContext);
     }
 
     [ContractClassFor(typeof(IDiscardStrategy))]

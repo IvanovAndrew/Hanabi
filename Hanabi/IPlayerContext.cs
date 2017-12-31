@@ -11,7 +11,7 @@ namespace Hanabi
         IEnumerable<CardInHand> Hand { get; }
         Clue PossibleClue { get; set; }
 
-        bool IsSubtleClue(CardInHand cardInHand, FireworkPile firework);
+        bool IsSubtleClue(CardInHand cardInHand, IEnumerable<Card> expectedCards);
         IList<Clue> GetCluesAboutCard(CardInHand cardInHand);
         bool KnowAboutRankOrColor(CardInHand cardInHand);
     }
@@ -39,10 +39,10 @@ namespace Hanabi
 
         public Clue PossibleClue { get; set; }
 
-        public bool IsSubtleClue(CardInHand cardInHand, FireworkPile firework)
+        public bool IsSubtleClue(CardInHand cardInHand, IEnumerable<Card> expectedCards)
         {
             Contract.Requires<ArgumentNullException>(cardInHand != null);
-            Contract.Requires<ArgumentNullException>(firework != null);
+            Contract.Requires<ArgumentNullException>(expectedCards != null);
             
             throw new NotSupportedException();
         }
