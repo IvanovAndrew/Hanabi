@@ -178,7 +178,7 @@ namespace HanabiTest
 
             var clueAboutOneRank = new ClueAboutRank(Rank.One);
             var blueOneInHand = playStrategyStub.Hand.First(card => card.Card == blueOneCard);
-            playerContext.CluesAboutCard[blueOneInHand] = new List<Clue> {clueAboutOneRank};
+            playerContext.CluesAboutCard[blueOneInHand] = new List<ClueType> {clueAboutOneRank};
 
             // act
             var playCardEstimator = new PlayCardEstimator(playStrategyStub);
@@ -223,7 +223,7 @@ namespace HanabiTest
             var playerContext = PlayerContextFabric.CreateStub(playStrategyStub.Player, playStrategyStub.Hand);
 
             var blueOneInHand = playStrategyStub.Hand.First(card => card.Card == blueOneCard);
-            playerContext.CluesAboutCard[blueOneInHand] = new List<Clue> { new ClueAboutRank(Rank.One) };
+            playerContext.CluesAboutCard[blueOneInHand] = new List<ClueType> { new ClueAboutRank(Rank.One) };
 
             var playCardEstimator = new PlayCardEstimator(playStrategyStub);
             var possibleCards = playCardEstimator.GetPossibleCards(boardContext, playerContext);

@@ -105,6 +105,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Clue.cs" />
+    <Compile Include="ClueAndCardMatcher.cs" />
     <Compile Include="DiscardStrategyFabric.cs" />
     <Compile Include="ManyTinClueStrategy.cs" />
     <Compile Include="PlayCardStrategy.cs" />
@@ -123,11 +125,8 @@
     <Compile Include="PlayerContext.cs" />
     <Compile Include="CardInHand.cs" />
     <Compile Include="CardsToMatrixConverter.cs" />
-    <Compile Include="Clue.cs" />
+    <Compile Include="ClueType.cs" />
     <Compile Include="ClueHelper.cs" />
-    <Compile Include="ClueAboutColorVisitor.cs" />
-    <Compile Include="ClueAboutRankVisitor.cs" />
-    <Compile Include="ClueCandidate.cs" />
     <Compile Include="Deck.cs" />
     <Compile Include="DiscardPile.cs" />
     <Compile Include="DiscardStrategy.cs" />

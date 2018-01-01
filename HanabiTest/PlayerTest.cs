@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using Hanabi;
 using NUnit.Framework;
 
@@ -14,13 +15,17 @@ namespace HanabiTest
             var gameProvider = new GameProvider();
             
             Game game = new Game(gameProvider, 2);
-            Player player = new Player(game, "");
+            Player player = new Player(game);
 
             CardInHand cardInHand = new CardInHand(player, new Card(Rank.One, Color.Blue));
             player.AddCard(cardInHand);
 
-            player.ListenClue(new []{cardInHand}, new ClueAboutRank(Rank.One));
-            player.ListenClue(new []{cardInHand}, new ClueAboutColor(Color.Blue));
+            var cardsToClue = new[] {cardInHand};
+            var clueOne = Clue.Create(new ClueAboutRank(Rank.One), cardsToClue);
+            var clueTwo = Clue.Create(new ClueAboutColor(Color.Blue), cardsToClue);
+
+            player.ListenClue(clueOne);
+            player.ListenClue(clueTwo);
 
             Assert.IsTrue(player.KnowAboutNominalAndColor(cardInHand));
         }
@@ -31,13 +36,15 @@ namespace HanabiTest
             var gameProvider = new GameProvider();
 
             Game game = new Game(gameProvider, 2);
-            Player player = new Player(game, "");
+            Player player = new Player(game);
 
             CardInHand card = new CardInHand(player, new Card(Color.Blue, Rank.One));
             player.AddCard(card);
 
+            var clue = Clue.Create(new ClueAboutRank(Rank.One), new[] {card});
+
             // act
-            player.ListenClue(new[] { card }, new ClueAboutRank(Rank.One));
+            player.ListenClue(clue);
 
             Assert.IsFalse(player.KnowAboutNominalAndColor(card));
         }
@@ -47,13 +54,16 @@ namespace HanabiTest
         {
             var gameProvider = new GameProvider();
             Game game = new Game(gameProvider, 2);
-            Player player = new Player(game, "");
+            Player player = new Player(game);
 
             CardInHand card = new CardInHand(player, new Card(Color.Blue, Rank.One));
             player.AddCard(card);
 
-            player.ListenClue(new[] { card }, new ClueAboutColor(Color.Blue));
+            // act
+            var clue = Clue.Create(new ClueAboutColor(Color.Blue), new[] {card});
+            player.ListenClue(clue);
 
+            // assert
             Assert.IsFalse(player.KnowAboutNominalAndColor(card));
         }
 
@@ -80,13 +90,14 @@ namespace HanabiTest
             player.AddCard(greenFiveCard);
 
             // clue about rank blue one
-            player.ListenClue(new[] { blueOneCard }, new ClueAboutRank(Rank.One));
+            var clue = Clue.Create(new ClueAboutRank(Rank.One), new[] { blueOneCard });
+            player.ListenClue(clue);
 
             // clues about red, yellow, white and green colors
-            player.ListenClue(new[] { redTwoCard  }, new ClueAboutColor(Color.Red));
-            player.ListenClue(new[] { yellowThreeCard }, new ClueAboutColor(Color.Yellow));
-            player.ListenClue(new[] { whiteFourCard }, new ClueAboutColor(Color.White));
-            player.ListenClue(new[] { greenFiveCard }, new ClueAboutColor(Color.Green));
+            player.ListenClue(Clue.Create(new ClueAboutColor(Color.Red),    new[] { redTwoCard }));
+            player.ListenClue(Clue.Create(new ClueAboutColor(Color.Yellow), new[] { yellowThreeCard }));
+            player.ListenClue(Clue.Create(new ClueAboutColor(Color.White),  new[] { whiteFourCard }));
+            player.ListenClue(Clue.Create(new ClueAboutColor(Color.Green),  new[] { greenFiveCard }));
 
             Assert.IsTrue(player.KnowAboutNominalAndColor(blueOneCard));
         }
@@ -94,46 +105,39 @@ namespace HanabiTest
         #endregion
 
         // TODO create more accurate name for test
-        //[Test]
+        [Test]
         public void ListenClue_HandWithTwoWhiteOneCardsAndClueAboutOne_AddsOneClueToEachCard()
         {
             IGameProvider provider = new GameProvider();
             Game game = new Game(provider, 2);
 
-            var player = new Player(game, "");
+            var player = new Player(game);
 
             CardInHand firstWhiteOneCard = new CardInHand(player, new Card(Color.White, Rank.One));
             player.AddCard(firstWhiteOneCard);
 
             CardInHand secondWhiteOneCard = new CardInHand(player, new Card(Color.White, Rank.One));
-            player.AddCard(firstWhiteOneCard);
+            player.AddCard(secondWhiteOneCard);
 
-            Clue clue = new ClueAboutRank(Rank.One);
+            ClueType clue = new ClueAboutRank(Rank.One);
 
-            player.ListenClue(new List<CardInHand>
-            {
-                firstWhiteOneCard,
-                secondWhiteOneCard
-            }, clue);
+            //act
+            player.ListenClue(
+                Clue.Create(clue, new List<CardInHand> {firstWhiteOneCard, secondWhiteOneCard}));
 
-            //foreach (var card in player.Memory.GetHand())
-            //{
-            //    IReadOnlyList<Clue> clues = player.Memory.GetCluesAboutCard(card);
-
-            //    Assert.AreEqual(1, clues.Count);
-
-            //    Assert.IsTrue(clues[0] is ClueAboutRank);
-            //}
+            // assert
+            Assert.AreEqual(1, player.GetCluesAboutCard(firstWhiteOneCard).Count);
+            Assert.AreEqual(1, player.GetCluesAboutCard(secondWhiteOneCard).Count);
         }
 
         // TODO create more accurate name for test
-        //[Test]
+        [Test]
         public void ListenClue_HandWithRedFiveAndClueAboutFive_AddsClueAboutOtherCards()
         {
             IGameProvider provider = new GameProvider();
             Game game = new Game(provider, 2);
 
-            var player = new Player(game, "");
+            var player = new Player(game);
 
             CardInHand blueOneCard = new CardInHand(player, new Card(Color.Blue, Rank.One));
             player.AddCard(blueOneCard);
@@ -141,17 +145,13 @@ namespace HanabiTest
             CardInHand redFiveCard = new CardInHand(player, new Card(Color.Red, Rank.Five));
             player.AddCard(redFiveCard);
 
-            Clue clue = new ClueAboutRank(Rank.Five);
+            // act
+            player.ListenClue(Clue.Create(new ClueAboutRank(Rank.Five), new [] { redFiveCard }));
 
-            player.ListenClue(new List<CardInHand>
-            {
-                redFiveCard,
-            }, clue);
+            IReadOnlyList<ClueType> clues = player.GetCluesAboutCard(blueOneCard);
 
-            //IReadOnlyList<Clue> clues = player.Memory.GetCluesAboutCard(blueOneCard);
-
-            //Assert.AreEqual(1, clues.Count);
-            //Assert.IsTrue(clues[0] is ClueAboutNotRank);
+            Assert.AreEqual(1, clues.Count);
+            Assert.IsTrue(clues[0] is ClueAboutNotRank);
         }
 
         public void GiveClue_Always_RaisesClueGivenEvent()

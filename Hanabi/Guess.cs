@@ -23,11 +23,11 @@ namespace Hanabi
         }
 
         #region IClueVisitor implementation
-        public bool Visit(ClueAboutColor clue)
+        public bool Visit(ClueAboutColor clueAboutColor)
         {
             foreach (var color in _provider.Colors)
             {
-                if (color == clue.Color) continue;
+                if (color == clueAboutColor.Color) continue;
 
                 foreach (Rank number in _provider.Ranks)
                 {
@@ -38,21 +38,21 @@ namespace Hanabi
             return true;
         }
 
-        public bool Visit(ClueAboutNotColor clue)
+        public bool Visit(ClueAboutNotColor clueAboutNotColor)
         {
             foreach (var number in _provider.Ranks)
             {
-                _matrix[number, clue.Color] = 0;
+                _matrix[number, clueAboutNotColor.Color] = 0;
             }
 
             return true;
         }
 
-        public bool Visit(ClueAboutRank clue)
+        public bool Visit(ClueAboutRank clueAboutRank)
         {
             foreach (var number in _provider.Ranks)
             {
-                if (clue.Rank == number) continue;
+                if (clueAboutRank.Rank == number) continue;
 
                 foreach (var color in _provider.Colors)
                 {
@@ -63,11 +63,11 @@ namespace Hanabi
             return true;
         }
 
-        public bool Visit(ClueAboutNotRank clue)
+        public bool Visit(ClueAboutNotRank clueAboutNotRank)
         {
             foreach (var color in _provider.Colors)
             {
-                _matrix[clue.Rank, color] = 0;
+                _matrix[clueAboutNotRank.Rank, color] = 0;
             }
 
             return true;

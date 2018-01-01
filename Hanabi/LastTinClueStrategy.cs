@@ -8,7 +8,7 @@ namespace Hanabi
     public class HardSolution
     {
         public Player PlayerToClue { get; set; }
-        public Clue Clue { get; set; }
+        public ClueType Clue { get; set; }
         public ClueSituation Situation;
         public IBoardContext BoardContext { get; set; }
     }
@@ -273,11 +273,11 @@ namespace Hanabi
             return cards;
         }
 
-        private Clue CreateClue(IPlayerContext playerContext, IEnumerable<Card> cards)
+        private ClueType CreateClue(IPlayerContext playerContext, IEnumerable<Card> cards)
         {
             Contract.Requires<ArgumentNullException>(playerContext != null);
             Contract.Requires(cards.Any());
-            Contract.Ensures(Contract.Result<Clue>() == null || Contract.Result<Clue>().IsStraightClue);
+            Contract.Ensures(Contract.Result<ClueType>() == null || Contract.Result<ClueType>().IsStraightClue);
 
             foreach (var cardInHand in playerContext.Hand.Where(c => cards.Contains(c.Card)))
             {

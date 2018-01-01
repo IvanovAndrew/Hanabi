@@ -9,10 +9,10 @@ namespace Hanabi
     {
         Player Player { get; }
         IEnumerable<CardInHand> Hand { get; }
-        Clue PossibleClue { get; set; }
+        ClueType PossibleClue { get; set; }
 
         bool IsSubtleClue(CardInHand cardInHand, IEnumerable<Card> expectedCards);
-        IList<Clue> GetCluesAboutCard(CardInHand cardInHand);
+        IList<ClueType> GetCluesAboutCard(CardInHand cardInHand);
         bool KnowAboutRankOrColor(CardInHand cardInHand);
     }
 
@@ -37,7 +37,7 @@ namespace Hanabi
             }
         }
 
-        public Clue PossibleClue { get; set; }
+        public ClueType PossibleClue { get; set; }
 
         public bool IsSubtleClue(CardInHand cardInHand, IEnumerable<Card> expectedCards)
         {
@@ -47,10 +47,10 @@ namespace Hanabi
             throw new NotSupportedException();
         }
 
-        public IList<Clue> GetCluesAboutCard(CardInHand cardInHand)
+        public IList<ClueType> GetCluesAboutCard(CardInHand cardInHand)
         {
             Contract.Requires<ArgumentNullException>(cardInHand != null);
-            var contractResult = Contract.Result<IList<Clue>>();
+            var contractResult = Contract.Result<IList<ClueType>>();
             Contract.Ensures(contractResult != null);
 
             throw new NotSupportedException();

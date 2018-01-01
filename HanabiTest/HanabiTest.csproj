@@ -46,7 +46,6 @@
     <Compile Include="CardsToMatrixConverterTest.cs" />
     <Compile Include="CardTest.cs" />
     <Compile Include="ClueAndCardMatcherTest.cs" />
-    <Compile Include="ClueDetailInfoTest.cs" />
     <Compile Include="ClueTest.cs" />
     <Compile Include="DeckTest.cs" />
     <Compile Include="DiscardEstimatorTest.cs" />

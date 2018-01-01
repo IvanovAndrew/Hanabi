@@ -2,10 +2,10 @@
 {
     public interface IClueVisitor
     {
-        bool Visit(ClueAboutRank clue);
-        bool Visit(ClueAboutNotRank clue);
+        bool Visit(ClueAboutRank clueAboutRank);
+        bool Visit(ClueAboutNotRank clueAboutNotRank);
 
-        bool Visit(ClueAboutColor clue);
-        bool Visit(ClueAboutNotColor clue);
+        bool Visit(ClueAboutColor clueAboutColor);
+        bool Visit(ClueAboutNotColor clueAboutNotColor);
     }
 }

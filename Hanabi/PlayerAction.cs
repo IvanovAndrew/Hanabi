@@ -6,16 +6,16 @@ namespace Hanabi
 {
     public class ClueAndAction
     {
-        public Clue Clue { get; set; }
+        public ClueType Clue { get; set; }
         public PlayerAction Action { get; set; }
     }
     
     public interface IPlayActionVisitor
     {
-        Clue CreateClueToAvoidAction(PlayCardAction action);
-        Clue CreateClueToAvoidAction(BlowCardAction action);
-        Clue CreateClueToAvoidAction(DiscardCardWhateverToPlayAction action);
-        Clue CreateClueToAvoidAction(DiscardUniqueCardAction action);
+        ClueType CreateClueToAvoidAction(PlayCardAction action);
+        ClueType CreateClueToAvoidAction(BlowCardAction action);
+        ClueType CreateClueToAvoidAction(DiscardCardWhateverToPlayAction action);
+        ClueType CreateClueToAvoidAction(DiscardUniqueCardAction action);
     }
     
     public abstract class PlayerAction
@@ -244,10 +244,5 @@ namespace Hanabi
     public class DiscardNoNeedCard : DiscardAction
     {
         public override bool RequiresImmediateClue => false;
-
-        //public override Clue Accept(ClueCreator clueCreator)
-        //{
-        //    return null;
-        //}
     }
 }

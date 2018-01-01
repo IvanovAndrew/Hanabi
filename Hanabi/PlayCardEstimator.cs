@@ -56,8 +56,7 @@ namespace Hanabi
                     {
                         var knowsAboutRank
                             = playerContext.GetCluesAboutCard(card)
-                                .Where(c => c.IsStraightClue)
-                                .Any(c => ClueDetailInfo.GetClueInfo(c).Rank == Rank.One);
+                                .Any(c => new ClueAboutRank(Rank.One).Equals(c));
 
                         if (knowsAboutRank)
                         {

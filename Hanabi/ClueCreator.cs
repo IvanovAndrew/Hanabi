@@ -25,7 +25,7 @@ namespace Hanabi
             _discardStrategy = discardStrategy;
         }
 
-        public Clue CreateClueToPlay(IPlayerContext playerContext)
+        public ClueType CreateClueToPlay(IPlayerContext playerContext)
         {
             var expectedCards = _boardContext.GetExpectedCards();
 
@@ -44,13 +44,13 @@ namespace Hanabi
             cardsToPlay =
                 cardsToPlay.OrderBy(cardInHand => (int)cardInHand.Card.Rank).ToList();
 
-            var clues = new List<Clue>();
+            var clues = new List<ClueType>();
 
 
             return null;
         }
 
-        public Clue CreateClue()
+        public ClueType CreateClue()
         {
             // если можно подсказать так, чтобы игрок сходил, то подсказать.
 

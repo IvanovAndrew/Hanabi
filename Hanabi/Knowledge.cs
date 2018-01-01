@@ -23,10 +23,10 @@ namespace Hanabi
             _thoughts.Remove(thoughts);
         }
 
-        public IReadOnlyList<Clue> GetCluesAboutCard(CardInHand card)
+        public IReadOnlyList<ClueType> GetCluesAboutCard(CardInHand card)
         {
             Contract.Requires<ArgumentNullException>(card != null);
-            Contract.Ensures(Contract.Result<IReadOnlyList<Clue>>() != null);
+            Contract.Ensures(Contract.Result<IReadOnlyList<ClueType>>() != null);
 
             return _thoughts
                         .Find(thought => Equals(thought.CardInHand, card)).Clues
@@ -59,7 +59,7 @@ namespace Hanabi
                         {
                             CardInHand = cardInHand,
                             Guess = new Guess(_provider, cardInHand), 
-                            Clues = new List<Clue>()
+                            Clues = new List<ClueType>()
                         };
             _thoughts.Add(newThought);
         }
@@ -77,30 +77,27 @@ namespace Hanabi
             return _thoughts.Find(thought => Equals(thought.CardInHand, cardInHand));
         }
 
-        public void Update(IEnumerable<CardInHand> cards, Clue clue)
+        public void Update(Clue clue)
         {
-            Contract.Requires<ArgumentNullException>(cards != null);
-            Contract.Requires(cards.Any());
-
             Contract.Requires<ArgumentNullException>(clue != null);
 
-            foreach (CardInHand card in cards)
+            foreach (CardInHand card in clue.Cards)
             {
-                ApplyClue(card, clue);
+                ApplyClue(card, clue.Type);
             }
 
-            Clue revertedClue = clue.Revert();
             IEnumerable<CardInHand> otherCards = _thoughts
-                                        .Select(thought => thought.CardInHand)
-                                        .Except(cards);
+                .Select(thought => thought.CardInHand);
 
-            foreach (CardInHand otherCard in otherCards)
+            Clue revertedClue = Clue.Revert(clue, otherCards);
+
+            foreach (CardInHand otherCard in revertedClue.Cards)
             {
-                ApplyClue(otherCard, revertedClue);
+                ApplyClue(otherCard, revertedClue.Type);
             }
         }
 
-        private void ApplyClue(CardInHand card, Clue clue)
+        private void ApplyClue(CardInHand card, ClueType clue)
         {
             var thought = GetThoughtsAboutCard(card);
             thought.Clues.Add(clue);

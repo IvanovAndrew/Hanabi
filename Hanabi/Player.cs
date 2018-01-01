@@ -70,23 +70,19 @@ namespace Hanabi
             return _memory.GetHand();
         }
 
-        public void ListenClue(ICollection<CardInHand> cards, Clue clue)
+        public void ListenClue(Clue clue)
         {
-            Contract.Requires<ArgumentNullException>(cards != null);
-            Contract.Requires<ArgumentException>(cards.Any());
-            Contract.Requires(Contract.ForAll(cards, card => card.Player == this));
-
             Contract.Requires<ArgumentNullException>(clue != null);
-            Contract.Requires(clue.IsStraightClue);
+            Contract.Requires(clue.Type.IsStraightClue);
 
             // эвристика
-            if (cards.Count == 1 && clue.IsSubtleClue(FireworkPile.GetExpectedCards()))
+            if (clue.IsSubtleClue(FireworkPile.GetExpectedCards()))
             {
                 Logger.Log.Info("It's a subtle clue");
-                _specialCards.Add(cards.First());
+                _specialCards.Add(clue.Cards.First());
             }
 
-            _memory.Update(cards, clue);
+            _memory.Update(clue);
         }
 
         /// Can I play?
@@ -171,7 +167,7 @@ namespace Hanabi
 
             HardSolution solution;
             Player playerToClue = null;
-            Clue clue = null;
+            ClueType clueType = null;
             
             if (ClueCounter == 1)
             {
@@ -183,7 +179,7 @@ namespace Hanabi
                     case ClueSituation.ClueExists:
 
                         playerToClue = solution.PlayerToClue;
-                        clue = solution.Clue;
+                        clueType = solution.Clue;
                         break;
 
                     case ClueSituation.ClueDoesntExist:
@@ -196,7 +192,7 @@ namespace Hanabi
                 }
             }
 
-            if (clue == null && playerToClue == null)
+            if (clueType == null && playerToClue == null)
             {
                 IBoardContext boardContext = BoardContext.Create(_game.Board, _pilesAnalyzer, PlayerCards());
                 var manyTinClueStrategy = new ManyTinClueStrategy(this, boardContext);
@@ -205,12 +201,13 @@ namespace Hanabi
 
                 if (solution.Situation == ClueSituation.ClueDoesntExist) return false;
 
-                clue = solution.Clue;
+                clueType = solution.Clue;
                 playerToClue = solution.PlayerToClue;
             }
 
-            var cardsToClue = ClueDetailInfo.GetCardsToClue(playerToClue.ShowCards(this), clue);
-            GiveClue(playerToClue, clue, cardsToClue);
+            var clue = Clue.Create(clueType, playerToClue.ShowCards(this));
+
+            GiveClue(playerToClue, clue);
             return true;
 
             IList<Card> PlayerCards()
@@ -220,19 +217,19 @@ namespace Hanabi
             }
         }
 
-        private void GiveClue(Player playerToClue, Clue clue, ICollection<CardInHand> cardsToClue)
+        private void GiveClue(Player playerToClue, Clue clue)
         {
             Contract.Requires<ArgumentNullException>(playerToClue != null);
             Contract.Requires<ArgumentNullException>(clue != null);
-            Contract.Requires(clue.IsStraightClue, "You must say rank or color!");
-            Contract.Requires<ArgumentNullException>(cardsToClue != null);
-            Contract.Requires<ArgumentNullException>(cardsToClue.Any());
-            Contract.Requires(Contract.ForAll(cardsToClue, card => card.Player == playerToClue));
+            //Contract.Requires(clue.IsStraightClue, "You must say rank or color!");
+            //Contract.Requires<ArgumentNullException>(cardsToClue != null);
+            //Contract.Requires<ArgumentNullException>(cardsToClue.Any());
+            //Contract.Requires(Contract.ForAll(cardsToClue, card => card.Player == playerToClue));
 
-            playerToClue.ListenClue(cardsToClue, clue);
+            playerToClue.ListenClue(clue);
 
             Logger.Log.Info(String.Format(
-                $"Player {Name} gives clue to player {playerToClue.Name}: {clue}"));
+                $"Player {Name} gives clue to player {playerToClue.Name}: {clue.Type}"));
 
             RaiseClueGivenEvent();
         }
@@ -315,14 +312,12 @@ namespace Hanabi
                 Contract.Result<CardInHand>().Player == this && 
                 Contract.Result<CardInHand>().Card.Rank == Rank.One);
 
-            var clueFinder = new ClueAboutRankVisitor();
             // Если мы знаем, что одна из карт -- единица неизвестного цвета, то ходим ей.
             foreach (var card in _memory.GetHand())
             {
                 foreach (var clue in _memory.GetCluesAboutCard(card))
                 {
-                    if (clue.Accept(clueFinder) && 
-                        clueFinder.Rank == Rank.One &&
+                    if (IsClueAboutOneRank(clue) &&
                         !KnowAboutNominalAndColor(card))
                     {
                         Logger.Log.InfoFormat("Player {0} finds cards with rank One", Name);
@@ -331,6 +326,11 @@ namespace Hanabi
                 }
             }
             return null;
+
+            bool IsClueAboutOneRank(ClueType clue)
+            {
+                return new ClueAboutRank(Rank.One).Equals(clue);
+            }
         }
 
         // Выбросить нужно ту карту, которая не нужна => P(карта сыграна U уже не может быть сыграна) -> max
@@ -419,7 +419,7 @@ namespace Hanabi
             return _memory.GetGuessAboutCard(cardInHand).KnowAboutNominalAndColor();
         }
 
-        public IReadOnlyList<Clue> GetCluesAboutCard(CardInHand cardInHand)
+        public IReadOnlyList<ClueType> GetCluesAboutCard(CardInHand cardInHand)
         {
             Contract.Requires<ArgumentNullException>(cardInHand != null);
             Contract.Requires<ArgumentException>(cardInHand.Player == this);
@@ -458,7 +458,7 @@ namespace Hanabi
                 {
                     string logString = $"\t{card}";
                     var logClueVisitor = new LogClueVisitor();
-                    foreach (Clue clue in player._memory.GetCluesAboutCard(card))
+                    foreach (ClueType clue in player._memory.GetCluesAboutCard(card))
                     {
                         clue.Accept(logClueVisitor);
                     }
@@ -470,6 +470,8 @@ namespace Hanabi
                     logEntry += logString + Environment.NewLine;
                 }
             }
+
+            Logger.Log.Info("");
             Logger.Log.Info(logEntry);
         }
     }

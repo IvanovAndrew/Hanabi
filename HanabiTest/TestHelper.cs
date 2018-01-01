@@ -11,23 +11,23 @@ namespace HanabiTest
     {
         public Player Player { get; set; }
         public IEnumerable<CardInHand> Hand { get; set; }
-        public Clue PossibleClue { get; set; }
+        public ClueType PossibleClue { get; set; }
 
         public Predicate<CardInHand> IsSubtleCluePredicate { get; set; }
         public Predicate<CardInHand> KnowAboutRankOrColorPredicate { get; set; }
 
-        public Dictionary<CardInHand, List<Clue>> CluesAboutCard { get; set; } = new Dictionary<CardInHand, List<Clue>>();
+        public Dictionary<CardInHand, List<ClueType>> CluesAboutCard { get; set; } = new Dictionary<CardInHand, List<ClueType>>();
         
         public bool IsSubtleClue(CardInHand cardInHand, IEnumerable<Card> expectedCards)
         {
             return IsSubtleCluePredicate(cardInHand);
         }
 
-        public IList<Clue> GetCluesAboutCard(CardInHand cardInHand)
+        public IList<ClueType> GetCluesAboutCard(CardInHand cardInHand)
         {
             return CluesAboutCard.ContainsKey(cardInHand)? 
                 CluesAboutCard[cardInHand] : 
-                new List<Clue>();
+                new List<ClueType>();
         }
 
         public bool KnowAboutRankOrColor(CardInHand cardInHand)

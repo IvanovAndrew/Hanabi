@@ -9,7 +9,7 @@ namespace Hanabi
     {
         public Player Player { get; }
         public IEnumerable<CardInHand> Hand { get; }
-        public Clue PossibleClue { get; set; }
+        public ClueType PossibleClue { get; set; }
 
         public PlayerContext(Player player, IEnumerable<CardInHand> hand)
         {
@@ -21,14 +21,21 @@ namespace Hanabi
             Hand = hand;
         }
 
-        public IList<Clue> GetCluesAboutCard(CardInHand cardInHand)
+        public IList<ClueType> GetCluesAboutCard(CardInHand cardInHand)
         {
             var result = Player.GetCluesAboutCard(cardInHand).ToList();
 
             if (PossibleClue != null)
             {
-                var clue = ClueAndCardMatcher.Match(cardInHand.Card, PossibleClue);
-                result.Add(clue);
+                var clueAndCardMatcher = new ClueAndCardMatcher(cardInHand.Card);
+                if (PossibleClue.Accept(clueAndCardMatcher))
+                {
+                    result.Add(PossibleClue);
+                }
+                else
+                {
+                    result.Add(PossibleClue.Revert());
+                }
             }
 
             return result;
@@ -50,9 +57,7 @@ namespace Hanabi
         {
             if (PossibleClue == null) return false;
 
-            var clue = ClueAndCardMatcher.Match(cardInHand.Card, PossibleClue);
-
-            return clue.IsStraightClue && PossibleClue.IsSubtleClue(expectedCards);
+            return PossibleClue.IsSubtleClue(expectedCards);
         }
 
         public PlayerContext Clone()

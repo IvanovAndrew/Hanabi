@@ -1,219 +1,64 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace Hanabi
 {
-    public abstract class Clue
+    public class Clue
     {
-        public abstract Clue Revert();
+        public IReadOnlyCollection<CardInHand> Cards { get; }
 
-        public abstract bool Accept(IClueVisitor visitor);
+        public ClueType Type { get; }
 
-        public bool IsStraightClue { get; protected set; }
 
-        public abstract bool IsSubtleClue(IEnumerable<Card> expectedCards);
-    }
-
-    public class ClueAboutRank : Clue
-    {
-        public Rank Rank { get; }
-
-        public ClueAboutRank(Rank rank)
+        private Clue(ClueType type, IReadOnlyCollection<CardInHand> cards)
         {
-            Rank = rank;
-            IsStraightClue = true;
+            Cards = cards;
+            Type = type;
         }
 
-        public override Clue Revert()
+
+        public static Clue Create(ClueType clueType, IEnumerable<CardInHand> hand)
         {
-            return new ClueAboutNotRank(Rank);
+            Contract.Requires<ArgumentNullException>(clueType != null);
+            Contract.Requires<ArgumentNullException>(hand.Any());
+
+            var result = new List<CardInHand>();
+            foreach (var cardInHand in hand)
+            {
+                var matcher = new ClueAndCardMatcher(cardInHand.Card);
+
+                if (clueType.Accept(matcher)) result.Add(cardInHand);
+            }
+
+            var readOnlyCollection = 
+                new ReadOnlyCollectionBuilder<CardInHand>(result).ToReadOnlyCollection();
+
+            return new Clue(clueType, readOnlyCollection);
         }
 
-        private bool EqualsCore(ClueAboutRank clue)
+
+        public static Clue Revert(Clue clue, IEnumerable<CardInHand> hand)
         {
-            return Rank == clue.Rank;
+            return Create(clue.Type.Revert(), hand);
         }
 
-        public override bool Equals(object obj)
+
+        public bool IsSubtleClue(IEnumerable<Card> expectedCards)
         {
-            if (obj is ClueAboutRank rank)
-                return EqualsCore(rank);
-            return false;
+            if (Cards.Count > 1) return false;
+
+            return Type.IsSubtleClue(expectedCards);
         }
 
-        public override int GetHashCode()
+
+        [ContractInvariantMethod]
+        private void InvariantMethod()
         {
-            return Rank.GetHashCode();
-        }
-
-        public override bool Accept(IClueVisitor visitor)
-        {
-            return visitor.Visit(this);
-        }
-
-        public override bool IsSubtleClue(IEnumerable<Card> expectedCards)
-        {
-            // тонкая подсказка на ранг карты
-            // тогда среди ожидаемых карт должна существовать одна или две карты таким же рангом.
-            // все остальные должны быть рангом старше
-            int diff = expectedCards.Count(card => card.Rank == Rank);
-
-            return (diff == 1 || diff == 2) &&
-                   expectedCards
-                       .Where(card => card.Rank != Rank)
-                       .All(card => card.Rank > Rank);
-        }
-
-        public override string ToString()
-        {
-            return Rank.ToString();
-        }
-    }
-
-    public class ClueAboutNotRank : Clue
-    {
-        public Rank Rank { get; }
-
-        public ClueAboutNotRank(Rank rank)
-        {
-            Rank = rank;
-            IsStraightClue = false;
-        }
-
-        public override Clue Revert()
-        {
-            return new ClueAboutRank(Rank);
-        }
-
-        public override bool Accept(IClueVisitor visitor)
-        {
-            return visitor.Visit(this);
-        }
-
-        public override bool IsSubtleClue(IEnumerable<Card> expectedCards)
-        {
-            return false;
-        }
-
-        private bool EqualsCore(ClueAboutNotRank clue)
-        {
-            return Rank == clue.Rank;
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (obj is ClueAboutNotRank rank)
-                return EqualsCore(rank);
-            return false;
-        }
-
-        public override int GetHashCode()
-        {
-            return Rank.GetHashCode();
-        }
-
-        public override string ToString()
-        {
-            return $"Not {Rank}";
-        }
-    }
-
-    public class ClueAboutColor : Clue
-    {
-        public Color Color { get; }
-
-        public ClueAboutColor(Color color)
-        {
-            Color = color;
-            IsStraightClue = true;
-        }
-
-        public override Clue Revert()
-        {
-            return new ClueAboutNotColor(Color);
-        }
-
-        public override bool Accept(IClueVisitor visitor)
-        {
-            return visitor.Visit(this);
-        }
-
-        public override bool IsSubtleClue(IEnumerable<Card> expectedCards)
-        {
-            // тонкая подсказка на цвет может быть только на максимальный ранг
-            // TODO 
-            var rankFive = Hanabi.Rank.Five;
-            return expectedCards.Any(card => card.Color == Color && card.Rank == rankFive);
-        }
-
-        private bool EqualsCore(ClueAboutColor clue)
-        {
-            return Color == clue.Color;
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (obj is ClueAboutColor color)
-                return EqualsCore(color);
-            return false;
-        }
-
-        public override int GetHashCode()
-        {
-            return Color.GetHashCode();
-        }
-
-        public override string ToString()
-        {
-            return Color.ToString();
-        }
-    }
-
-    public class ClueAboutNotColor : Clue
-    {
-        public Color Color { get; }
-
-        public ClueAboutNotColor(Color color)
-        {
-            Color = color;
-            IsStraightClue = false;
-        }
-
-        public override Clue Revert()
-        {
-            return new ClueAboutColor(Color);
-        }
-
-        public override bool Accept(IClueVisitor visitor)
-        {
-            return visitor.Visit(this);
-        }
-
-        public override bool IsSubtleClue(IEnumerable<Card> expectedCards)
-        {
-            return false;
-        }
-
-        public override int GetHashCode()
-        {
-            return Color.GetHashCode();
-        }
-
-        private bool EqualsCore(ClueAboutNotColor clue)
-        {
-            return Color == clue.Color;
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (obj is ClueAboutNotColor color)
-                return EqualsCore(color);
-            return false;
-        }
-
-        public override string ToString()
-        {
-            return $"Not {Color}";
+            Contract.Invariant(Type != null);
+            Contract.Invariant(!Type.IsStraightClue || Cards.Any());
         }
     }
 }

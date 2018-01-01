@@ -18,7 +18,7 @@ namespace Hanabi
             _playerContext = playerContext;
         }
 
-        public Clue Find(IPlayCardStrategy playStrategy, IDiscardStrategy discardStrategy)
+        public ClueType Find(IPlayCardStrategy playStrategy, IDiscardStrategy discardStrategy)
         {
             var expectedCards = _boardContext.GetExpectedCards();
 

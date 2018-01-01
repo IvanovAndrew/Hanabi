@@ -6,6 +6,6 @@ namespace Hanabi
     {
         public CardInHand CardInHand { get; set; }
         public Guess Guess { get; set; }
-        public IList<Clue> Clues { get; set; }
+        public IList<ClueType> Clues { get; set; }
     }
 }

@@ -11,7 +11,7 @@ namespace HanabiTest
         {
             var game = new Game(gameProvider, 2);
             return 
-                new CardInHand(new Player(game, ""), card);
+                new CardInHand(new Player(game), card);
         }
 
         [Test]
@@ -94,8 +94,9 @@ namespace HanabiTest
         {
             IGameProvider gameProvider = GameProviderFabric.Create(Color.Red);
 
-            Guess guess = new Guess(gameProvider,
-                CreateCardInHand(gameProvider, new Card(Color.Red, Rank.Two)));
+            var redTwoCardInHand = CreateCardInHand(gameProvider, new Card(Color.Red, Rank.Two));
+            var cardsToClue = new[] {redTwoCardInHand};
+            Guess guess = new Guess(gameProvider, redTwoCardInHand);
 
             guess.Visit(new ClueAboutColor(Color.Red));
             guess.Visit(new ClueAboutRank(Rank.Two));
@@ -110,9 +111,10 @@ namespace HanabiTest
         {
             IGameProvider gameProvider = GameProviderFabric.Create(new List<Color>{Color.Red, Color.Yellow});
 
-            Guess guess = new Guess(
-                    gameProvider,
-                    CreateCardInHand(gameProvider, new Card(Color.Red, Rank.Two)));
+            var redTwoCardInHand = CreateCardInHand(gameProvider, new Card(Color.Red, Rank.Two));
+            var cardsToClue = new[] {redTwoCardInHand};
+
+            Guess guess = new Guess(gameProvider, redTwoCardInHand);
             guess.Visit(new ClueAboutColor(Color.Red));
 
             bool result = guess.KnowAboutNominalAndColor();
@@ -125,9 +127,10 @@ namespace HanabiTest
         {
             IGameProvider gameProvider = GameProviderFabric.Create(Color.Red, Color.Yellow);
 
-            Guess guess = new Guess(
-                gameProvider,
-                CreateCardInHand(gameProvider, new Card(Color.Red, Rank.Two)));
+            var redTwoCardInHand = CreateCardInHand(gameProvider, new Card(Color.Red, Rank.Two));
+            var cardsToClue = new[] {redTwoCardInHand};
+
+            Guess guess = new Guess(gameProvider, redTwoCardInHand);
             guess.Visit(new ClueAboutRank(Rank.Two));
 
             bool result = guess.KnowAboutNominalAndColor();
@@ -140,9 +143,10 @@ namespace HanabiTest
         {
             IGameProvider gameProvider = GameProviderFabric.Create(Color.Red, Color.Yellow);
 
-            Guess guess = new Guess(
-                gameProvider,
-                CreateCardInHand(gameProvider, new Card(Color.Red, Rank.Two)));
+            var redTwoCardInHand = CreateCardInHand(gameProvider, new Card(Color.Red, Rank.Two));
+            var cardToClue = new[] {redTwoCardInHand};
+
+            Guess guess = new Guess(gameProvider, redTwoCardInHand);
 
             guess.Visit(new ClueAboutColor(Color.Red));
             guess.Visit(new ClueAboutRank(Rank.Two));
@@ -157,9 +161,10 @@ namespace HanabiTest
         {
             IGameProvider gameProvider = GameProviderFabric.Create(Color.Red, Color.Yellow);
 
-            Guess guess = new Guess(
-                gameProvider,
-                CreateCardInHand(gameProvider, new Card(Color.Red, Rank.Two)));
+            var redTwoCardInHand = CreateCardInHand(gameProvider, new Card(Color.Red, Rank.Two));
+            var cardsToClue = new[] { redTwoCardInHand };
+
+            Guess guess = new Guess(gameProvider, redTwoCardInHand);
             guess.Visit(new ClueAboutColor(Color.Red));
 
             bool result = guess.KnowAboutRankOrColor();
@@ -172,9 +177,10 @@ namespace HanabiTest
         {
             IGameProvider gameProvider = GameProviderFabric.Create(Color.Red, Color.Yellow);
 
-            Guess guess = new Guess(
-                gameProvider,
-                CreateCardInHand(gameProvider, new Card(Color.Red, Rank.Two)));
+            var redTwoCardInHand = CreateCardInHand(gameProvider, new Card(Color.Red, Rank.Two));
+            var cardsToClue = new[] {redTwoCardInHand};
+
+            Guess guess = new Guess(gameProvider, redTwoCardInHand);
             guess.Visit(new ClueAboutRank(Rank.Two));
 
             bool result = guess.KnowAboutRankOrColor();
@@ -201,9 +207,10 @@ namespace HanabiTest
         {
             IGameProvider gameProvider = GameProviderFabric.Create(Color.Red, Color.Yellow);
 
-            Guess guess = new Guess(
-                gameProvider,
-                CreateCardInHand(gameProvider, new Card(Color.Red, Rank.Two)));
+            var redTwoCardInHand = CreateCardInHand(gameProvider, new Card(Color.Red, Rank.Two));
+            var cardsToClue = new[] {redTwoCardInHand};
+
+            Guess guess = new Guess(gameProvider, redTwoCardInHand);
             guess.Visit(new ClueAboutNotColor(Color.Yellow));
 
             bool result = guess.KnowAboutRankOrColor();

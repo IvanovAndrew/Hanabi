@@ -7,35 +7,44 @@ namespace HanabiTest
     public class ClueAndCardMatcherTest
     {
         [Test]
-        public void Match_ClueAboutThreeAndBlueTwoCard_ReturnsRevertedClue()
+        public void Match_ClueAboutThreeAndBlueTwoCard_ReturnsFalse()
         {
-            var clue = ClueAndCardMatcher.Match(new ClueAboutRank(Rank.Three), new Card(Color.Blue, Rank.Two));
+            var blueTwoCard = new Card(Color.Blue, Rank.Two);
+            var matcher = new ClueAndCardMatcher(blueTwoCard);
+            var clue = new ClueAboutRank(Rank.Three);
 
-            Assert.IsTrue(clue is ClueAboutNotRank);
+            Assert.IsFalse(clue.Accept(matcher));
         }
 
         [Test]
-        public void Match_ClueAboutThreeAndBlueThreeCard_ReturnsClueAboutRank()
+        public void Match_ClueAboutThreeAndBlueThreeCard_ReturnsTrue()
         {
-            var clue = ClueAndCardMatcher.Match(new ClueAboutRank(Rank.Three), new Card(Color.Blue, Rank.Three));
+            var blueThreeCard = new Card(Color.Blue, Rank.Three);
+            var matcher = new ClueAndCardMatcher(blueThreeCard);
 
-            Assert.IsTrue(clue is ClueAboutRank);
+            var clue = new ClueAboutRank(Rank.Three);
+
+            Assert.IsTrue(clue.Accept(matcher));
         }
 
         [Test]
-        public void Match_ClueAboutWhiteAndBlueThreeCard_ReturnsRevertedClue()
+        public void Match_ClueAboutWhiteAndBlueThreeCard_ReturnsFalse()
         {
-            var clue = ClueAndCardMatcher.Match(new ClueAboutColor(Color.White), new Card(Color.Blue, Rank.Three));
+            var blueThreeCard = new Card(Color.Blue, Rank.Three);
+            var matcher = new ClueAndCardMatcher(blueThreeCard);
+            var clue = new ClueAboutColor(Color.White);
 
-            Assert.IsTrue(clue is ClueAboutNotColor);
+            Assert.IsFalse(clue.Accept(matcher));
         }
 
         [Test]
-        public void Match_ClueAboutBlueAndBlueThreeCard_ReturnsClueAboutColor()
+        public void Match_ClueAboutBlueAndBlueThreeCard_ReturnsTrue()
         {
-            var clue = ClueAndCardMatcher.Match(new ClueAboutColor(Color.Blue), new Card(Color.Blue, Rank.Three));
+            var blueThreeCard = new Card(Color.Blue, Rank.Three);
+            var matcher = new ClueAndCardMatcher(blueThreeCard);
+            var clue = new ClueAboutColor(Color.Blue);
 
-            Assert.IsTrue(clue is ClueAboutColor);
+            Assert.IsTrue(clue.Accept(matcher));
         }
     }
 }
