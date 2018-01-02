@@ -22,11 +22,21 @@ namespace Hanabi
         {
             var expectedCards = _boardContext.GetExpectedCards();
 
-            var cardsToPlay =
+            var expectedThatCanPlay =
                 _playerContext.Hand
-                .Where(cih => expectedCards.Contains(cih.Card))
-                .OrderBy(cih => cih.Card.Rank)
+                    .Where(cih => expectedCards.Contains(cih.Card))
+                    .ToList();
+
+            var cardsToPlay = 
+                expectedThatCanPlay.Where(cih => cih.Card.Rank == Rank.Five)
+                .Concat(
+                    expectedThatCanPlay
+                    .Where(cih => cih.Card.Rank != Rank.Five)
+                    .OrderBy(cih => cih.Card.Rank)
+                    )
                 .ToList();
+
+
 
             if (cardsToPlay.Any())
             {
