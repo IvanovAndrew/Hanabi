@@ -111,7 +111,6 @@ namespace Hanabi
             if (!unknownOneRankedCards.Any()) return null;
 
 
-
             var cardsToClue = 
                 allOneRankedCards.Where(cardInHand => unknownOneRankedCards.Contains(cardInHand.Card));
 

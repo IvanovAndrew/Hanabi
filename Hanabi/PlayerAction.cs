@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 namespace Hanabi
@@ -13,11 +12,10 @@ namespace Hanabi
     
     public abstract class PlayerAction
     {
-        protected IList<Type> ActionsToAvoid = new List<Type> { typeof(BlowCardAction), typeof(DiscardUniqueCardAction) };
-
         public abstract bool PlayCard { get; }
         public abstract bool AddsClueAfter { get; }
-        public abstract bool RequiresImmediateClue { get; }
+        public abstract bool DiscardWhateverToPlayCard { get; }
+        public abstract bool IsActionToAvoid { get; }
 
         public abstract bool Discard { get; }
 
@@ -31,7 +29,8 @@ namespace Hanabi
         public override bool PlayCard => true;
 
         public override bool AddsClueAfter => false;
-        public override bool RequiresImmediateClue => false;
+        public override bool DiscardWhateverToPlayCard => false;
+        public override bool IsActionToAvoid => false;
         public override bool Discard => false;
 
         public override ClueAndAction CreateClueToAvoid(IBoardContext boardContext, IPlayerContext playerContext)
@@ -53,7 +52,8 @@ namespace Hanabi
 
         public override bool AddsClueAfter => false;
 
-        public override bool RequiresImmediateClue => true;
+        public override bool DiscardWhateverToPlayCard => true;
+        public override bool IsActionToAvoid => true;
         public override bool Discard => false;
 
         public override ClueAndAction CreateClueToAvoid(
@@ -94,7 +94,7 @@ namespace Hanabi
                     //     *) неуникальную карту    => OK
 
                     // если новое действие не ведёт к взрыву или сбросу нужной карты, то считаем подсказку приемлемой
-                    if (ActionsToAvoid.All(a => a != newAction.GetType()))
+                    if (!newAction.IsActionToAvoid)
                         return new ClueAndAction
                             {
                                 Clue = clue,
@@ -124,7 +124,8 @@ namespace Hanabi
 
     public class DiscardCardWhateverToPlayAction : DiscardAction
     {
-        public override bool RequiresImmediateClue => true;
+        public override bool DiscardWhateverToPlayCard => true;
+        public override bool IsActionToAvoid => false;
 
         public override ClueAndAction CreateClueToAvoid(IBoardContext boardContext, IPlayerContext playerContext)
         {
@@ -162,7 +163,7 @@ namespace Hanabi
                     //     *) неуникальную карту    => рассмотреть другой вариант
 
                     // если новое действие не требует вмешательства, то считаем подсказку приемлемой
-                    if (!newAction.RequiresImmediateClue)
+                    if (!newAction.DiscardWhateverToPlayCard)
                         return new ClueAndAction
                         {
                             Clue = clue,
@@ -178,10 +179,10 @@ namespace Hanabi
     public class DiscardUniqueCardAction : DiscardAction
     {
         public override bool PlayCard => false;
+        public override bool DiscardWhateverToPlayCard => true;
 
         public override bool AddsClueAfter => false;
-
-        public override bool RequiresImmediateClue => true;
+        public override bool IsActionToAvoid => true;
 
         public override ClueAndAction CreateClueToAvoid(IBoardContext boardContext, IPlayerContext playerContext)
         {
@@ -209,7 +210,7 @@ namespace Hanabi
                     var newAction = playerPredictor.Predict(playCardStrategy, discardStrategy);
 
                     // если новое действие не ведёт к взрыву или сбросу нужной карты, то считаем подсказку приемлемой
-                    if (ActionsToAvoid.All(a => a != newAction.GetType()))
+                    if (!newAction.IsActionToAvoid)
                     {
                         var clueAndAction = new ClueAndAction{Clue = clue, Action = newAction};
                         possibleCluesAndActions.Add(clueAndAction);
@@ -246,6 +247,7 @@ namespace Hanabi
 
     public class DiscardNoNeedCard : DiscardAction
     {
-        public override bool RequiresImmediateClue => false;
+        public override bool DiscardWhateverToPlayCard => false;
+        public override bool IsActionToAvoid => false;
     }
 }
