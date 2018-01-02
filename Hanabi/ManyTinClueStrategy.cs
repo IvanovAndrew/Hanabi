@@ -25,6 +25,20 @@ namespace Hanabi
 
             var expectedCards = _boardContext.GetExpectedCards();
 
+            var expectedOneRankedCards = expectedCards.Where(card => card.Rank == Rank.One);
+
+            if (expectedOneRankedCards.Any())
+            {
+                var situation = FindClueToPlayOneRankedCard(players, expectedOneRankedCards);
+
+                if (situation != null)
+                {
+                    return situation;
+                }
+                expectedCards = expectedCards.Except(expectedOneRankedCards);
+            }
+
+
             foreach (var player in players)
             {
                 ClueType clue = FindClueToPlay(player, expectedCards);
@@ -65,6 +79,56 @@ namespace Hanabi
             return new ClueNotExistsSituation();
         }
 
+        private IClueSituationStrategy FindClueToPlayOneRankedCard(IReadOnlyList<Player> players, IEnumerable<Card> expectedOneRankedCards)
+        {
+            var knownOneRankedCards = new List<Card>();
+
+            var allOneRankedCards = new List<CardInHand>();
+
+            foreach (var player in players)
+            {
+                var oneRankedCards = player
+                                    .ShowCards(_clueGiver)
+                                    .Where(cardInHand => expectedOneRankedCards.Contains(cardInHand.Card));
+
+                allOneRankedCards = allOneRankedCards.Concat(oneRankedCards).ToList();
+
+                var clueAboutOneRank = new ClueAboutRank(Rank.One);
+                foreach (var card in oneRankedCards)
+                {
+                    if (player.GetCluesAboutCard(card).Any(c => clueAboutOneRank.Equals(c)))
+                    {
+                        knownOneRankedCards.Add(card.Card);
+                    }
+                }
+            }
+
+            var unknownOneRankedCards =
+                expectedOneRankedCards
+                    .Except(knownOneRankedCards)
+                    .ToList();
+
+            if (!unknownOneRankedCards.Any()) return null;
+
+
+
+            var cardsToClue = 
+                allOneRankedCards.Where(cardInHand => unknownOneRankedCards.Contains(cardInHand.Card));
+
+            if (!cardsToClue.Any()) return null;
+
+            var playerToClue =
+                cardsToClue
+                    .GroupBy(cih => cih.Player)
+                    .OrderByDescending(group => group.Count())
+                    .Select(group => group.Key)
+                    .First();
+
+            var playerContext = new PlayerContext(playerToClue, playerToClue.ShowCards(_clueGiver));
+
+            return new OnlyClueExistsSituation(playerContext, new ClueAboutRank(Rank.One));
+        }
+
         private ClueType FindClueToPlay(Player playerToClue, IEnumerable<Card> expectedCards)
         {
             // сразу уберём карты, о которых игрок знает.
@@ -82,7 +146,7 @@ namespace Hanabi
             if (!cardsToPlay.Any()) return null;
 
             cardsToPlay =
-                cardsToPlay.OrderBy(cardInHand => (int)cardInHand.Card.Rank).ToList();
+                cardsToPlay.OrderBy(cardInHand => (int) cardInHand.Card.Rank).ToList();
 
             var cardToClue =
                 cardsToPlay.Last().Card.Rank == Rank.Five ? cardsToPlay.Last() : cardsToPlay.First();
@@ -111,7 +175,7 @@ namespace Hanabi
 
             if (!uniqueUnknownCards.Any()) return null;
 
-            uniqueUnknownCards = 
+            uniqueUnknownCards =
                 uniqueUnknownCards
                     .OrderBy(cardInHand => (int) cardInHand.Card.Rank)
                     .ToList();
@@ -129,7 +193,7 @@ namespace Hanabi
                 if (cardInHand.Card.Rank != Rank.Five) return false;
 
                 var clueAboutFiveRank = new ClueAboutRank(Rank.Five);
-                return 
+                return
                     playerToClue
                         .GetCluesAboutCard(cardInHand)
                         .Any(clue => clueAboutFiveRank.Equals(clue));
@@ -154,7 +218,7 @@ namespace Hanabi
             // TODO изучить...
             unknownCards =
                 unknownCards
-                    .OrderBy(cardInHand => (int)cardInHand.Card.Rank)
+                    .OrderBy(cardInHand => (int) cardInHand.Card.Rank)
                     .ToList();
 
             var cardToClue = unknownCards.FirstOrDefault();
@@ -165,4 +229,3 @@ namespace Hanabi
         }
     }
 }
-
