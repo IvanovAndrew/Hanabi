@@ -7,26 +7,21 @@ namespace Hanabi
 {
     public class BoardContext : IBoardContext
     {
-        private FireworkPile _fireworkPile;
-        private DiscardPile _discardPile;
-
+        private readonly FireworkPile _fireworkPile;
+        private readonly DiscardPile _discardPile;
         
         private readonly IList<Card> _possiblePlayed = new List<Card>();
-        private IList<Card> _possibleDiscarded = new List<Card>();
-
-        public IEnumerable<Card> PossiblePlayed { get; }
+        private readonly IList<Card> _possibleDiscarded = new List<Card>();
 
         private readonly PilesAnalyzer _pilesAnalyzer;
         private readonly IEnumerable<Card> _otherPlayerCards;
 
-        private BoardContext(FireworkPile fireworkPile, DiscardPile discardPile, PilesAnalyzer pilesAnalyzer, IEnumerable<Card> otherPlayerCards, IEnumerable<Card> possiblePlayed = null)
+        private BoardContext(FireworkPile fireworkPile, DiscardPile discardPile, PilesAnalyzer pilesAnalyzer, IEnumerable<Card> otherPlayerCards)
         {
             _fireworkPile = fireworkPile;
             _discardPile = discardPile;
             _pilesAnalyzer = pilesAnalyzer;
             _otherPlayerCards = otherPlayerCards;
-
-            PossiblePlayed = possiblePlayed?? new List<Card>();
         }
 
         public static IBoardContext Create(Board board, PilesAnalyzer pilesAnalyzer, IEnumerable<Card> otherPlayersCards)
@@ -44,15 +39,14 @@ namespace Hanabi
             FireworkPile fireworkPile,
             DiscardPile discardPile,
             PilesAnalyzer pilesAnalyzer,
-            IEnumerable<Card> otherPlayersCards,
-            IEnumerable<Card> cardPossiblePlayed = null)
+            IEnumerable<Card> otherPlayersCards)
         {
             Contract.Requires<ArgumentNullException>(fireworkPile != null);
             Contract.Requires<ArgumentNullException>(discardPile != null);
             Contract.Requires<ArgumentNullException>(pilesAnalyzer != null);
             Contract.Requires<ArgumentNullException>(otherPlayersCards != null);
 
-            return new BoardContext(fireworkPile, discardPile, pilesAnalyzer, otherPlayersCards, cardPossiblePlayed);
+            return new BoardContext(fireworkPile, discardPile, pilesAnalyzer, otherPlayersCards);
         }
 
         public void AddToFirework(Card card)
@@ -86,7 +80,6 @@ namespace Hanabi
             return _pilesAnalyzer.GetThrownCards(_fireworkPile, _discardPile).Concat(_otherPlayerCards);
         }
 
-
         private FireworkPile GetPossibleFireworkPile()
         {
             var possibleFirework = _fireworkPile.Clone();
@@ -107,10 +100,26 @@ namespace Hanabi
             return possibleDiscardPile;
         }
 
-
         public void Discard(Card card)
         {
             _possibleDiscarded.Add(card);
+        }
+
+        public IBoardContext ChangeContext(IEnumerable<Card> otherPlayerCards)
+        {
+            var newContext = BoardContext.Create(_fireworkPile, _discardPile, _pilesAnalyzer, otherPlayerCards);
+
+            foreach (var card in _possiblePlayed)
+            {
+                newContext.AddToFirework(card);
+            }
+
+            foreach (var card in _possibleDiscarded)
+            {
+                newContext.Discard(card);
+            }
+
+            return newContext;
         }
     }
 }

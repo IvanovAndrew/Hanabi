@@ -34,6 +34,7 @@ namespace Hanabi
         public Card PopCard()
         {
             Contract.Requires<InvalidOperationException>(!IsEmpty(), "Deck is empty");
+            Contract.Ensures(Contract.OldValue(Cards()) - 1 == Cards());
             Contract.Ensures(Contract.Result<Card>() != null);
             
             return _cards.Pop();
@@ -44,5 +45,8 @@ namespace Hanabi
         {
             return _cards.Count == 0;
         }
+
+        [Pure]
+        public int Cards() => _cards.Count;
     }
 }

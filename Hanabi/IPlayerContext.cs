@@ -14,6 +14,7 @@ namespace Hanabi
         bool IsSubtleClue(CardInHand cardInHand, IEnumerable<Card> expectedCards);
         IList<ClueType> GetCluesAboutCard(CardInHand cardInHand);
         bool KnowAboutRankOrColor(CardInHand cardInHand);
+        IPlayerContext Clone();
     }
 
     [ContractClassFor(typeof(IPlayerContext))]
@@ -59,6 +60,12 @@ namespace Hanabi
         public bool KnowAboutRankOrColor(CardInHand cardInHand)
         {
             Contract.Requires<ArgumentNullException>(cardInHand != null);
+            throw new NotSupportedException();
+        }
+
+        public IPlayerContext Clone()
+        {
+            Contract.Ensures(Contract.Result<IPlayerContext>() != null);
             throw new NotSupportedException();
         }
     }

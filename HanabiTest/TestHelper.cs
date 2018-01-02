@@ -34,6 +34,11 @@ namespace HanabiTest
         {
             return KnowAboutRankOrColorPredicate(cardInHand);
         }
+
+        public IPlayerContext Clone()
+        {
+            throw new NotImplementedException();
+        }
     }
     
     public class BoardContextStub : IBoardContext
@@ -71,6 +76,11 @@ namespace HanabiTest
         }
 
         public void Discard(Card card)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IBoardContext ChangeContext(IEnumerable<Card> otherPlayerCards)
         {
             throw new NotImplementedException();
         }

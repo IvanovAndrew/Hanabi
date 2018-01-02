@@ -165,49 +165,28 @@ namespace Hanabi
         {
             Contract.Requires<HanabiException>(ClueCounter > 0, "Zero blue counter");
 
-            HardSolution solution;
-            Player playerToClue = null;
-            ClueType clueType = null;
+            IClueStrategy strategy;
             
             if (ClueCounter == 1)
             {
-                LastTinClueStrategy strategy = new LastTinClueStrategy(this, _game.Board, GameProvider);
-                solution = strategy.FindClueCandidate(Players);
-
-                switch (solution.Situation)
-                {
-                    case ClueSituation.ClueExists:
-
-                        playerToClue = solution.PlayerToClue;
-                        clueType = solution.Clue;
-                        break;
-
-                    case ClueSituation.ClueDoesntExist:
-                        Logger.Log.Info(String.Format($"Player {Name} has to discard, because there isn't a clue"));
-                        return false;
-                        break;
-
-                    default:
-                        break;
-                }
+                strategy = new LastTinClueStrategy(this, _game.Board, GameProvider);
             }
-
-            if (clueType == null && playerToClue == null)
+            else
             {
                 IBoardContext boardContext = BoardContext.Create(_game.Board, _pilesAnalyzer, PlayerCards());
-                var manyTinClueStrategy = new ManyTinClueStrategy(this, boardContext);
-
-                solution = manyTinClueStrategy.FindClueCandidate(Players);
-
-                if (solution.Situation == ClueSituation.ClueDoesntExist) return false;
-
-                clueType = solution.Clue;
-                playerToClue = solution.PlayerToClue;
+                strategy = new ManyTinClueStrategy(this, boardContext);
             }
 
-            var clue = Clue.Create(clueType, playerToClue.ShowCards(this));
+            var solution = strategy.FindClueCandidate(Players);
+            var clueCandidate = solution.GetClueCandidate();
 
-            GiveClue(playerToClue, clue);
+            if (clueCandidate == null)
+            {
+                Logger.Log.Info(String.Format($"Player {Name} has to discard, because there isn't a clue"));
+                return false;
+            }
+
+            GiveClue(clueCandidate.Candidate, clueCandidate.Clue);
             return true;
 
             IList<Card> PlayerCards()
@@ -449,7 +428,7 @@ namespace Hanabi
 
         private void LogPlayersCards()
         {
-            string logEntry = string.Empty;
+            string logEntry = Environment.NewLine;
             foreach (var player in Players)
             {
                 logEntry += $"Player {player.Name} hand: {Environment.NewLine}";
@@ -471,7 +450,6 @@ namespace Hanabi
                 }
             }
 
-            Logger.Log.Info("");
             Logger.Log.Info(logEntry);
         }
     }

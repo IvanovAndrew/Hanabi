@@ -128,8 +128,9 @@ namespace Hanabi
                 playersEnumerator.MoveNext();
                 Player player = playersEnumerator.Current;
 
-                Logger.Log.InfoFormat(String.Format($"Player {player.Name} turns!"));
-                Logger.Log.InfoFormat(String.Format($"Firework: {Board.FireworkPile}"));
+                Logger.Log.Info($"Deck contains {Board.Deck.Cards()} card(s)");
+                Logger.Log.InfoFormat($"Player {player.Name} turns!");
+                Logger.Log.InfoFormat($"Firework: {Board.FireworkPile}");
                 Logger.Log.InfoFormat(String.Empty);
 
                 player.Turn();
@@ -137,7 +138,7 @@ namespace Hanabi
                 Logger.Log.Info("");
             }
 
-            Logger.Log.InfoFormat(String.Format($"Firework: {Board.FireworkPile}"));
+            Logger.Log.InfoFormat($"Firework: {Board.FireworkPile}");
             return Score;
         }
 

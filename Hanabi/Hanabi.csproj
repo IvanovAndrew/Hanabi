@@ -108,6 +108,7 @@
     <Compile Include="Clue.cs" />
     <Compile Include="ClueAndCardMatcher.cs" />
     <Compile Include="DiscardStrategyFabric.cs" />
+    <Compile Include="IClueSituationStrategy.cs" />
     <Compile Include="ManyTinClueStrategy.cs" />
     <Compile Include="PlayCardStrategy.cs" />
     <Compile Include="Board.cs" />

@@ -28,17 +28,14 @@ namespace Hanabi
         {
             var cardsToPlay = boardContext.GetExpectedCards();
 
-            var dict = new ConcurrentDictionary<CardInHand, Probability>();
-            Parallel.ForEach(
-                _guesses,
-                guess =>
-                {
-                    var probability = guess.GetProbability(cardsToPlay, boardContext.GetExcludedCards());
+            var dict = new Dictionary<CardInHand, Probability>();
 
-                    if (!dict.TryAdd(guess.CardInHand, probability))
-                        throw new Exception("Коллизии при добавлении в словарь");
-                }
-            );
+            foreach (var guess in _guesses)
+            {
+                var probability = guess.GetProbability(cardsToPlay, boardContext.GetExcludedCards());
+
+                dict[guess.CardInHand] = probability;
+            }
 
             return dict;
         }

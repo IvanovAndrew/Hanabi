@@ -8,9 +8,7 @@ namespace Hanabi
         private readonly IBoardContext _boardContext;
         private readonly IPlayerContext _playerContext;
 
-        public PlayerActionPredictor(
-            IBoardContext boardContext,
-            IPlayerContext playerContext)
+        public PlayerActionPredictor(IBoardContext boardContext, IPlayerContext playerContext)
         {
             _boardContext = boardContext;
             _playerContext = playerContext;
@@ -26,10 +24,10 @@ namespace Hanabi
             IEstimator playCardEstimator = new PlayCardEstimator(playCardStrategy);
             var cardsToPlay = playCardEstimator.GetPossibleCards(_boardContext, _playerContext).ToList();
 
-            var expectedCards = _boardContext.GetExpectedCards();
 
             if (cardsToPlay.Any())
             {
+                var expectedCards = _boardContext.GetExpectedCards();
                 var possibleBlowCards = cardsToPlay.Except(expectedCards);
                 if (!possibleBlowCards.Any())
                 {
@@ -63,7 +61,7 @@ namespace Hanabi
             if (cardsWhateverToPlay.Any())
                 return new DiscardCardWhateverToPlayAction() {CardsToDiscard = cardsWhateverToPlay};
             
-            return new DiscardNoNeedCard();
+            return new DiscardNoNeedCard {CardsToDiscard = cardsToDiscard};
         }
     }
 }

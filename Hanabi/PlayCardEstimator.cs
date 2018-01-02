@@ -50,7 +50,9 @@ namespace Hanabi
             {
                 if (boardContext.GetExpectedCards().Any(c => c.Rank == Rank.One))
                 {
-                    var cards = playerContext.Hand.Where(c => c.Card.Rank == Rank.One);
+                    var cards = playerContext.Hand
+                                    .Where(c => c.Card.Rank == Rank.One)
+                                    .Where(c => !playerContext.Player.KnowAboutNominalAndColor(c));
 
                     foreach (CardInHand card in cards)
                     {

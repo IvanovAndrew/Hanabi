@@ -14,6 +14,7 @@ namespace Hanabi
 
         void AddToFirework(Card card);
         void Discard(Card card);
+        IBoardContext ChangeContext(IEnumerable<Card> otherPlayerCards);
     }
 
     [ContractClassFor(typeof(IBoardContext))]
@@ -54,6 +55,13 @@ namespace Hanabi
         public void Discard(Card card)
         {
             Contract.Requires(card != null);
+        }
+
+        public IBoardContext ChangeContext(IEnumerable<Card> otherPlayerCards)
+        {
+            Contract.Ensures(Contract.Result<IBoardContext>() != this);
+            Contract.Ensures(Contract.Result<IBoardContext>() != null);
+            throw new NotImplementedException();
         }
     }
 }

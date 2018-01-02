@@ -6,10 +6,10 @@ namespace Hanabi
 {
     public class ClueToPlayFinder
     {
-        private readonly BoardContext _boardContext;
-        private readonly PlayerContext _playerContext;
+        private readonly IBoardContext _boardContext;
+        private readonly IPlayerContext _playerContext;
 
-        public ClueToPlayFinder(BoardContext boardContext, PlayerContext playerContext)
+        public ClueToPlayFinder(IBoardContext boardContext, IPlayerContext playerContext)
         {
             Contract.Requires<ArgumentNullException>(boardContext != null);
             Contract.Requires<ArgumentNullException>(playerContext != null);
@@ -18,13 +18,15 @@ namespace Hanabi
             _playerContext = playerContext;
         }
 
-        public ClueType Find(IPlayCardStrategy playStrategy, IDiscardStrategy discardStrategy)
+        public ClueAndAction Find()
         {
             var expectedCards = _boardContext.GetExpectedCards();
 
             var cardsToPlay =
-                _playerContext.Hand.Where(cih => expectedCards.Contains(cih.Card))
-                    .ToList();
+                _playerContext.Hand
+                .Where(cih => expectedCards.Contains(cih.Card))
+                .OrderBy(cih => cih.Card.Rank)
+                .ToList();
 
             if (cardsToPlay.Any())
             {
@@ -36,9 +38,15 @@ namespace Hanabi
                         playerContext.PossibleClue = clue;
                         
                         PlayerActionPredictor predictor = new PlayerActionPredictor(_boardContext, playerContext);
+                        IPlayCardStrategy playStrategy =
+                            PlayStrategyFabric.Create(playerContext.Player.GameProvider, playerContext);
+
+                        IDiscardStrategy discardStrategy =
+                            DiscardStrategyFabric.Create(playerContext.Player.GameProvider, playerContext);
+
                         var action = predictor.Predict(playStrategy, discardStrategy);
 
-                        if (action.PlayCard) return clue;
+                        if (action.PlayCard) return new ClueAndAction {Action = action, Clue = clue};
                     }
                 }
             }

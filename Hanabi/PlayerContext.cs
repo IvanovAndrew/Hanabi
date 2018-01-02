@@ -60,7 +60,7 @@ namespace Hanabi
             return PossibleClue.IsSubtleClue(expectedCards);
         }
 
-        public PlayerContext Clone()
+        public IPlayerContext Clone()
         {
             return new PlayerContext(Player, Hand);
         }

@@ -19,9 +19,8 @@ namespace Hanabi
             _boardContext = boardContext;
         }
 
-        public HardSolution FindClueCandidate(IReadOnlyList<Player> players)
+        public IClueSituationStrategy FindClueCandidate(IReadOnlyList<Player> players)
         {
-            Logger.Log.Info($"Many tin clue strategy. First player is {players[0].Name}");
             // поищем подсказки "на ход"
 
             var expectedCards = _boardContext.GetExpectedCards();
@@ -32,12 +31,8 @@ namespace Hanabi
 
                 if (clue == null) continue;
 
-                return new HardSolution
-                {
-                    Clue = clue,
-                    PlayerToClue = player,
-                    Situation = ClueSituation.ClueExists,
-                };
+                var playerContext = new PlayerContext(player, player.ShowCards(_clueGiver));
+                return new OnlyClueExistsSituation(playerContext, clue);
             }
 
             var uniqueCards = _boardContext.GetUniqueCards();
@@ -48,12 +43,8 @@ namespace Hanabi
 
                 if (clue == null) continue;
 
-                return new HardSolution
-                {
-                    Clue = clue,
-                    PlayerToClue = player,
-                    Situation = ClueSituation.ClueExists,
-                };
+                var playerContext = new PlayerContext(player, player.ShowCards(_clueGiver));
+                return new OnlyClueExistsSituation(playerContext, clue);
             }
 
 
@@ -67,15 +58,11 @@ namespace Hanabi
 
                 if (clue == null) continue;
 
-                return new HardSolution
-                {
-                    Clue = clue,
-                    PlayerToClue = player,
-                    Situation = ClueSituation.ClueExists,
-                };
+                var playerContext = new PlayerContext(player, player.ShowCards(_clueGiver));
+                return new OnlyClueExistsSituation(playerContext, clue);
             }
 
-            return new HardSolution {Situation = ClueSituation.ClueDoesntExist};
+            return new ClueNotExistsSituation();
         }
 
         private ClueType FindClueToPlay(Player playerToClue, IEnumerable<Card> expectedCards)
@@ -105,7 +92,7 @@ namespace Hanabi
             bool IsKnownOneRankedCard(CardInHand cardInHand)
             {
                 return playerToClue.GetCluesAboutCard(cardInHand)
-                    .Any(clue => clue == new ClueAboutRank(Rank.One));
+                    .Any(clue => Equals(new ClueAboutRank(Rank.One), clue));
             }
         }
 
@@ -145,7 +132,7 @@ namespace Hanabi
                 return 
                     playerToClue
                         .GetCluesAboutCard(cardInHand)
-                        .Any(clue => clue == clueAboutFiveRank);
+                        .Any(clue => clueAboutFiveRank.Equals(clue));
             }
         }
 
