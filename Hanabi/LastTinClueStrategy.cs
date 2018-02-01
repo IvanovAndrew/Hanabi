@@ -8,22 +8,17 @@ namespace Hanabi
     public class LastTinClueStrategy : IClueStrategy
     {
         private readonly Player _clueGiver;
-        private readonly Board _board;
+        private readonly IBoardContext _boardContext;
         private readonly IGameProvider _gameProvider;
-        private readonly PilesAnalyzer _pilesAnalyzer;
+        private readonly IEnumerable<Card> _otherPlayersCards;
 
-        public LastTinClueStrategy(Player clueGiver, Board board, IGameProvider gameProvider)
+        public LastTinClueStrategy(Player clueGiver, IBoardContext boardContext, IGameProvider gameProvider, IEnumerable<Card> otherPlayerCards)
         {
-            Contract.Requires<ArgumentNullException>(clueGiver != null);
-            Contract.Requires<ArgumentNullException>(board != null);
-            Contract.Requires<ArgumentNullException>(gameProvider != null);
-
             _clueGiver = clueGiver;
-            _board = board;
+            _boardContext = boardContext;
             _gameProvider = gameProvider;
-            _pilesAnalyzer = new PilesAnalyzer(_gameProvider);
+            _otherPlayersCards = otherPlayerCards;
         }
-
 
         public IClueSituationStrategy FindClueCandidate(IReadOnlyList<Player> players)
         {
@@ -46,11 +41,12 @@ namespace Hanabi
 
             LogUniqueCards();
 
-            IBoardContext boardContext = BoardContext.Create(_board.FireworkPile, _board.DiscardPile, _pilesAnalyzer, new Card[0]);
+            var boardContext = _boardContext;
+            //IBoardContext boardContext = BoardContext.Create(_board.FireworkPile, _board.DiscardPile, _pilesAnalyzer, new Card[0]);
 
             foreach (var playerToClue in players)
             {
-                IList<Card> otherPlayerCards = GetOtherPlayerCards(players, playerToClue);
+                IEnumerable<Card> otherPlayerCards = GetPlayersCards(playerToClue);
 
                 var playerHand = playerToClue.ShowCards(_clueGiver);
 
@@ -67,12 +63,21 @@ namespace Hanabi
 
                 // игрок играет пятёрку или сбрасывает ненужную карту: 
                 // подсказываем, если хотели подсказать. Иначе расслабляемся.
-                if (action.AddsClueAfter && action.PlayCard || action is DiscardNoNeedCard)
+                if (action.AddsClueAfter && action.PlayCard)
                 {
                     willDiscard |= true;
                     ignoreUntil = playerToClue;
 
-                    LogThoughtActionAddingClue(playerToClue);
+                    LogThoughtPlayFiveRankedAction(playerToClue);
+                    break;
+                }
+
+                if (action is DiscardNoNeedCard)
+                {
+                    willDiscard |= true;
+                    ignoreUntil = playerToClue;
+
+                    LogThoughtAboutDiscardNoNeedCardsAction(playerToClue, action.Cards);
                     break;
                 }
 
@@ -81,10 +86,10 @@ namespace Hanabi
                 if (action.PlayCard)
                 {
                     var playCardAction = action as PlayCardAction;
-                    var card = playCardAction.CardsToPlay.First();
+                    var card = playCardAction.Cards.First();
                     boardContext.AddToFirework(card);
 
-                    LogThoughtPlayAction(playerToClue, playCardAction.CardsToPlay);
+                    LogThoughtPlayAction(playerToClue, playCardAction.Cards);
                     continue;
                 }
 
@@ -92,7 +97,7 @@ namespace Hanabi
                 // если получится, то воспрепятствуем
                 if (action is DiscardCardWhateverToPlayAction discardAction)
                 {
-                    LogThoughtDiscardWhateverToPlayCards(playerToClue, discardAction.CardsToDiscard);
+                    LogThoughtDiscardWhateverToPlayCards(playerToClue, discardAction.Cards);
 
                     // подберём потенциальную подсказку
                     if (optionalSolution == null)
@@ -128,12 +133,12 @@ namespace Hanabi
                 {
                     if (action is BlowCardAction b)
                     {
-                        LogThoughtAboutBlowAction(playerToClue, b.CardsToBlow);
+                        LogThoughtAboutBlowAction(playerToClue, b.Cards);
                         
                     }
                     else if (action is DiscardUniqueCardAction d)
                     {
-                        LogThoughtAboutDiscardUniqueCardsAction(playerToClue, d.CardsToDiscard);
+                        LogThoughtAboutDiscardUniqueCardsAction(playerToClue, d.Cards);
                     }
                     
 
@@ -162,15 +167,15 @@ namespace Hanabi
                             IEnumerable<Card> cards = new List<Card>();
                             if (action is BlowCardAction b1)
                             {
-                                cards = b1.CardsToBlow;
-                                LogThoughtAboutBlowAction(playerToClue, b1.CardsToBlow);
+                                cards = b1.Cards;
+                                LogThoughtAboutBlowAction(playerToClue, b1.Cards);
                             }
                             else if (action is DiscardUniqueCardAction d1)
                             {
-                                cards = d1.CardsToDiscard;
+                                cards = d1.Cards;
                                 LogThoughtAboutDiscardUniqueCardsAction(
                                     playerToClue, 
-                                    d1.CardsToDiscard);
+                                    d1.Cards);
                             }
                             
                             // придумать подсказку про запас
@@ -203,7 +208,16 @@ namespace Hanabi
 
             Logger.Log.Info("");
             if (solution != null) return solution;
-            if (optionalSolution != null) return optionalSolution;
+            if (optionalSolution != null)
+            {
+                // TODO проверить, что подсказка ещё актуальна. 
+                // Пример: после подсказки игрок А сходит жёлтой двойкой.
+                // Но мы знаем, что по-любому игрок Б сходит жёлтой двойкой. 
+
+
+
+                return optionalSolution;
+            }
 
             // выскочили из цикла, но не придумали подсказку... 
             // Значит, можно расслабиться...
@@ -218,30 +232,27 @@ namespace Hanabi
                         .ToList()
                         .AsReadOnly();
             }
+            // костыль на случай конца игры
+            // осталось по ходу у двух игроков: А и Б. 
+            // А попытался подсказать Б. Не вышло.
+            // Без костыля playersCircle будет пустым.
+            if (!playersCircle.Any()) playersCircle = players;
 
             return 
                 new NoCriticalSituation(_clueGiver, playersCircle, boardContext);
         }
 
-        private IList<Card> GetOtherPlayerCards(IReadOnlyList<Player> players, Player playerToClue)
+        private IEnumerable<Card> GetPlayersCards(Player playerToExclude)
         {
-            var cards = new List<Card>();
+            var result = _otherPlayersCards.ToList();
 
-            // соберём карты других игроков
-            foreach (var otherPlayer in players)
+            var cardsToExclude = playerToExclude.ShowCards(_clueGiver).Select(cih => cih.Card);
+            foreach (var card in cardsToExclude)
             {
-                if (playerToClue == otherPlayer) continue;
-
-                cards.AddRange(
-                    otherPlayer
-                        .ShowCards(_clueGiver)
-                        .Select(cardInHand => cardInHand.Card)
-                );
+                result.Remove(card);
             }
 
-            cards.AddRange(_clueGiver.GetKnownCards());
-
-            return cards;
+            return result;
         }
 
         private ClueType CreateClue(IPlayerContext playerContext, IEnumerable<Card> cards)
@@ -258,14 +269,34 @@ namespace Hanabi
             return null;
         }
 
+        private bool IsCorrectClue(IClueSituationStrategy solution, IBoardContext boardContext)
+        {
+            return true;
+            var candidate = solution.GetClueCandidate();
+
+            //var playerContext = new PlayerContext(candidate.Candidate, candidate.Candidate.ShowCards(_clueGiver));
+
+            //var actionPredictor = new PlayerActionPredictor(boardContext, playerContext);
+            
+
+            //var playStrategy = PlayStrategyFabric.Create(_gameProvider, playerContext);
+            //var discardStrategy = DiscardStrategyFabric.Create(_gameProvider, playerContext);
+
+            //var action = actionPredictor.Predict(playStrategy, discardStrategy);
+
+            //if (action)
+        }
+
+        #region Log methods
+
         private void LogUniqueCards()
         {
-            var str = "Unique cards: ";
-            foreach (var card in _pilesAnalyzer
-                                    .GetUniqueCards(_board.FireworkPile, _board.DiscardPile)
+            var str = "Unique cards:";
+            foreach (var card in _boardContext
+                                    .GetUniqueCards()
                                     .OrderBy(c => c.Rank))
             {
-                str += $"{card}; ";
+                str += $" {{{card}}}";
             }
             Logger.Log.Info(str);
         }
@@ -274,10 +305,10 @@ namespace Hanabi
         {
             string str = $"Player {_clueGiver.Name} thinks " +
                          $"that player {player.Name} plays ";
-                            
+
             foreach (var cardToPlay in cards)
             {
-                str += $"{cardToPlay} ";
+                str += $"{{{cardToPlay}}} ";
             }
             Logger.Log.Info(str);
         }
@@ -290,18 +321,17 @@ namespace Hanabi
 
             foreach (var card in cards)
             {
-                info += $"{card} ";
+                info += $"{{{card}}} ";
             }
 
             Logger.Log.Info(info);
         }
 
-        private void LogThoughtActionAddingClue(Player player)
+        private void LogThoughtPlayFiveRankedAction(Player player)
         {
             Logger.Log.Info(
                 $"Player {_clueGiver.Name} thinks " +
-                $"that player {player.Name} " +
-                "discards no need cards or plays five-ranked card");
+                $"that player {player.Name} plays five-ranked card");
         }
 
         private void LogThoughtAboutBlowAction(Player player, IEnumerable<Card> cards)
@@ -310,7 +340,7 @@ namespace Hanabi
                           $"that player {player.Name} blows ";
             foreach (var card in cards)
             {
-                info += $" {card}";
+                info += $"{{{card}}}";
             }
             Logger.Log.Info(info);
         }
@@ -322,10 +352,25 @@ namespace Hanabi
 
             foreach (var card in cards)
             {
-                info += $" {card}";
+                info += $"{{{card}}}";
             }
-                            
+
             Logger.Log.Info(info);
         }
+
+        private void LogThoughtAboutDiscardNoNeedCardsAction(Player player, IEnumerable<Card> cards)
+        {
+            string info = $"Player {_clueGiver.Name} thinks " +
+                          $"that player {player.Name} discards no need card(s)";
+
+            foreach (var card in cards)
+            {
+                info += $" {{{card}}}";
+            }
+
+            Logger.Log.Info(info);
+        }
+
+        #endregion
     }
 }

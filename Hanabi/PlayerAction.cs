@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 
 namespace Hanabi
@@ -8,8 +10,8 @@ namespace Hanabi
         public ClueType Clue { get; set; }
         public PlayerAction Action { get; set; }
     }
-    
-    
+
+    [ContractClass(typeof(PlayerActionContract))]
     public abstract class PlayerAction
     {
         public abstract bool PlayCard { get; }
@@ -19,13 +21,72 @@ namespace Hanabi
 
         public abstract bool Discard { get; }
 
-        public abstract ClueAndAction CreateClueToAvoid(IBoardContext boardContext, IPlayerContext playerContext);
+        public IEnumerable<Card> Cards { get; set; }
+
+        public ClueAndAction CreateClueToAvoid(IBoardContext boardContext, IPlayerContext playerContext)
+        {
+            // 1. Поищем подсказки, после которых игрок точно сходит
+            var clueToPlayFinder = new ClueToPlayFinder(boardContext, playerContext);
+            var actionToPlay = clueToPlayFinder.Find();
+
+            if (actionToPlay != null) return actionToPlay;
+
+            var variants = new List<ClueAndAction>();
+
+            var clues =
+                playerContext.Hand
+                    .Where(cih => Cards.Contains(cih.Card))
+                    .Select(cih => ClueDetailInfo.CreateClues(cih, playerContext.Player))
+                    .Aggregate((acc, c) => acc.Concat(c).ToList())
+                    .Distinct();
+
+            foreach (var clue in clues)
+            {
+                // применим подсказку и посмотрим, будет ли всё хорошо
+                playerContext.PossibleClue = clue;
+
+                // контекст должен чуток измениться...
+                var playCardStrategy = PlayStrategyFabric.Create(playerContext.Player.GameProvider, playerContext);
+                var discardStrategy =
+                    DiscardStrategyFabric.Create(playerContext.Player.GameProvider, playerContext);
+
+                var playerPredictor = new PlayerActionPredictor(boardContext, playerContext);
+                var newAction = playerPredictor.Predict(playCardStrategy, discardStrategy);
+
+
+                if (IsNewActionCorrect(newAction))
+                    variants.Add(new ClueAndAction {Clue = clue, Action = newAction});
+            }
+
+            return ChooseClue(playerContext, variants);
+        }
+
+        protected abstract bool IsNewActionCorrect(PlayerAction action);
+
+        protected abstract ClueAndAction ChooseClue(IPlayerContext playerContext, IEnumerable<ClueAndAction> possibleCluesAndActions);
+    }
+
+    [ContractClassFor(typeof(PlayerAction))]
+    abstract class PlayerActionContract : PlayerAction
+    {
+        protected override bool IsNewActionCorrect(PlayerAction action)
+        {
+            Contract.Requires<ArgumentNullException>(action != null);
+
+            throw new NotSupportedException();
+        }
+
+        protected override ClueAndAction ChooseClue(IPlayerContext playerContext, IEnumerable<ClueAndAction> possibleCluesAndActions)
+        {
+            Contract.Requires<ArgumentNullException>(playerContext != null);
+            Contract.Requires<ArgumentNullException>(possibleCluesAndActions != null);
+
+            throw new NotSupportedException();
+        }
     }
 
     public class PlayCardAction : PlayerAction
     {
-        public IList<Card> CardsToPlay;
-
         public override bool PlayCard => true;
 
         public override bool AddsClueAfter => false;
@@ -33,7 +94,12 @@ namespace Hanabi
         public override bool IsActionToAvoid => false;
         public override bool Discard => false;
 
-        public override ClueAndAction CreateClueToAvoid(IBoardContext boardContext, IPlayerContext playerContext)
+        protected override bool IsNewActionCorrect(PlayerAction action)
+        {
+            return false;
+        }
+
+        protected override ClueAndAction ChooseClue(IPlayerContext playerContext, IEnumerable<ClueAndAction> possibleCluesAndActions)
         {
             return null;
         }
@@ -46,8 +112,6 @@ namespace Hanabi
 
     public class BlowCardAction : PlayerAction
     {
-        public IList<Card> CardsToBlow;
-
         public override bool PlayCard => false;
 
         public override bool AddsClueAfter => false;
@@ -56,70 +120,26 @@ namespace Hanabi
         public override bool IsActionToAvoid => true;
         public override bool Discard => false;
 
-        public override ClueAndAction CreateClueToAvoid(
-            IBoardContext boardContext, 
-            IPlayerContext playerContext)
+        protected override bool IsNewActionCorrect(PlayerAction action)
         {
-            // 1. Поищем подсказки, после которых игрок точно сходит
-            var clueToPlayFinder = new ClueToPlayFinder(boardContext, playerContext);
-            var actionToPlay = clueToPlayFinder.Find();
+            // игрок собирался взрывать...
+            // что угодно, только не взрыв и не сброс нужной карты!
+            return !action.IsActionToAvoid;
+        }
 
-            if (actionToPlay != null) return actionToPlay;
-
-            foreach (var card in CardsToBlow)
-            {
-                var cardInHand = playerContext.Hand.First(c => c.Card == card);
-                foreach (var clue in ClueDetailInfo.CreateClues(cardInHand, playerContext.Player))
-                {
-                    // применим подсказку и посмотрим, будет ли всё хорошо
-                    playerContext.PossibleClue = clue;
-
-                    // контекст должен чуток измениться...
-                    var playCardStrategy = PlayStrategyFabric.Create(playerContext.Player.GameProvider, playerContext);
-                    var discardStrategy =
-                        DiscardStrategyFabric.Create(playerContext.Player.GameProvider, playerContext);
-
-                    var playerPredictor = new PlayerActionPredictor(boardContext, playerContext);
-                    var newAction = playerPredictor.Predict(playCardStrategy, discardStrategy);
-
-
-                    //1. Ходит
-                    // a) ходит 5                   => OK
-                    // б) ходит не 5                => OK
-                    // в) взрыв                     => :(
-                    //2. Сбрасывает
-                    //  а) ненужную карту           => OK
-                    //  б) нужную карту
-                    //     *) уникальную карту      => :(
-                    //     *) неуникальную карту    => OK
-
-                    // если новое действие не ведёт к взрыву или сбросу нужной карты, то считаем подсказку приемлемой
-                    if (!newAction.IsActionToAvoid)
-                        return new ClueAndAction
-                            {
-                                Clue = clue,
-                                Action = newAction,
-                            };
-                }
-            }
-
-            return null;
+        protected override ClueAndAction ChooseClue(IPlayerContext playerContext, IEnumerable<ClueAndAction> possibleCluesAndActions)
+        {
+            // TODO придумать выход из ситуации
+            return possibleCluesAndActions.FirstOrDefault();
         }
     }
 
     public abstract class DiscardAction : PlayerAction
     {
-        public IList<Card> CardsToDiscard;
-
         public override bool PlayCard => false;
 
         public override bool AddsClueAfter => true;
         public override bool Discard => true;
-
-        public override ClueAndAction CreateClueToAvoid(IBoardContext boardContext, IPlayerContext playerContext)
-        {
-            return null;
-        }
     }
 
     public class DiscardCardWhateverToPlayAction : DiscardAction
@@ -127,52 +147,15 @@ namespace Hanabi
         public override bool DiscardWhateverToPlayCard => true;
         public override bool IsActionToAvoid => false;
 
-        public override ClueAndAction CreateClueToAvoid(IBoardContext boardContext, IPlayerContext playerContext)
+        protected override bool IsNewActionCorrect(PlayerAction action)
         {
-            // 1. Поищем подсказки, после которых игрок точно сходит
-            var clueToPlayFinder = new ClueToPlayFinder(boardContext, playerContext);
-            var actionToPlay = clueToPlayFinder.Find();
+            // не будем усугублять и менять шило на мыло
+            return !action.IsActionToAvoid && !action.DiscardWhateverToPlayCard;
+        }
 
-            if (actionToPlay != null) return actionToPlay;
-
-            foreach (var card in CardsToDiscard)
-            {
-                var cardInHand = playerContext.Hand.First(c => c.Card == card);
-                foreach (var clue in ClueDetailInfo.CreateClues(cardInHand, playerContext.Player))
-                {
-                    // применим подсказку и посмотрим, будет ли всё хорошо
-                    playerContext.PossibleClue = clue;
-
-                    // контекст должен чуток измениться...
-                    var playCardStrategy = PlayStrategyFabric.Create(playerContext.Player.GameProvider, playerContext);
-                    var discardStrategy =
-                        DiscardStrategyFabric.Create(playerContext.Player.GameProvider, playerContext);
-
-                    var playerPredictor = new PlayerActionPredictor(boardContext, playerContext);
-                    var newAction = playerPredictor.Predict(playCardStrategy, discardStrategy);
-
-
-                    //1. Ходит
-                    // a) ходит 5                   => можно из цикла выходить
-                    // б) ходит не 5                => перейти к следующему игроку
-                    // в) взрыв                     => рассмотреть следующий вариант
-                    //2. Сбрасывает
-                    //  а) ненужную карту           => можно из цикла выходить
-                    //  б) нужную карту
-                    //     *) уникальную карту      => рассмотреть другой вариант
-                    //     *) неуникальную карту    => рассмотреть другой вариант
-
-                    // если новое действие не требует вмешательства, то считаем подсказку приемлемой
-                    if (!newAction.DiscardWhateverToPlayCard)
-                        return new ClueAndAction
-                        {
-                            Clue = clue,
-                            Action = newAction,
-                        };
-                }
-            }
-
-            return null;
+        protected override ClueAndAction ChooseClue(IPlayerContext playerContext, IEnumerable<ClueAndAction> possibleCluesAndActions)
+        {
+            return possibleCluesAndActions.FirstOrDefault();
         }
     }
 
@@ -184,48 +167,21 @@ namespace Hanabi
         public override bool AddsClueAfter => false;
         public override bool IsActionToAvoid => true;
 
-        public override ClueAndAction CreateClueToAvoid(IBoardContext boardContext, IPlayerContext playerContext)
+        protected override bool IsNewActionCorrect(PlayerAction action)
         {
-            // 1. Поищем подсказки, после которых игрок точно сходит
-            var clueToPlayFinder = new ClueToPlayFinder(boardContext, playerContext);
-            var actionToPlay = clueToPlayFinder.Find();
+            return !action.IsActionToAvoid;
+        }
 
-            if (actionToPlay != null) return actionToPlay;
-
-            var possibleCluesAndActions = new List<ClueAndAction>();
-
-            foreach (var card in CardsToDiscard)
-            {
-                var cardInHand = playerContext.Hand.First(c => c.Card == card);
-                foreach (var clue in ClueDetailInfo.CreateClues(cardInHand, playerContext.Player))
-                {
-                    // применим подсказку и посмотрим, будет ли всё хорошо
-                    playerContext.PossibleClue = clue;
-
-                    // контекст должен чуток измениться...
-                    var playCardStrategy = PlayStrategyFabric.Create(playerContext.Player.GameProvider, playerContext);
-                    var discardStrategy = DiscardStrategyFabric.Create(playerContext.Player.GameProvider, playerContext);
-
-                    var playerPredictor = new PlayerActionPredictor(boardContext, playerContext);
-                    var newAction = playerPredictor.Predict(playCardStrategy, discardStrategy);
-
-                    // если новое действие не ведёт к взрыву или сбросу нужной карты, то считаем подсказку приемлемой
-                    if (!newAction.IsActionToAvoid)
-                    {
-                        var clueAndAction = new ClueAndAction{Clue = clue, Action = newAction};
-                        possibleCluesAndActions.Add(clueAndAction);
-                    }
-                }
-            }
-
-            // на этой стадии отобраны возможны такие последствия:
+        protected override ClueAndAction ChooseClue(IPlayerContext playerContext, IEnumerable<ClueAndAction> possibleCluesAndActions)
+        {
+            // на этой стадии возможны такие последствия:
             // игрок ходит 5,
             // игрок сбрасывает ненужную карту,
             // игрок ходит не 5,
             // игрок сбрасывает нужную некритичную карту
             // выводим именно в таком порядке.
 
-            var result = 
+            var result =
                 possibleCluesAndActions.FirstOrDefault(ca => ca.Action is PlayCardWithRankFiveAction);
 
             if (result != null) return result;
@@ -249,5 +205,15 @@ namespace Hanabi
     {
         public override bool DiscardWhateverToPlayCard => false;
         public override bool IsActionToAvoid => false;
+
+        protected override bool IsNewActionCorrect(PlayerAction action)
+        {
+            return action.PlayCard;
+        }
+
+        protected override ClueAndAction ChooseClue(IPlayerContext playerContext, IEnumerable<ClueAndAction> possibleCluesAndActions)
+        {
+            return possibleCluesAndActions.FirstOrDefault();
+        }
     }
 }

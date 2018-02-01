@@ -34,19 +34,6 @@ namespace Hanabi
         public static Probability PlayProbabilityThreshold => new Probability(0.8);
         public static Probability DiscardProbabilityThreshold => new Probability(0.05);
 
-        private IReadOnlyList<Player> Players
-        {
-            get
-            {
-                var contractResult = Contract.Result<IReadOnlyList<Player>>();
-                Contract.Ensures(contractResult != null);
-                Contract.Ensures(contractResult.Any());
-                Contract.Ensures(Contract.ForAll(contractResult, player => player != this));
-
-                return _game.GetPlayersExcept(this);
-            }
-        }
-
         public IGameProvider GameProvider => _game.GameProvider;
         public int CardsCount => _memory.GetHand().Count;
 
@@ -165,19 +152,21 @@ namespace Hanabi
         {
             Contract.Requires<HanabiException>(ClueCounter > 0, "Zero blue counter");
 
+            if (_game.Deck.IsEmpty() && !_game.GetPlayersToTurn(this).Any()) return false;
+
+            var otherPlayerCards = GetOtherPlayersCards().Select(cih => cih.Card).Concat(GetKnownCards());
             IClueStrategy strategy;
-            
+            IBoardContext boardContext = BoardContext.Create(_game.Board, _pilesAnalyzer, otherPlayerCards);
             if (ClueCounter == 1)
             {
-                strategy = new LastTinClueStrategy(this, _game.Board, GameProvider);
+                strategy = new LastTinClueStrategy(this, boardContext, GameProvider, otherPlayerCards);
             }
             else
             {
-                IBoardContext boardContext = BoardContext.Create(_game.Board, _pilesAnalyzer, PlayerCards());
                 strategy = new ManyTinClueStrategy(this, boardContext);
             }
 
-            var solution = strategy.FindClueCandidate(Players);
+            var solution = strategy.FindClueCandidate(_game.GetPlayersToTurn(this));
             var clueCandidate = solution.GetClueCandidate();
 
             if (clueCandidate == null)
@@ -188,22 +177,14 @@ namespace Hanabi
 
             GiveClue(clueCandidate.Candidate, clueCandidate.Clue);
             return true;
-
-            IList<Card> PlayerCards()
-            {
-                return Players.Aggregate(new List<Card>(),
-                    (acc, player) => acc.Concat(player.ShowCards(this).Select(cardInHand => cardInHand.Card)).ToList());
-            }
         }
 
         private void GiveClue(Player playerToClue, Clue clue)
         {
             Contract.Requires<ArgumentNullException>(playerToClue != null);
             Contract.Requires<ArgumentNullException>(clue != null);
-            //Contract.Requires(clue.IsStraightClue, "You must say rank or color!");
-            //Contract.Requires<ArgumentNullException>(cardsToClue != null);
-            //Contract.Requires<ArgumentNullException>(cardsToClue.Any());
-            //Contract.Requires(Contract.ForAll(cardsToClue, card => card.Player == playerToClue));
+            Contract.Requires(clue.Type.IsStraightClue, "You must say rank or color!");
+            Contract.Requires(Contract.ForAll(clue.Cards, card => card.Player == playerToClue));
 
             playerToClue.ListenClue(clue);
 
@@ -381,9 +362,9 @@ namespace Hanabi
             Contract.Ensures(Contract.Result<IReadOnlyList<CardInHand>>() != null);
             Contract.Ensures(Contract.Result<IReadOnlyList<CardInHand>>().Any());
 
-            List<CardInHand> result = new List<CardInHand>();
+            var result = new List<CardInHand>();
 
-            return Players
+            return _game.GetPlayersExcept(this)
                 .Aggregate(result, (cards, player) => cards.Concat(player.ShowCards(this)).ToList())
                 .Where(card => card != null)
                 .ToList()
@@ -429,7 +410,7 @@ namespace Hanabi
         private void LogPlayersCards()
         {
             string logEntry = Environment.NewLine;
-            foreach (var player in Players)
+            foreach (var player in _game.GetPlayersToTurn(this))
             {
                 logEntry += $"Player {player.Name} hand: {Environment.NewLine}";
 

@@ -21,6 +21,8 @@ namespace Hanabi
             }
         }
 
+        public Player PlayerToTurnLast { get; private set; }
+
         private readonly List<Player> _players;
 
         public IGameProvider GameProvider
@@ -121,12 +123,14 @@ namespace Hanabi
 
             var playersEnumerator = NextTurn();
 
-            int turnsLeft = _players.Count;
+            Player player;
+            
+            bool lastTurn = false;
 
-            while (!IsGameOver(ref turnsLeft))
+            do
             {
                 playersEnumerator.MoveNext();
-                Player player = playersEnumerator.Current;
+                player = playersEnumerator.Current;
 
                 Logger.Log.Info($"Deck contains {Board.Deck.Cards()} card(s)");
                 Logger.Log.InfoFormat($"Player {player.Name} turns!");
@@ -136,7 +140,15 @@ namespace Hanabi
                 player.Turn();
 
                 Logger.Log.Info("");
-            }
+
+                if (Deck.IsEmpty())
+                {
+                    if (PlayerToTurnLast == null)
+                        PlayerToTurnLast = player;
+                    else
+                        lastTurn = true;
+                }
+            } while (!IsGameOver(lastTurn, player, PlayerToTurnLast));
 
             Logger.Log.InfoFormat($"Firework: {Board.FireworkPile}");
             return Score;
@@ -220,17 +232,32 @@ namespace Hanabi
             }
         }
 
-        private bool IsGameOver(ref int turnsCount)
+        private bool IsGameOver(bool lastTurn, Player currentTurn, Player lastPlayerToTurn)
         {
-            Contract.Requires(turnsCount >= 0);
+            Contract.Requires<ArgumentNullException>(currentTurn != null);
 
             if (Score == GameProvider.GetMaximumScore()) return true;
             if (Board.BlowCounter == 0) return true;
 
-            if (!Deck.IsEmpty()) return false;
-            Logger.Log.Info("EMPTY DECK!");
 
-            return turnsCount-- == 0;
+            return lastTurn && currentTurn == lastPlayerToTurn;
+        }
+
+        public IReadOnlyList<Player> GetPlayersToTurn(Player start)
+        {
+            Contract.Requires<ArgumentNullException>(start != null);
+            Contract.Ensures(Contract.Result<IReadOnlyList<Player>>() != null);
+
+            var players = GetPlayersExcept(start);
+            if (PlayerToTurnLast == null) return players;
+
+            if (start == PlayerToTurnLast) return new List<Player>();
+
+            return players
+                        .TakeWhile(p => p != PlayerToTurnLast)
+                        .Concat(new List<Player>{PlayerToTurnLast})
+                        .ToList()
+                        .AsReadOnly();
         }
     }
 }

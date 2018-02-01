@@ -44,8 +44,10 @@ namespace Hanabi
             cardsToPlay =
                 cardsToPlay.OrderBy(cardInHand => (int)cardInHand.Card.Rank).ToList();
 
+
             var clues = new List<ClueType>();
 
+            
 
             return null;
         }

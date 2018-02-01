@@ -34,17 +34,17 @@ namespace Hanabi
                     // карта/карты, которыми собирается сыграть игрок, к взрыву не приводят.
                     if (cardsToPlay.Any(c => c.Rank == Rank.Five))
                     {
-                        return new PlayCardWithRankFiveAction {CardsToPlay = cardsToPlay};
+                        return new PlayCardWithRankFiveAction {Cards = cardsToPlay};
                     }
                     else
                     {
-                        return new PlayCardAction{CardsToPlay = cardsToPlay.ToList()};
+                        return new PlayCardAction{Cards = cardsToPlay.ToList()};
                     }
                 }
                 else
                 {
                     // одна из карт, которыми скорее всего сыграют, приведёт к взрыву.
-                    return new BlowCardAction(){ CardsToBlow = possibleBlowCards.ToList()};
+                    return new BlowCardAction(){ Cards = possibleBlowCards.ToList()};
                 }
             }
 
@@ -55,13 +55,13 @@ namespace Hanabi
 
             var uniqueCardsToDiscard = cardsToDiscard.Intersect(_boardContext.GetUniqueCards()).ToList();
             if (uniqueCardsToDiscard.Any())
-                return new DiscardUniqueCardAction() {CardsToDiscard = uniqueCardsToDiscard};
+                return new DiscardUniqueCardAction() {Cards = uniqueCardsToDiscard};
 
             var cardsWhateverToPlay = cardsToDiscard.Intersect(_boardContext.GetWhateverToPlayCards()).ToList();
             if (cardsWhateverToPlay.Any())
-                return new DiscardCardWhateverToPlayAction() {CardsToDiscard = cardsWhateverToPlay};
+                return new DiscardCardWhateverToPlayAction() {Cards = cardsWhateverToPlay};
             
-            return new DiscardNoNeedCard {CardsToDiscard = cardsToDiscard};
+            return new DiscardNoNeedCard {Cards = cardsToDiscard};
         }
     }
 }

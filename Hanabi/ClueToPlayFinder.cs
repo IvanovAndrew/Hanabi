@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
 
@@ -37,31 +38,66 @@ namespace Hanabi
                 .ToList();
 
 
-
+            List<ClueAndAction> possibleClues = new List<ClueAndAction>();
             if (cardsToPlay.Any())
             {
-                foreach (var card in cardsToPlay)
+                var clues = 
+                    cardsToPlay
+                        .Select(card => ClueDetailInfo.CreateClues(card, _playerContext.Player))
+                        .Aggregate((acc, list) => acc.Concat(list).ToList())
+                        .Distinct();
+
+                foreach (var clue in clues)
                 {
-                    foreach (var clue in ClueDetailInfo.CreateClues(card, _playerContext.Player))
-                    {
-                        var playerContext = _playerContext.Clone();
-                        playerContext.PossibleClue = clue;
+                    var playerContext = _playerContext.Clone();
+                    playerContext.PossibleClue = clue;
                         
-                        PlayerActionPredictor predictor = new PlayerActionPredictor(_boardContext, playerContext);
-                        IPlayCardStrategy playStrategy =
-                            PlayStrategyFabric.Create(playerContext.Player.GameProvider, playerContext);
+                    PlayerActionPredictor predictor = new PlayerActionPredictor(_boardContext, playerContext);
+                    IPlayCardStrategy playStrategy =
+                        PlayStrategyFabric.Create(playerContext.Player.GameProvider, playerContext);
 
-                        IDiscardStrategy discardStrategy =
-                            DiscardStrategyFabric.Create(playerContext.Player.GameProvider, playerContext);
+                    IDiscardStrategy discardStrategy =
+                        DiscardStrategyFabric.Create(playerContext.Player.GameProvider, playerContext);
 
-                        var action = predictor.Predict(playStrategy, discardStrategy);
+                    var action = predictor.Predict(playStrategy, discardStrategy);
 
-                        if (action.PlayCard) return new ClueAndAction {Action = action, Clue = clue};
-                    }
+                    if (action.PlayCard)
+                        possibleClues.Add(new ClueAndAction { Action = action, Clue = clue });
                 }
             }
+
+            if (possibleClues.Count <= 1) return possibleClues.FirstOrDefault();
+
+            // раз возможных подсказок больше одной, то выберем ту, которая затрагивает большее число карт
+            // из тех, которыми можно сыграть
+            int max = 0;
+            ClueAndAction clueAndAction = null;
+            foreach (var clue in possibleClues)
+            {
+                int cardsAffected = CardsToClue(clue.Clue);
+                if (cardsAffected > max)
+                {
+                    max = cardsAffected;
+                    clueAndAction = clue;
+                }
+            }
+
+            return clueAndAction;
+        }
+
+        private int CardsToClue(ClueType clue)
+        {
+            Contract.Requires(clue != null);
+            Contract.Requires(clue.IsStraightClue);
+            Contract.Ensures(Contract.Result<int>() > 0);
+
             
-            return null;
+
+            return _playerContext.Hand
+                    .Select(cih => cih.Card)
+                    .Where(_boardContext.GetWhateverToPlayCards().Contains)
+                    .Select(card => new ClueAndCardMatcher(card))
+                    .Count(matcher => clue.Accept(matcher));
         }
     }
 }
