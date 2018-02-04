@@ -269,24 +269,6 @@ namespace Hanabi
             return null;
         }
 
-        private bool IsCorrectClue(IClueSituationStrategy solution, IBoardContext boardContext)
-        {
-            return true;
-            var candidate = solution.GetClueCandidate();
-
-            //var playerContext = new PlayerContext(candidate.Candidate, candidate.Candidate.ShowCards(_clueGiver));
-
-            //var actionPredictor = new PlayerActionPredictor(boardContext, playerContext);
-            
-
-            //var playStrategy = PlayStrategyFabric.Create(_gameProvider, playerContext);
-            //var discardStrategy = DiscardStrategyFabric.Create(_gameProvider, playerContext);
-
-            //var action = actionPredictor.Predict(playStrategy, discardStrategy);
-
-            //if (action)
-        }
-
         #region Log methods
 
         private void LogUniqueCards()

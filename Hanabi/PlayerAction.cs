@@ -63,7 +63,41 @@ namespace Hanabi
 
         protected abstract bool IsNewActionCorrect(PlayerAction action);
 
-        protected abstract ClueAndAction ChooseClue(IPlayerContext playerContext, IEnumerable<ClueAndAction> possibleCluesAndActions);
+        protected virtual ClueAndAction ChooseClue(IPlayerContext playerContext,
+            IEnumerable<ClueAndAction> possibleCluesAndActions)
+        {
+            Contract.Requires<ArgumentNullException>(playerContext != null);
+            Contract.Requires<ArgumentNullException>(possibleCluesAndActions != null);
+
+            Contract.Ensures(!possibleCluesAndActions.Any() || Contract.Result<ClueAndAction>() != null);
+
+            if (possibleCluesAndActions.Count() <= 1) return possibleCluesAndActions.FirstOrDefault();
+
+            int max = 0;
+            ClueAndAction result = null;
+            foreach (var clueAndAction in possibleCluesAndActions)
+            {
+                int affectedCards = GetAffectedCardsCount(playerContext, clueAndAction.Clue);
+
+                if (affectedCards > max)
+                {
+                    max = affectedCards;
+                    result = clueAndAction;
+                }
+            }
+
+            return result;
+
+            int GetAffectedCardsCount(IPlayerContext context, ClueType clue)
+            {
+                // возможно, стоит исключить карты, о которых игрок и так знает...
+
+                return context.Hand
+                    .Select(cardInHand => cardInHand.Card)
+                    .Select(card => new ClueAndCardMatcher(card))
+                    .Count(clueAndCardMatcher => clue.Accept(clueAndCardMatcher));
+            }
+        }
     }
 
     [ContractClassFor(typeof(PlayerAction))]
@@ -78,9 +112,6 @@ namespace Hanabi
 
         protected override ClueAndAction ChooseClue(IPlayerContext playerContext, IEnumerable<ClueAndAction> possibleCluesAndActions)
         {
-            Contract.Requires<ArgumentNullException>(playerContext != null);
-            Contract.Requires<ArgumentNullException>(possibleCluesAndActions != null);
-
             throw new NotSupportedException();
         }
     }
@@ -126,12 +157,6 @@ namespace Hanabi
             // что угодно, только не взрыв и не сброс нужной карты!
             return !action.IsActionToAvoid;
         }
-
-        protected override ClueAndAction ChooseClue(IPlayerContext playerContext, IEnumerable<ClueAndAction> possibleCluesAndActions)
-        {
-            // TODO придумать выход из ситуации
-            return possibleCluesAndActions.FirstOrDefault();
-        }
     }
 
     public abstract class DiscardAction : PlayerAction
@@ -151,11 +176,6 @@ namespace Hanabi
         {
             // не будем усугублять и менять шило на мыло
             return !action.IsActionToAvoid && !action.DiscardWhateverToPlayCard;
-        }
-
-        protected override ClueAndAction ChooseClue(IPlayerContext playerContext, IEnumerable<ClueAndAction> possibleCluesAndActions)
-        {
-            return possibleCluesAndActions.FirstOrDefault();
         }
     }
 
@@ -209,11 +229,6 @@ namespace Hanabi
         protected override bool IsNewActionCorrect(PlayerAction action)
         {
             return action.PlayCard;
-        }
-
-        protected override ClueAndAction ChooseClue(IPlayerContext playerContext, IEnumerable<ClueAndAction> possibleCluesAndActions)
-        {
-            return possibleCluesAndActions.FirstOrDefault();
         }
     }
 }
