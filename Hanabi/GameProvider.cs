@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 
 namespace Hanabi
 {
@@ -31,8 +30,8 @@ namespace Hanabi
 
         public Matrix CreateMatrix(int[,] table)
         {
-            Contract.Requires(table.GetLength(0) == Ranks.Count);
-            Contract.Requires(table.GetLength(1) == Colors.Count);
+            if (table.GetLength(0) != Ranks.Count) throw new ArgumentException("Dimensions mismatch");
+            if (table.GetLength(1) != Colors.Count) throw new ArgumentException("Dimensions mismatch");
 
             Matrix result = CreateEmptyMatrix();
             for (int i = 0; i < Ranks.Count; i++)

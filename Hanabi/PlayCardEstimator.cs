@@ -32,11 +32,12 @@ namespace Hanabi
                     .Select(cardInHand => cardInHand.Card)
                     .ToList();
 
+            // Если нет тонких подсказок, то посмотрим на вероятности
             if (!result.Any())
             {
                 Probability maxProbability = estimates.Values.Max();
 
-                if (maxProbability >= Player.PlayProbabilityThreshold)
+                if (maxProbability >= playerContext.Player.PlayProbabilityThreshold)
                 {
                     result =
                         (from e in estimates
@@ -46,7 +47,9 @@ namespace Hanabi
                 }
             }
 
-            if (!result.Any())
+            // Ни тонких подсказок, не явных карт, которыми можно сходить, нет
+            // посмотрим, знает ли игрок об единицах
+            if (!result.Any() && boardContext.BlowCounter > 1)
             {
                 if (boardContext.GetExpectedCards().Any(c => c.Rank == Rank.One))
                 {

@@ -1,4 +1,5 @@
-﻿using Hanabi;
+﻿using System.Collections.Generic;
+using Hanabi;
 using NUnit.Framework;
 
 namespace HanabiTest
@@ -25,7 +26,11 @@ namespace HanabiTest
             var guessAboutGreenTwo = CreateGuess(provider, new Card(Color.Green, Rank.Two));
             var discardStrategy = new DiscardStrategy(new []{guessAboutGreenTwo, guessAboutBlueThree});
 
-            var boardContext = new BoardContextStub();
+            var boardContext = new BoardContextStub
+            {
+                ExcludedCards = new List<Card>(),
+                WhateverToPlayCards = new List<Card>(),
+            };
 
             //act
             discardStrategy.EstimateDiscardProbability(boardContext);

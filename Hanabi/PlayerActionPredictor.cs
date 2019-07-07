@@ -1,4 +1,4 @@
-﻿using System.Diagnostics.Contracts;
+﻿using System;
 using System.Linq;
 
 namespace Hanabi
@@ -10,16 +10,14 @@ namespace Hanabi
 
         public PlayerActionPredictor(IBoardContext boardContext, IPlayerContext playerContext)
         {
-            _boardContext = boardContext;
-            _playerContext = playerContext;
+            _boardContext = boardContext ?? throw new ArgumentNullException(nameof(boardContext));
+            _playerContext = playerContext ?? throw new ArgumentNullException(nameof(playerContext));
         }
 
         public PlayerAction Predict(IPlayCardStrategy playCardStrategy, IDiscardStrategy discardStrategy)
         {
-            Contract.Requires(playCardStrategy != null);
-            Contract.Requires(discardStrategy != null);
-
-            Contract.Ensures(Contract.Result<PlayerAction>() != null);
+            if(playCardStrategy == null) throw new ArgumentNullException(nameof(playCardStrategy));
+            if(discardStrategy == null) throw new ArgumentNullException(nameof(discardStrategy));
 
             IEstimator playCardEstimator = new PlayCardEstimator(playCardStrategy);
             var cardsToPlay = playCardEstimator.GetPossibleCards(_boardContext, _playerContext).ToList();

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Linq;
 
 namespace Hanabi
@@ -17,7 +16,7 @@ namespace Hanabi
 
         public void Remove(CardInHand card)
         {
-            Contract.Requires<ArgumentNullException>(card != null);
+            if(card == null) throw new ArgumentNullException(nameof(card));
 
             var thoughts = _thoughts.Find(thought => Equals(thought.CardInHand, card));
             _thoughts.Remove(thoughts);
@@ -25,8 +24,7 @@ namespace Hanabi
 
         public IReadOnlyList<ClueType> GetCluesAboutCard(CardInHand card)
         {
-            Contract.Requires<ArgumentNullException>(card != null);
-            Contract.Ensures(Contract.Result<IReadOnlyList<ClueType>>() != null);
+            if (card == null) throw new ArgumentNullException(nameof(card));
 
             return _thoughts
                         .Find(thought => Equals(thought.CardInHand, card)).Clues
@@ -36,24 +34,17 @@ namespace Hanabi
 
         public IReadOnlyList<CardInHand> GetHand()
         {
-            Contract.Ensures(Contract.Result<IReadOnlyList<CardInHand>>() != null);
-            Contract.Ensures(Contract.Result<IReadOnlyList<CardInHand>>().Any());
-            
             return _thoughts.Select(thought => thought.CardInHand).ToList().AsReadOnly();
         }
 
         public IReadOnlyList<Guess> GetGuesses()
         {
-            Contract.Ensures(Contract.Result<IReadOnlyList<Guess>>() != null);
-            Contract.Ensures(Contract.Result<IReadOnlyList<Guess>>().Any());
-
             return _thoughts.Select(thoughts => thoughts.Guess).ToList().AsReadOnly();
         }
 
         public void Add(CardInHand cardInHand)
         {
-            Contract.Requires<ArgumentNullException>(cardInHand != null);
-            Contract.Ensures(Contract.OldValue(_thoughts.Count) + 1 == _thoughts.Count);
+            if (cardInHand == null) throw new ArgumentNullException(nameof(cardInHand));
 
             var newThought = new ThoughtsAboutCard
                         {
@@ -66,8 +57,7 @@ namespace Hanabi
 
         public CardInHand GetCardByGuess(Guess guess)
         {
-            Contract.Requires<ArgumentNullException>(guess != null);
-            Contract.Ensures(Contract.Result<CardInHand>() != null);
+            if (guess == null) throw new ArgumentNullException(nameof(guess));
 
             return _thoughts.Find(thought => thought.Guess == guess).CardInHand;
         }
@@ -79,7 +69,7 @@ namespace Hanabi
 
         public void Update(Clue clue)
         {
-            Contract.Requires<ArgumentNullException>(clue != null);
+            if(clue == null) throw new ArgumentNullException(nameof(clue));
 
             foreach (CardInHand card in clue.Cards)
             {
@@ -107,8 +97,7 @@ namespace Hanabi
 
         public Guess GetGuessAboutCard(CardInHand card)
         {
-            Contract.Requires<ArgumentNullException>(card != null);
-            Contract.Ensures(Contract.Result<Guess>() != null);
+            if (card == null) throw new ArgumentNullException(nameof(card));
 
             return _thoughts.Find(thought => Equals(thought.CardInHand, card)).Guess;
         }

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
@@ -22,8 +21,7 @@ namespace Hanabi
 
         public static Clue Create(ClueType clueType, IEnumerable<CardInHand> hand)
         {
-            Contract.Requires<ArgumentNullException>(clueType != null);
-            Contract.Requires<ArgumentNullException>(hand.Any());
+            if (clueType == null) throw new ArgumentNullException(nameof(clueType));
 
             var result = new List<CardInHand>();
             foreach (var cardInHand in hand)
@@ -51,14 +49,6 @@ namespace Hanabi
             if (Cards.Count > 1) return false;
 
             return Type.IsSubtleClue(expectedCards);
-        }
-
-
-        [ContractInvariantMethod]
-        private void InvariantMethod()
-        {
-            Contract.Invariant(Type != null);
-            Contract.Invariant(!Type.IsStraightClue || Cards.Any());
         }
     }
 }

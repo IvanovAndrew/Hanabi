@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics.Contracts;
 
 namespace Hanabi
 {
@@ -19,7 +18,8 @@ namespace Hanabi
             get => _clueCounter;
             set
             {
-                Contract.Requires<ArgumentOutOfRangeException>(0 <= value && value <= MaxClueCounter);
+                if (value < 0 || MaxClueCounter < value )
+                    throw new ArgumentOutOfRangeException();
 
                 _clueCounter = value;
             }
@@ -31,7 +31,8 @@ namespace Hanabi
             get => _blowCounter;
             set
             {
-                Contract.Requires<ArgumentOutOfRangeException>(0 <= value && value <= MaxBlowCounter);
+                if (value < 0 || MaxBlowCounter < value)
+                    throw new ArgumentOutOfRangeException();
 
                 _blowCounter = value;
             }
@@ -46,8 +47,8 @@ namespace Hanabi
 
         public static Board Create(IGameProvider provider)
         {
-            Contract.Requires<ArgumentNullException>(provider != null);
-            Contract.Ensures(Contract.Result<Board>() != null);
+            if (provider == null)
+                throw new ArgumentNullException();
 
             var cards = new CardsToMatrixConverter(provider).Decode(provider.CreateFullDeckMatrix());
 

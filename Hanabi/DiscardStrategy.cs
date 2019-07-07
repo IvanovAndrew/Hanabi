@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -13,8 +12,7 @@ namespace Hanabi
 
         public DiscardStrategy(IEnumerable<Guess> guesses)
         {
-            Contract.Requires<ArgumentNullException>(guesses != null);
-            Contract.Requires<ArgumentException>(guesses.Any());
+            if (guesses == null) throw new ArgumentNullException(nameof(guesses));
 
             _guesses = guesses.ToList().AsReadOnly();
         }
@@ -26,6 +24,8 @@ namespace Hanabi
         /// <returns></returns>
         public IDictionary<CardInHand, Probability> EstimateDiscardProbability(IBoardContext boardContext)
         {
+            if (boardContext == null) throw new ArgumentNullException(nameof(boardContext));
+
             var result = new ConcurrentDictionary<CardInHand, Probability>();
 
             // для каждой карты посчитаем вероятность того, что она будет сброшена

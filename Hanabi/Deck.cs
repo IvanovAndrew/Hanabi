@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 
 namespace Hanabi
 {
@@ -12,7 +11,7 @@ namespace Hanabi
 
         public Deck(IEnumerable<Card> cards)
         {
-            Contract.Requires<ArgumentNullException>(cards != null);
+            if (cards == null) throw new ArgumentNullException(nameof(cards));
 
             _cards = new Stack<Card>(cards);
         }
@@ -31,22 +30,23 @@ namespace Hanabi
             _cards = new Stack<Card>(cards);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException">throw if deck is empty</exception>
         public Card PopCard()
         {
-            Contract.Requires<InvalidOperationException>(!IsEmpty(), "Deck is empty");
-            Contract.Ensures(Contract.OldValue(Cards()) - 1 == Cards());
-            Contract.Ensures(Contract.Result<Card>() != null);
+            if (IsEmpty()) throw new InvalidOperationException("Deck is empty");
             
             return _cards.Pop();
         }
 
-        [Pure]
         public bool IsEmpty()
         {
             return _cards.Count == 0;
         }
 
-        [Pure]
         public int Cards() => _cards.Count;
     }
 }

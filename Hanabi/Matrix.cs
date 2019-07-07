@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics.Contracts;
 
 namespace Hanabi
 {
@@ -10,9 +9,7 @@ namespace Hanabi
 
         public Matrix(IGameProvider provider)
         {
-            Contract.Requires<ArgumentNullException>(provider != null);
-
-            _gameProvider = provider;
+            _gameProvider = provider ?? throw new ArgumentNullException(nameof(provider));
             _matrix = new int[provider.Ranks.Count, provider.Colors.Count];
         }
 
@@ -26,19 +23,18 @@ namespace Hanabi
         {
             get
             {
-                Contract.Requires<ArgumentNullException>(card != null);
+                if (card == null) throw new ArgumentNullException(nameof(card));
 
                 return this[card.Rank, card.Color];
             }
             set
             {
-                Contract.Requires<ArgumentNullException>(card != null);
+                if (card == null) throw new ArgumentNullException(nameof(card));
 
                 this[card.Rank, card.Color] = value;
             }
         }
 
-        [Pure]
         public int Sum()
         {
             int sum = 0;

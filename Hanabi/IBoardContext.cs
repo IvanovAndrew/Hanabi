@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 
 namespace Hanabi
 {
-    [ContractClass(typeof(BoardContextContract))]
     public interface IBoardContext
     {
+        int BlowCounter { get; }
+
         IEnumerable<Card> GetExpectedCards();
         IEnumerable<Card> GetUniqueCards();
         IEnumerable<Card> GetWhateverToPlayCards();
@@ -15,53 +15,5 @@ namespace Hanabi
         void AddToFirework(Card card);
         void Discard(Card card);
         IBoardContext ChangeContext(IEnumerable<Card> otherPlayerCards);
-    }
-
-    [ContractClassFor(typeof(IBoardContext))]
-    abstract class BoardContextContract : IBoardContext
-    {
-        public IEnumerable<Card> GetUniqueCards()
-        {
-            Contract.Ensures(Contract.Result<IEnumerable<Card>>() != null);
-
-            throw new NotSupportedException();
-        }
-
-        public IEnumerable<Card> GetWhateverToPlayCards()
-        {
-            Contract.Ensures(Contract.Result<IEnumerable<Card>>() != null);
-
-            throw new NotSupportedException();
-        }
-
-        public IEnumerable<Card> GetExcludedCards()
-        {
-            Contract.Ensures(Contract.Result<IEnumerable<Card>>() != null);
-
-            throw new NotSupportedException();
-        }
-
-        public IEnumerable<Card> GetExpectedCards()
-        {
-            Contract.Ensures(Contract.Result<IEnumerable<Card>>() != null);
-            throw new NotSupportedException();
-        }
-
-        public void AddToFirework(Card card)
-        {
-            Contract.Requires(card != null);
-        }
-
-        public void Discard(Card card)
-        {
-            Contract.Requires(card != null);
-        }
-
-        public IBoardContext ChangeContext(IEnumerable<Card> otherPlayerCards)
-        {
-            Contract.Ensures(Contract.Result<IBoardContext>() != this);
-            Contract.Ensures(Contract.Result<IBoardContext>() != null);
-            throw new NotImplementedException();
-        }
     }
 }

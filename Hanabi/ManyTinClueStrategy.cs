@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Linq;
 
 namespace Hanabi
@@ -12,11 +11,8 @@ namespace Hanabi
 
         public ManyTinClueStrategy(Player clueGiver, IBoardContext boardContext)
         {
-            Contract.Requires<ArgumentNullException>(clueGiver != null);
-            Contract.Requires<ArgumentNullException>(boardContext != null);
-
-            _clueGiver = clueGiver;
-            _boardContext = boardContext;
+            _clueGiver = clueGiver ?? throw new ArgumentNullException(nameof(clueGiver));
+            _boardContext = boardContext ?? throw new ArgumentNullException(nameof(boardContext));
         }
 
         public IClueSituationStrategy FindClueCandidate(IReadOnlyList<Player> players)
@@ -41,11 +37,11 @@ namespace Hanabi
 
             foreach (var player in players)
             {
-                ClueType clue = FindClueToPlay(player, expectedCards);
+                var playerContext = new PlayerContext(player, player.ShowCards(_clueGiver));
+                ClueType clue = FindClueToPlay(playerContext, expectedCards);
 
                 if (clue == null) continue;
 
-                var playerContext = new PlayerContext(player, player.ShowCards(_clueGiver));
                 return new OnlyClueExistsSituation(playerContext, clue);
             }
 
@@ -53,11 +49,11 @@ namespace Hanabi
             // поищем подсказки из серии "как бы чего не вышло"
             foreach (var player in players)
             {
-                ClueType clue = FindClueToDiscard(player, uniqueCards);
+                var playerContext = new PlayerContext(player, player.ShowCards(_clueGiver));
+                ClueType clue = FindClueToDiscard(playerContext, uniqueCards);
 
                 if (clue == null) continue;
-
-                var playerContext = new PlayerContext(player, player.ShowCards(_clueGiver));
+                
                 return new OnlyClueExistsSituation(playerContext, clue);
             }
 
@@ -68,11 +64,11 @@ namespace Hanabi
 
             foreach (var player in players)
             {
-                ClueType clue = FindClueToWhateverPlay(player, whateverToPlayCards);
+                var playerContext = new PlayerContext(player, player.ShowCards(_clueGiver));
+                ClueType clue = FindClueToWhateverPlay(playerContext, whateverToPlayCards);
 
                 if (clue == null) continue;
 
-                var playerContext = new PlayerContext(player, player.ShowCards(_clueGiver));
                 return new OnlyClueExistsSituation(playerContext, clue);
             }
 
@@ -128,16 +124,16 @@ namespace Hanabi
             return new OnlyClueExistsSituation(playerContext, new ClueAboutRank(Rank.One));
         }
 
-        private ClueType FindClueToPlay(Player playerToClue, IEnumerable<Card> expectedCards)
+        private ClueType FindClueToPlay(IPlayerContext playerContext, IEnumerable<Card> expectedCards)
         {
             // сразу уберём карты, о которых игрок знает.
-            var cardsToSearch = expectedCards.Except(playerToClue.GetKnownCards()).ToList();
+            var cardsToSearch = expectedCards.Except(playerContext.Player.GetKnownCards()).ToList();
 
             if (!cardsToSearch.Any()) return null;
 
             var cardsToPlay =
-                playerToClue
-                    .ShowCards(_clueGiver)
+                playerContext
+                    .Hand
                     .Where(cardInHand => cardsToSearch.Contains(cardInHand.Card))
                     .Where(cardInHand => !IsKnownOneRankedCard(cardInHand))
                     .ToList();
@@ -150,25 +146,27 @@ namespace Hanabi
             var cardToClue =
                 cardsToPlay.Last().Card.Rank == Rank.Five ? cardsToPlay.Last() : cardsToPlay.First();
 
-            return ClueDetailInfo.CreateClues(cardToClue, playerToClue).FirstOrDefault();
+            return ClueDetailInfo.CreateClues(cardToClue, playerContext).FirstOrDefault();
 
             bool IsKnownOneRankedCard(CardInHand cardInHand)
             {
-                return playerToClue.GetCluesAboutCard(cardInHand)
-                    .Any(clue => Equals(new ClueAboutRank(Rank.One), clue));
+                return 
+                    playerContext
+                        .GetCluesAboutCard(cardInHand)
+                        .Any(clue => Equals(new ClueAboutRank(Rank.One), clue));
             }
         }
 
-        private ClueType FindClueToDiscard(Player playerToClue, IEnumerable<Card> uniqueCards)
+        private ClueType FindClueToDiscard(IPlayerContext playerContext, IEnumerable<Card> uniqueCards)
         {
             // сразу уберём карты, о которых игрок знает.
-            var cardsToSearch = uniqueCards.Except(playerToClue.GetKnownCards()).ToList();
+            var cardsToSearch = uniqueCards.Except(playerContext.Player.GetKnownCards()).ToList();
 
             if (!cardsToSearch.Any()) return null;
 
             var uniqueUnknownCards =
-                playerToClue
-                    .ShowCards(_clueGiver)
+                playerContext
+                    .Hand
                     .Where(cardInHand => cardsToSearch.Contains(cardInHand.Card))
                     .ToList();
 
@@ -185,7 +183,7 @@ namespace Hanabi
 
             if (cardToClue == null) return null;
 
-            return ClueDetailInfo.CreateClues(cardToClue, playerToClue).First();
+            return ClueDetailInfo.CreateClues(cardToClue, playerContext).First();
 
             bool KnownFiveRankedCards(CardInHand cardInHand)
             {
@@ -193,22 +191,22 @@ namespace Hanabi
 
                 var clueAboutFiveRank = new ClueAboutRank(Rank.Five);
                 return
-                    playerToClue
+                    playerContext
                         .GetCluesAboutCard(cardInHand)
                         .Any(clue => clueAboutFiveRank.Equals(clue));
             }
         }
 
-        private ClueType FindClueToWhateverPlay(Player playerToClue, IEnumerable<Card> whateverToPlayCards)
+        private ClueType FindClueToWhateverPlay(IPlayerContext playerContext, IEnumerable<Card> whateverToPlayCards)
         {
             // сразу уберём карты, о которых игрок знает.
-            var cardsToSearch = whateverToPlayCards.Except(playerToClue.GetKnownCards()).ToList();
+            var cardsToSearch = whateverToPlayCards.Except(playerContext.Player.GetKnownCards()).ToList();
 
             if (!cardsToSearch.Any()) return null;
 
             var unknownCards =
-                playerToClue
-                    .ShowCards(_clueGiver)
+                playerContext
+                    .Hand
                     .Where(cardInHand => cardsToSearch.Contains(cardInHand.Card))
                     .ToList();
 
@@ -221,10 +219,9 @@ namespace Hanabi
                     .ToList();
 
             var cardToClue = unknownCards.FirstOrDefault();
-
             if (cardToClue == null) return null;
 
-            return ClueDetailInfo.CreateClues(playerToClue, cardToClue).First();
+            return ClueDetailInfo.CreateClues(playerContext, cardToClue).First();
         }
     }
 }

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Linq;
 
 namespace Hanabi
@@ -14,19 +13,17 @@ namespace Hanabi
 
         public ClueCreator(IBoardContext boardContext, PlayerContext playerContext, IPlayCardStrategy playCardStrategy, IDiscardStrategy discardStrategy)
         {
-            Contract.Requires<ArgumentNullException>(boardContext != null);
-            Contract.Requires<ArgumentNullException>(playerContext != null);
-            Contract.Requires<ArgumentNullException>(playCardStrategy != null);
-            Contract.Requires<ArgumentNullException>(discardStrategy != null);
-
-            _boardContext = boardContext;
-            _playerContext = playerContext;
-            _playCardStrategy = playCardStrategy;
-            _discardStrategy = discardStrategy;
+            _boardContext = boardContext ?? throw new ArgumentNullException(nameof(boardContext));
+            _playerContext = playerContext ?? throw new ArgumentNullException(nameof(playerContext));
+            _playCardStrategy = playCardStrategy?? throw new ArgumentNullException(nameof(playCardStrategy));
+            _discardStrategy = discardStrategy?? throw new ArgumentNullException(nameof(discardStrategy));
         }
 
         public ClueType CreateClueToPlay(IPlayerContext playerContext)
         {
+            if (playerContext == null)
+                throw new ArgumentNullException(nameof(playerContext));
+
             var expectedCards = _boardContext.GetExpectedCards();
 
             // сразу уберём карты, о которых игрок знает.
@@ -41,14 +38,12 @@ namespace Hanabi
 
             if (!cardsToPlay.Any()) return null;
 
+            // TODO it looks strange
             cardsToPlay =
                 cardsToPlay.OrderBy(cardInHand => (int)cardInHand.Card.Rank).ToList();
 
 
             var clues = new List<ClueType>();
-
-            
-
             return null;
         }
 

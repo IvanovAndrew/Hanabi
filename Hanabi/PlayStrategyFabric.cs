@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 
 namespace Hanabi
 {
@@ -8,10 +7,8 @@ namespace Hanabi
     {
         public static IPlayCardStrategy Create(IGameProvider gameProvider, IPlayerContext playerContext)
         {
-            Contract.Requires<ArgumentNullException>(gameProvider != null);
-            Contract.Requires<ArgumentNullException>(playerContext != null);
-
-            Contract.Ensures(Contract.Result<IPlayCardStrategy>() != null);
+            if (gameProvider == null) throw new ArgumentNullException(nameof(gameProvider));
+            if (playerContext == null) throw new ArgumentNullException(nameof(playerContext));
 
             List<Guess> guesses = new List<Guess>();
 

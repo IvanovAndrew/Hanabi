@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
-using System.Linq;
 
 namespace Hanabi
 {
@@ -9,19 +7,15 @@ namespace Hanabi
     {
         public static IDiscardStrategy Create(IEnumerable<Guess> guesses)
         {
-            Contract.Requires<ArgumentNullException>(guesses != null);
-            Contract.Requires(guesses.Any());
-
-            Contract.Ensures(Contract.Result<IDiscardStrategy>() != null);
+            if (guesses == null) throw new ArgumentNullException(nameof(guesses));
 
             return new DiscardStrategy(guesses);
         }
 
         public static IDiscardStrategy Create(IGameProvider gameProvider, IPlayerContext playerContext)
         {
-            Contract.Requires<ArgumentNullException>(gameProvider != null);
-            Contract.Requires<ArgumentNullException>(playerContext != null);
-            Contract.Ensures(Contract.Result<IDiscardStrategy>() != null);
+            if (gameProvider == null) throw new ArgumentNullException(nameof(gameProvider));
+            if (playerContext == null) throw new ArgumentNullException(nameof(playerContext));
 
             List<Guess> guesses = new List<Guess>();
             foreach (var cardInHand in playerContext.Hand)

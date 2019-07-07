@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Linq;
 
 namespace Hanabi
@@ -13,12 +12,8 @@ namespace Hanabi
 
         public PlayerContext(Player player, IEnumerable<CardInHand> hand)
         {
-            Contract.Requires<ArgumentNullException>(player != null);
-            Contract.Requires<ArgumentNullException>(hand != null);
-            Contract.Requires(hand.Any());
-
-            Player = player;
-            Hand = hand;
+            Player = player ?? throw new ArgumentNullException(nameof(player));
+            Hand = hand ?? throw new ArgumentNullException(nameof(hand));
         }
 
         public IList<ClueType> GetCluesAboutCard(CardInHand cardInHand)
@@ -63,14 +58,6 @@ namespace Hanabi
         public IPlayerContext Clone()
         {
             return new PlayerContext(Player, Hand);
-        }
-
-        [ContractInvariantMethod]
-        private void Invariant()
-        {
-            Contract.Invariant(Player != null);
-            Contract.Invariant(Hand != null);
-            Contract.Invariant(Hand.Any());
         }
     }
 }

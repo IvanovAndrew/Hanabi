@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Linq;
 
 namespace Hanabi
@@ -22,10 +21,8 @@ namespace Hanabi
         // на руках или в колоде осталась всего одна такая карта.
         public IReadOnlyList<Card> GetUniqueCards(FireworkPile fireworkPile, DiscardPile discardPile)
         {
-            Contract.Requires<ArgumentNullException>(fireworkPile != null);
-            Contract.Requires<ArgumentNullException>(discardPile != null);
-
-            Contract.Ensures(Contract.Result<IReadOnlyList<Card>>() != null);
+            if (fireworkPile == null) throw new ArgumentNullException(nameof(fireworkPile));
+            if (discardPile == null) throw new ArgumentNullException(nameof(discardPile));
 
             Matrix resultMatrix = _provider.CreateFullDeckMatrix();
 
@@ -96,10 +93,8 @@ namespace Hanabi
         /// <returns></returns>
         public IReadOnlyList<Card> GetThrownCards(FireworkPile fireworkPile, DiscardPile discardPile)
         {
-            Contract.Requires<ArgumentNullException>(fireworkPile != null);
-            Contract.Requires<ArgumentNullException>(discardPile != null);
-
-            Contract.Ensures(Contract.Result<IReadOnlyList<Card>>() != null);
+            if (fireworkPile == null) throw new ArgumentNullException(nameof(fireworkPile));
+            if (discardPile == null) throw new ArgumentNullException(nameof(discardPile));
 
             return fireworkPile.Cards.Concat(discardPile.Cards)
                 .ToList()
@@ -114,10 +109,8 @@ namespace Hanabi
         /// <returns></returns>
         public IReadOnlyList<Card> GetCardsWhateverToPlay(FireworkPile fireworkPile, DiscardPile discardPile)
         {
-            Contract.Requires<ArgumentNullException>(fireworkPile != null);
-            Contract.Requires<ArgumentNullException>(discardPile != null);
-
-            Contract.Ensures(Contract.Result<IReadOnlyList<Card>>() != null);
+            if (fireworkPile == null) throw new ArgumentNullException(nameof(fireworkPile));
+            if (discardPile == null) throw new ArgumentNullException(nameof(discardPile));
 
             Matrix possibleToPlay = _provider.CreateFullDeckMatrix();
 

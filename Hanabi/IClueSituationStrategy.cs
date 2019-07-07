@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Linq;
 
 namespace Hanabi
@@ -24,13 +23,9 @@ namespace Hanabi
 
         public NoCriticalSituation(Player clueGiver, IReadOnlyList<Player> players, IBoardContext boardContext)
         {
-            Contract.Requires<ArgumentNullException>(clueGiver != null);
-            Contract.Requires<ArgumentException>(players.Count > 0);
-            Contract.Requires<ArgumentNullException>(boardContext != null);
-
-            _clueGiver = clueGiver;
+            _clueGiver = clueGiver?? throw new ArgumentNullException(nameof(clueGiver));
             _players = players;
-            _boardContext = boardContext;
+            _boardContext = boardContext ?? throw new ArgumentNullException(nameof(boardContext));
         }
 
         public ClueCandidate GetClueCandidate()

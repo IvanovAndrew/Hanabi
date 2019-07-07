@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Linq;
 
 namespace Hanabi
@@ -14,14 +13,16 @@ namespace Hanabi
 
         public override bool AddCard(Card card)
         {
+            if (card == null) throw new ArgumentNullException(nameof(card));
+
             // ищем последнюю карту с данным цветом
             Card lastCardInFirework = GetLastCardInFirework(card.Color);
 
             bool added = false;
-            if (Equals(lastCardInFirework, Card.GetCardInFireworkBefore(card)))
+            if (Equals(lastCardInFirework, Card.GetPreviousCardInFirework(card)))
             {
-                added = true;
                 Matrix[card] += 1;
+                added = true;
             }
 
             return added;
@@ -53,9 +54,6 @@ namespace Hanabi
 
         public IReadOnlyList<Card> GetExpectedCards()
         {
-            Contract.Ensures(Contract.Result<IReadOnlyList<Card>>() != null);
-            Contract.Ensures(Contract.ForAll(Contract.Result<IReadOnlyList<Card>>(), card => card != null));
-            
             List<Card> result = new List<Card>();
 
             foreach (var color in Provider.Colors)
@@ -70,8 +68,6 @@ namespace Hanabi
 
         public IReadOnlyList<Card> GetLastCards()
         {
-            Contract.Ensures(Contract.Result<IReadOnlyList<Card>>() != null);
-            
             List<Card> result = new List<Card>();
 
             foreach (var color in Provider.Colors)
@@ -86,18 +82,11 @@ namespace Hanabi
 
         public override string ToString()
         {
-            Func<string, Card, string> func = 
-                (current, card) => $"{current} {card.ToString()} |";
-
-            return GetLastCards().Aggregate("|", func);
+            return GetLastCards().Aggregate("|", (current, card) => $"{current} {card.ToString()} |");
         }
 
         public FireworkPile Clone()
         {
-            var contractResult = Contract.Result<FireworkPile>();
-            Contract.Ensures(contractResult != null);
-            Contract.Ensures(Contract.ForAll(contractResult.Cards, this.Cards.Contains));
-
             var newFirework = new FireworkPile(this.Provider);
 
             foreach (var card in Cards)

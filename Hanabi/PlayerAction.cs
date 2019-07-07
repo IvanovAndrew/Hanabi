@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Linq;
 
 namespace Hanabi
@@ -11,15 +10,35 @@ namespace Hanabi
         public PlayerAction Action { get; set; }
     }
 
-    [ContractClass(typeof(PlayerActionContract))]
-    public abstract class PlayerAction
-    {
-        public abstract bool PlayCard { get; }
-        public abstract bool AddsClueAfter { get; }
-        public abstract bool DiscardWhateverToPlayCard { get; }
-        public abstract bool IsActionToAvoid { get; }
 
-        public abstract bool Discard { get; }
+    public interface IHanabiInfoLog
+    {
+        void Log(string clueGiver, string player);
+    }
+
+    [Flags]
+    public enum OutcomeFlags
+    {
+        Play = 0x01,
+        PlayFiveRankCard = 0x02,
+        Blow = 0x04,
+        DiscardNoNeedCard = 0x08,
+        DiscardWhateverToPlayCard = 0x10,
+        DiscardUniqueCard = 0x20,
+    }
+
+    public abstract class PlayerAction : IHanabiInfoLog
+    {
+        public abstract OutcomeFlags Outcome { get; }
+
+        public bool IsActionToAvoid
+        {
+            get
+            {
+                var actionsToAvoid = OutcomeFlags.DiscardUniqueCard | OutcomeFlags.Blow;
+                return (Outcome & actionsToAvoid) > 0;
+            }
+        }
 
         public IEnumerable<Card> Cards { get; set; }
 
@@ -36,7 +55,7 @@ namespace Hanabi
             var clues =
                 playerContext.Hand
                     .Where(cih => Cards.Contains(cih.Card))
-                    .Select(cih => ClueDetailInfo.CreateClues(cih, playerContext.Player))
+                    .Select(cih => ClueDetailInfo.CreateClues(cih, playerContext))
                     .Aggregate((acc, c) => acc.Concat(c).ToList())
                     .Distinct();
 
@@ -66,10 +85,8 @@ namespace Hanabi
         protected virtual ClueAndAction ChooseClue(IPlayerContext playerContext,
             IEnumerable<ClueAndAction> possibleCluesAndActions)
         {
-            Contract.Requires<ArgumentNullException>(playerContext != null);
-            Contract.Requires<ArgumentNullException>(possibleCluesAndActions != null);
-
-            Contract.Ensures(!possibleCluesAndActions.Any() || Contract.Result<ClueAndAction>() != null);
+            if (playerContext == null) throw new ArgumentNullException(nameof(playerContext));
+            if (possibleCluesAndActions == null) throw new ArgumentNullException(nameof(possibleCluesAndActions));
 
             if (possibleCluesAndActions.Count() <= 1) return possibleCluesAndActions.FirstOrDefault();
 
@@ -98,14 +115,16 @@ namespace Hanabi
                     .Count(clueAndCardMatcher => clue.Accept(clueAndCardMatcher));
             }
         }
+
+
+        public abstract void Log(string clueGiver, string player);
     }
 
-    [ContractClassFor(typeof(PlayerAction))]
     abstract class PlayerActionContract : PlayerAction
     {
         protected override bool IsNewActionCorrect(PlayerAction action)
         {
-            Contract.Requires<ArgumentNullException>(action != null);
+            if (action == null) throw new ArgumentNullException(nameof(action));
 
             throw new NotSupportedException();
         }
@@ -118,12 +137,7 @@ namespace Hanabi
 
     public class PlayCardAction : PlayerAction
     {
-        public override bool PlayCard => true;
-
-        public override bool AddsClueAfter => false;
-        public override bool DiscardWhateverToPlayCard => false;
-        public override bool IsActionToAvoid => false;
-        public override bool Discard => false;
+        public override OutcomeFlags Outcome => OutcomeFlags.Play;
 
         protected override bool IsNewActionCorrect(PlayerAction action)
         {
@@ -134,22 +148,32 @@ namespace Hanabi
         {
             return null;
         }
+
+        public override void Log(string clueGiver, string player)
+        {
+            string str = $"Player {clueGiver} thinks that player {player} plays ";
+
+            foreach (var cardToPlay in this.Cards)
+            {
+                str += $"{{{cardToPlay}}} ";
+            }
+            Logger.Log.Info(str);
+        }
     }
 
     public class PlayCardWithRankFiveAction : PlayCardAction
     {
-        public override bool AddsClueAfter => true;
+        public override OutcomeFlags Outcome => OutcomeFlags.Play | OutcomeFlags.PlayFiveRankCard;
+
+        public override void Log(string clueGiver, string player)
+        {
+            Logger.Log.Info($"Player {clueGiver} thinks that player {player} plays five-ranked card");
+        }
     }
 
     public class BlowCardAction : PlayerAction
     {
-        public override bool PlayCard => false;
-
-        public override bool AddsClueAfter => false;
-
-        public override bool DiscardWhateverToPlayCard => true;
-        public override bool IsActionToAvoid => true;
-        public override bool Discard => false;
+        public override OutcomeFlags Outcome => OutcomeFlags.Blow;
 
         protected override bool IsNewActionCorrect(PlayerAction action)
         {
@@ -157,35 +181,52 @@ namespace Hanabi
             // что угодно, только не взрыв и не сброс нужной карты!
             return !action.IsActionToAvoid;
         }
+
+        public override void Log(string clueGiver, string player)
+        {
+            string info = $"Player {clueGiver} thinks that player {player} blows ";
+            foreach (var card in this.Cards)
+            {
+                info += $" {{{card}}}";
+            }
+            Logger.Log.Info(info);
+        }
     }
 
     public abstract class DiscardAction : PlayerAction
     {
-        public override bool PlayCard => false;
-
-        public override bool AddsClueAfter => true;
-        public override bool Discard => true;
     }
 
     public class DiscardCardWhateverToPlayAction : DiscardAction
     {
-        public override bool DiscardWhateverToPlayCard => true;
-        public override bool IsActionToAvoid => false;
+        public override OutcomeFlags Outcome => OutcomeFlags.DiscardWhateverToPlayCard;
 
         protected override bool IsNewActionCorrect(PlayerAction action)
         {
-            // не будем усугублять и менять шило на мыло
-            return !action.IsActionToAvoid && !action.DiscardWhateverToPlayCard;
+            // принимается:
+            // ход картой и сброс ненужной карты
+
+            var expectedOutcome = OutcomeFlags.Play | OutcomeFlags.DiscardNoNeedCard;
+
+            return (action.Outcome & expectedOutcome) > 0;
+        }
+
+        public override void Log(string clueGiver, string player)
+        {
+            string info = $"Player {clueGiver} thinks that player {player} discards ";
+
+            foreach (var card in Cards)
+            {
+                info += $"{{{card}}} ";
+            }
+
+            Logger.Log.Info(info);
         }
     }
 
     public class DiscardUniqueCardAction : DiscardAction
     {
-        public override bool PlayCard => false;
-        public override bool DiscardWhateverToPlayCard => true;
-
-        public override bool AddsClueAfter => false;
-        public override bool IsActionToAvoid => true;
+        public override OutcomeFlags Outcome => OutcomeFlags.DiscardUniqueCard;
 
         protected override bool IsNewActionCorrect(PlayerAction action)
         {
@@ -219,16 +260,39 @@ namespace Hanabi
 
             return result;
         }
+
+        public override void Log(string clueGiver, string player)
+        {
+            string info = $"Player {clueGiver} thinks that player {player} discards uniqueCard(s)";
+
+            foreach (var card in this.Cards)
+            {
+                info += $" {{{card}}}";
+            }
+
+            Logger.Log.Info(info);
+        }
     }
 
     public class DiscardNoNeedCard : DiscardAction
     {
-        public override bool DiscardWhateverToPlayCard => false;
-        public override bool IsActionToAvoid => false;
+        public override OutcomeFlags Outcome => OutcomeFlags.DiscardNoNeedCard;
 
         protected override bool IsNewActionCorrect(PlayerAction action)
         {
-            return action.PlayCard;
+            return (action.Outcome & OutcomeFlags.Play) > 0;
+        }
+
+        public override void Log(string clueGiver, string player)
+        {
+            string info = $"Player {clueGiver} thinks that player {player} discards no need card(s)";
+
+            foreach (var card in this.Cards)
+            {
+                info += $" {{{card}}}";
+            }
+
+            Logger.Log.Info(info);
         }
     }
 }

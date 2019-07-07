@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics.Contracts;
 
 namespace Hanabi
 {
@@ -12,8 +11,7 @@ namespace Hanabi
 
         public Probability(double value)
         {
-            Contract.Requires<ArgumentOutOfRangeException>(0 <= value);
-            Contract.Requires<ArgumentOutOfRangeException>(value <= 1);
+            if (value < 0 || 1 < value) throw new ArgumentOutOfRangeException(nameof(value) + " " + value);
 
             Value = value;
         }

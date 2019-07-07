@@ -5,6 +5,9 @@
     <ApplicationIcon />
     <StartupObject>Hanabi.Program</StartupObject>
   </PropertyGroup>
+  <ItemGroup>
+    <None Remove="Board.cs~RF2c87671.TMP" />
+  </ItemGroup>
   <ItemGroup>                         
     <PackageReference Include="log4net" Version="2.0.8" />
   </ItemGroup>

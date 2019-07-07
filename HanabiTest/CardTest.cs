@@ -34,32 +34,11 @@ namespace HanabiTest
         }
 
         [Test]
-        public void GetCardInFireworkAfter_WhiteThree_ReturnsWhiteFour()
-        {
-            var whiteThreeCard = new Card(Color.White, Rank.Three);
-
-            var cardAfterWhiteThree = Card.GetCardInFireworkAfter(whiteThreeCard);
-            var whiteFourCard = new Card(Color.White, Rank.Four);
-
-            Assert.AreEqual(whiteFourCard, cardAfterWhiteThree);
-        }
-
-        [Test]
-        public void GetCardInFireworkAfter_WhiteFive_ReturnsNull()
-        {
-            var whiteFiveCard = new Card(Color.White, Rank.Five);
-
-            var cardAfterWhiteFive = Card.GetCardInFireworkAfter(whiteFiveCard);
-
-            Assert.IsNull(cardAfterWhiteFive);
-        }
-
-        [Test]
         public void GetCardInFireworkBefore_YellowFour_ReturnsYellowThree()
         {
             var yellowFour = new Card(Color.Yellow, Rank.Four);
 
-            var cardBeforeYellowFour = Card.GetCardInFireworkBefore(yellowFour);
+            var cardBeforeYellowFour = Card.GetPreviousCardInFirework(yellowFour);
             var yellowThreeCard = new Card(Color.Yellow, Rank.Three);
 
             Assert.AreEqual(yellowThreeCard, cardBeforeYellowFour);
@@ -70,7 +49,7 @@ namespace HanabiTest
         {
             var yellowOneCard = new Card(Color.Yellow, Rank.One);
 
-            var cardBeforeYellowOne = Card.GetCardInFireworkBefore(yellowOneCard);
+            var cardBeforeYellowOne = Card.GetPreviousCardInFirework(yellowOneCard);
 
             Assert.IsNull(cardBeforeYellowOne);
         }

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 
 namespace Hanabi
 {
@@ -10,15 +9,13 @@ namespace Hanabi
 
         public CardsToMatrixConverter(IGameProvider provider)
         {
-            Contract.Requires<ArgumentNullException>(provider != null);
-
-            _provider = provider;
+            _provider = provider?? throw new ArgumentNullException(nameof(provider));
         }
 
         public Matrix Encode(IEnumerable<Card> cards)
         {
-            Contract.Requires<ArgumentNullException>(cards != null);
-            Contract.Ensures(Contract.Result<Matrix>() != null);
+            if (cards == null)
+                throw new ArgumentNullException(nameof(cards));
 
             Matrix result = _provider.CreateEmptyMatrix();
 
@@ -32,8 +29,8 @@ namespace Hanabi
 
         public IReadOnlyList<Card> Decode(Matrix matrix)
         {
-            Contract.Requires<ArgumentNullException>(matrix != null);
-            Contract.Ensures(Contract.Result<IReadOnlyList<Card>>() != null);
+            if (matrix == null)
+                throw new ArgumentNullException(nameof(matrix));
 
             var result = new List<Card>();
 

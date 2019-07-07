@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Linq;
 
 namespace Hanabi
@@ -12,11 +11,8 @@ namespace Hanabi
 
         public ClueToPlayFinder(IBoardContext boardContext, IPlayerContext playerContext)
         {
-            Contract.Requires<ArgumentNullException>(boardContext != null);
-            Contract.Requires<ArgumentNullException>(playerContext != null);
-            
-            _boardContext = boardContext;
-            _playerContext = playerContext;
+            _boardContext = boardContext?? throw new ArgumentNullException(nameof(boardContext));
+            _playerContext = playerContext?? throw new ArgumentNullException(nameof(playerContext));
         }
 
         public ClueAndAction Find()
@@ -43,7 +39,7 @@ namespace Hanabi
             {
                 var clues = 
                     cardsToPlay
-                        .Select(card => ClueDetailInfo.CreateClues(card, _playerContext.Player))
+                        .Select(card => ClueDetailInfo.CreateClues(card, _playerContext))
                         .Aggregate((acc, list) => acc.Concat(list).ToList())
                         .Distinct();
 
@@ -61,7 +57,7 @@ namespace Hanabi
 
                     var action = predictor.Predict(playStrategy, discardStrategy);
 
-                    if (action.PlayCard)
+                    if ((action.Outcome & OutcomeFlags.Play) > 0)
                         possibleClues.Add(new ClueAndAction { Action = action, Clue = clue });
                 }
             }
@@ -87,17 +83,13 @@ namespace Hanabi
 
         private int CardsToClue(ClueType clue)
         {
-            Contract.Requires(clue != null);
-            Contract.Requires(clue.IsStraightClue);
-            Contract.Ensures(Contract.Result<int>() > 0);
-
-            
+            if (clue == null) throw new ArgumentNullException(nameof(clue));
 
             return _playerContext.Hand
                     .Select(cih => cih.Card)
                     .Where(_boardContext.GetWhateverToPlayCards().Contains)
                     .Select(card => new ClueAndCardMatcher(card))
-                    .Count(matcher => clue.Accept(matcher));
+                    .Count(clue.Accept);
         }
     }
 }

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics.Contracts;
 
 namespace Hanabi
 {
@@ -19,7 +18,7 @@ namespace Hanabi
             Color = color;
         }
 
-        public override String ToString()
+        public override string ToString()
         {
             return $"{Color} {Rank}";
         }
@@ -44,19 +43,10 @@ namespace Hanabi
         }
 
 
-        public static Card GetCardInFireworkAfter(Card card)
+        public static Card GetPreviousCardInFirework(Card card)
         {
-            Contract.Requires<ArgumentNullException>(card != null);
-
-            Rank? nextRank = card.Rank.GetNextNumber();
-
-            return nextRank != null ? new Card(nextRank.Value, card.Color) : null;
-        }
-
-        
-        public static Card GetCardInFireworkBefore(Card card)
-        {
-            Contract.Requires<ArgumentNullException>(card != null);
+            if (card == null)
+                throw new ArgumentNullException(nameof(card));
 
             Rank? previousRank = card.Rank.GetPreviousNumber();
 

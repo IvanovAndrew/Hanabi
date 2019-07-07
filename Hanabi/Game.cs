@@ -1,6 +1,6 @@
-﻿using System;
+﻿using Hanabi.Exceptions;
+using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Linq;
 
 namespace Hanabi
@@ -16,7 +16,6 @@ namespace Hanabi
         {
             get
             {
-                Contract.Ensures(Contract.Result<Deck>() != null);
                 return Board.Deck;
             }
         }
@@ -30,11 +29,17 @@ namespace Hanabi
             get;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="provider"></param>
+        /// <param name="playersCount"></param>
+        /// <exception cref="TooLessPlayersException"></exception>
+        /// <exception cref="TooManyPlayersException"></exception>
         public Game(IGameProvider provider, int playersCount)
         {
-            Contract.Requires<ArgumentOutOfRangeException>(MinPlayerCount <= playersCount, "Too less players!");
-            Contract.Requires<ArgumentOutOfRangeException>(playersCount <= MaxPlayerCount, "Too many players!");
-            Contract.Requires<ArgumentNullException>(provider != null);
+            if (playersCount < MinPlayerCount) throw new TooLessPlayersException();
+            if (MaxPlayerCount < playersCount) throw new TooManyPlayersException();
 
             GameProvider = provider;
             _players = new List<Player>();
@@ -50,10 +55,16 @@ namespace Hanabi
             Board = Board.Create(provider);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="player"></param>
+        /// <param name="card"></param>
+        /// <exception cref="ArgumentNullException"></exception>
         public void AddCardToFirework(Player player, Card card)
         {
-            Contract.Requires<ArgumentNullException>(player != null);
-            Contract.Requires<ArgumentNullException>(card != null);
+            if (player == null) throw new ArgumentNullException(nameof(player));
+            if (card == null) throw new ArgumentNullException(nameof(card));
 
             Logger.Log.InfoFormat("{0} is played", card);
 
@@ -78,11 +89,16 @@ namespace Hanabi
                 AddCardToPlayer(player);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="player"></param>
+        /// <param name="card"></param>
+        /// <exception cref="ArgumentNullException"></exception>
         public void AddCardToDiscardPile(Player player, Card card)
         {
-            Contract.Requires<ArgumentNullException>(player != null);
-            Contract.Requires<ArgumentNullException>(card != null);
-            Contract.Ensures(Contract.OldValue(Board.ClueCounter) + 1 == Board.ClueCounter);
+            if (player == null) throw new ArgumentNullException(nameof(player));
+            if (card == null) throw new ArgumentNullException(nameof(card));
 
             Logger.Log.InfoFormat("{0} discarded", card);
 
@@ -98,16 +114,19 @@ namespace Hanabi
 
         void OnClueGiven(Object sender, EventArgs args)
         {
-            Contract.Ensures(Board.ClueCounter < Contract.OldValue(Board.ClueCounter));
-            
             Board.ClueCounter -= 1;
             Logger.Log.Info("Clues: " + Board.ClueCounter);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="player"></param>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="InvalidOperationException">Throws if deck if empty</exception>
         private void AddCardToPlayer(Player player)
         {
-            Contract.Requires<ArgumentNullException>(player != null);
-            Contract.Requires(!Deck.IsEmpty());
+            if (player == null) throw new ArgumentNullException(nameof(player));
 
             Card newCard = Deck.PopCard();
             CardInHand cardInHand = new CardInHand(player, newCard);
@@ -117,8 +136,6 @@ namespace Hanabi
 
         public int Play()
         {
-            Contract.Ensures(Contract.Result<int>() >= 0);
-
             PrepareForGame();
 
             var playersEnumerator = NextTurn();
@@ -158,9 +175,6 @@ namespace Hanabi
         {
             get
             {
-                Contract.Ensures(Contract.Result<int>() >= 0);
-                Contract.Ensures(Contract.Result<int>() <= GameProvider.GetMaximumScore());
-
                 return Board.BlowCounter == 0 ? 0 : Board.FireworkPile.Cards.Count;
             }
         }
@@ -190,11 +204,10 @@ namespace Hanabi
         /// </summary>
         /// <param name="player"></param>
         /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
         public IReadOnlyList<Player> GetPlayersExcept(Player player)
-        
         {
-            Contract.Requires<ArgumentNullException>(player != null);
-            Contract.Ensures(Contract.Result<IReadOnlyList<Player>>().All(p => p != player));
+            if (player == null) throw new ArgumentNullException(nameof(player));
 
             List<Player> result = new List<Player>();
             bool found = false;
@@ -218,6 +231,7 @@ namespace Hanabi
 
         private int GetCardInHandsCount(int playersCount)
         {
+            // TODO clean up this
             return playersCount > 3 ? 4 : 5;
         }
 
@@ -232,21 +246,34 @@ namespace Hanabi
             }
         }
 
-        private bool IsGameOver(bool lastTurn, Player currentTurn, Player lastPlayerToTurn)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="lastTurn"></param>
+        /// <param name="activePlayer"></param>
+        /// <param name="lastPlayerToTurn"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        private bool IsGameOver(bool lastTurn, Player activePlayer, Player lastPlayerToTurn)
         {
-            Contract.Requires<ArgumentNullException>(currentTurn != null);
+            if (activePlayer == null) throw new ArgumentNullException(nameof(activePlayer));
 
             if (Score == GameProvider.GetMaximumScore()) return true;
             if (Board.BlowCounter == 0) return true;
 
 
-            return lastTurn && currentTurn == lastPlayerToTurn;
+            return lastTurn && activePlayer == lastPlayerToTurn;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="start"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
         public IReadOnlyList<Player> GetPlayersToTurn(Player start)
         {
-            Contract.Requires<ArgumentNullException>(start != null);
-            Contract.Ensures(Contract.Result<IReadOnlyList<Player>>() != null);
+            if (start == null) throw new ArgumentNullException(nameof(start));
 
             var players = GetPlayersExcept(start);
             if (PlayerToTurnLast == null) return players;

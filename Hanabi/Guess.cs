@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Linq;
 
 namespace Hanabi
@@ -80,15 +79,10 @@ namespace Hanabi
         /// <summary>
         /// P (card in {cardsToSearch})
         /// </summary>
-        /// <param name="cardsToSearch"></param>
-        /// <param name="excludedCards"></param>
-        /// <returns></returns>
         public Probability GetProbability(IEnumerable<Card> cardsToSearch, IEnumerable<Card> excludedCards)
         {
-            Contract.Requires<ArgumentNullException>(cardsToSearch != null);
-            Contract.Requires<ArgumentNullException>(excludedCards != null);
-
-            Contract.Ensures(Contract.Result<Probability>() != null);
+            if (cardsToSearch == null) throw new ArgumentNullException(nameof(cardsToSearch));
+            if (excludedCards == null) throw new ArgumentNullException(nameof(excludedCards));
 
             Matrix excludedCardsMatrix = _converter.Encode(excludedCards);
 
@@ -109,10 +103,15 @@ namespace Hanabi
             return new Probability(positiveWays / (double) allWays);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="excludedCards"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
         private Matrix GetCorrectedGuess(Matrix excludedCards)
         {
-            Contract.Requires<ArgumentNullException>(excludedCards != null);
-            Contract.Ensures(Contract.Result<Matrix>().Sum() > 0);
+            if (excludedCards == null) throw new ArgumentNullException(nameof(excludedCards));
 
             Matrix situation = _provider.CreateEmptyMatrix();
 

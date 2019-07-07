@@ -13,8 +13,8 @@ namespace HanabiTest
         public IEnumerable<CardInHand> Hand { get; set; }
         public ClueType PossibleClue { get; set; }
 
-        public Predicate<CardInHand> IsSubtleCluePredicate { get; set; }
-        public Predicate<CardInHand> KnowAboutRankOrColorPredicate { get; set; }
+        public Predicate<CardInHand> IsSubtleCluePredicate { get; set; } = (c) => false;
+        public Predicate<CardInHand> KnowAboutRankOrColorPredicate { get; set; } = (c) => false;
 
         public Dictionary<CardInHand, List<ClueType>> CluesAboutCard { get; set; } = new Dictionary<CardInHand, List<ClueType>>();
         
@@ -37,7 +37,15 @@ namespace HanabiTest
 
         public IPlayerContext Clone()
         {
-            throw new NotImplementedException();
+            return new PlayerContextStub
+            {
+                Player = this.Player,
+                CluesAboutCard = this.CluesAboutCard,
+                Hand = this.Hand,
+                IsSubtleCluePredicate = this.IsSubtleCluePredicate,
+                KnowAboutRankOrColorPredicate = this.KnowAboutRankOrColorPredicate,
+                PossibleClue = null
+            };
         }
     }
     
@@ -45,10 +53,12 @@ namespace HanabiTest
     {
         public FireworkPile Firework { get; set; }
         public DiscardPile DiscardPile { get; set; }
-        public IEnumerable<Card> ExpectedCards { get; set; }
-        public IEnumerable<Card> UniqueCards { get; set; }
-        public IEnumerable<Card> WhateverToPlayCards { get; set; }
-        public IEnumerable<Card> ExcludedCards { get; set; }
+        public IEnumerable<Card> ExpectedCards { get; set; } = new Card[0];
+        public IEnumerable<Card> UniqueCards { get; set; } = new Card[0];
+        public IEnumerable<Card> WhateverToPlayCards { get; set; } = new Card[0];
+        public IEnumerable<Card> ExcludedCards { get; set; } = new Card[0];
+
+        public int BlowCounter { get; set; }
 
         public IEnumerable<Card> GetExpectedCards()
         {

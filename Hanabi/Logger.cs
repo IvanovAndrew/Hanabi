@@ -1,15 +1,13 @@
-﻿using log4net;
-using log4net.Config;
-
-namespace Hanabi
+﻿namespace Hanabi
 {
     public static class Logger
     {
-        public static ILog Log { get; } = LogManager.GetLogger("LOGGER");
+        public static readonly log4net.ILog Log = log4net.LogManager.GetLogger
+            (System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         public static void InitLogger()
         {
-            XmlConfigurator.Configure();
+            //BasicConfigurator.Configure();
         }
     }
 }

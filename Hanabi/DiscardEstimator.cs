@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Linq;
 
 namespace Hanabi
@@ -11,13 +10,14 @@ namespace Hanabi
 
         public DiscardEstimator(IDiscardStrategy strategy)
         {
-            Contract.Requires<ArgumentNullException>(strategy != null);
-
-            _strategy = strategy;
+            _strategy = strategy ?? throw new ArgumentNullException(nameof(strategy));
         }
 
         public IList<Card> GetPossibleCards(IBoardContext boardContext, IPlayerContext playerContext)
         {
+            if (boardContext == null) throw new ArgumentNullException(nameof(boardContext));
+            if (playerContext == null) throw new ArgumentNullException(nameof(playerContext));
+
             var discardEstimates =
                 _strategy.EstimateDiscardProbability(boardContext);
 
