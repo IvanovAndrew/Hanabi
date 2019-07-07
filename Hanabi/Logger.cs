@@ -1,13 +1,40 @@
-﻿namespace Hanabi
+﻿using log4net;
+using log4net.Config;
+using System;
+using System.IO;
+using System.Reflection;
+using System.Xml;
+
+namespace Hanabi
 {
     public static class Logger
     {
-        public static readonly log4net.ILog Log = log4net.LogManager.GetLogger
-            (System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly string LOG_CONFIG_FILE = @"log4net.config";
 
-        public static void InitLogger()
+        private static readonly log4net.ILog _log = GetLogger(typeof(Logger));
+
+        public static ILog Log => _log;
+
+        public static ILog GetLogger(Type type)
         {
-            //BasicConfigurator.Configure();
+            return LogManager.GetLogger(type);
+        }
+
+        public static void Init()
+        {
+            SetLog4NetConfiguration();
+        }
+
+        public static void Debug(object message)
+        {
+            SetLog4NetConfiguration();
+            _log.Debug(message);
+        }
+
+        private static void SetLog4NetConfiguration()
+        {
+            var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
+            XmlConfigurator.Configure(logRepository, new FileInfo("log4net.config"));
         }
     }
 }

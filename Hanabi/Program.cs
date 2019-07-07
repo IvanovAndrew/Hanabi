@@ -1,6 +1,5 @@
-﻿using System;
-
-[assembly: log4net.Config.XmlConfigurator(Watch = true)]
+﻿using log4net;
+using System;
 
 namespace Hanabi
 {
@@ -9,7 +8,7 @@ namespace Hanabi
         static void Main(string[] args)
         {
             int n = 1; //100
-            //int n = 100;
+            //int n = 1000;
             while (n-- > 0)
             {
                 Play();
@@ -18,7 +17,7 @@ namespace Hanabi
 
         public static void Play()
         {
-            Logger.InitLogger();
+            Logger.Init();
             Logger.Log.Info("START!");
 
             IGameProvider provider = new GameProvider();
@@ -27,7 +26,6 @@ namespace Hanabi
             Logger.Log.InfoFormat("Number of players: {0}", numOfPlayers);
 
             var game = new Game(provider, numOfPlayers);
-
 
             int score = game.Play();
             Logger.Log.Info("");
