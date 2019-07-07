@@ -1,5 +1,7 @@
 ﻿using System;
 
+[assembly: log4net.Config.XmlConfigurator(Watch = true)]
+
 namespace Hanabi
 {
     class Program
@@ -7,6 +9,7 @@ namespace Hanabi
         static void Main(string[] args)
         {
             int n = 1; //100
+            //int n = 100;
             while (n-- > 0)
             {
                 Play();
